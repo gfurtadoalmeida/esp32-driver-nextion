@@ -1,0 +1,48 @@
+{
+    "C_Cpp.clang_format_style": "Visual Studio",
+    "editor.formatOnSave": false,
+    "[cpp]": {
+      "editor.quickSuggestions": true
+    },
+    "[c]": {
+      "editor.quickSuggestions": true
+    },
+    "C_Cpp.intelliSenseEngineFallback": "Enabled",
+    "cmake.configureOnOpen": false,
+    "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/CVS": true,
+      "**/.DS_Store": true,
+      "build/": true,
+      "debug.log": true,
+      "sdkconfig.old": true
+    },
+    "files.associations": {
+      "sdkconfig": "c",
+      "cstddef": "cpp",
+      "limits": "cpp",
+      "memory": "cpp",
+      "mutex": "cpp",
+      "vector": "cpp",
+      "xhash": "cpp",
+      "xtree": "cpp",
+      "xutility": "cpp",
+      "*.inc": "c",
+      "xlocale": "c",
+      "xstring": "c",
+      "array": "c",
+      "stdarg.h": "c",
+      "xiosbase": "c",
+      "istream": "c",
+      "*.ipp": "c"
+    },
+    "idf.port": "/dev/ttyUSB1",
+    "idf.portWin": "COM4",
+    "idf.openOcdConfigs": [
+      "interface/ftdi/ft232h-module-swd.cfg",
+      "target/esp32.cfg",
+      "board/esp-wroom-32.cfg"
+    ]
+  }

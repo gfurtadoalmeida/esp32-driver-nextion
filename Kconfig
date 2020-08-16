@@ -1,0 +1,45 @@
+menu "Nextion Display"
+
+    config NEX_EVENT_QUEUE_WAIT_TIME_MS
+        int "Event queue wait time (ms)"
+        range 10 1000
+        default 50
+        help
+            Time, in millisecods, to wait before dropping an event.
+
+    config NEX_RESP_MSG_MAX_LENGTH
+        int "Max response message size"
+        range 4 1024
+        default 140
+        help
+            The maxium size of a response message.
+            Usually, the biggest messages are the ones that retrieve text.
+
+    config NEX_RESP_WAIT_TIME_MS
+        int "Response wait time (ms)"
+        range 10 10000
+        default 1000
+        help
+            Time, in millisecods, to wait for a response.
+
+    config NEX_UART_BUFFER_MULT
+        int "UART buffer size multiplier"
+        range 1 50
+        default 5
+        help
+            The UART buffer size is calculated by multiplying the maximum size of
+            a response message by this number.
+
+            Use a big multiplier if you intend to receive a lot of event messages
+            and/or the event message processing is slow.
+
+            UART buffer = max response message size * multiplier
+
+    config NEX_UART_QUEUE_SIZE
+        int "UART queue size"
+        range 1 100
+        default 10
+        help
+            The UART queue size.
+
+endmenu  # Nextion Configuration
