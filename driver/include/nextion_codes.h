@@ -16,9 +16,9 @@ extern "C"
     // know the ranges.
 
     // Prefix meanings:
-    // NEX_DVC_INSTRUCTION_ = Instruction returns ACK or fail due to malformed command.
+    // NEX_DVC_INSTRUCTION_ = Instruction returns success or fail due to malformed command.
     // NEX_DVC_ERR_         = Instruction well-formed but failed.
-    // NEX_DVC_EVT_         = Event sent automatically from the device.
+    // NEX_DVC_EVT_         = Event sent by the device.
     // NEX_DVC_RSP_         = Instruction executed and returned data.
 
 #define NEX_FAIL 0x00U

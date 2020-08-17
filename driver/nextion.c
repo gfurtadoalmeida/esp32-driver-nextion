@@ -120,6 +120,8 @@ extern "C"
 
     nex_err_t nextion_driver_init()
     {
+        // The logic relies on receiving responses in all
+        // cases, be it success or failure.
         nex_err_t code = nextion_send_command("bkcmd=3\0");
 
         if (!NEX_DVC_CODE_IS_SUCCESS(code))
@@ -194,7 +196,7 @@ extern "C"
         uint8_t *response = NULL;
         const int read = _send_command(command, &response);
 
-        if (read == NEX_DVC_SERIAL_ACK_LENGTH)
+        if (read == NEX_DVC_CMD_ACK_LENGTH)
         {
             return (nex_err_t)response[0];
         }
@@ -210,13 +212,13 @@ extern "C"
         uint8_t *response = NULL;
         const int read = _send_command(command, &response);
 
-        if (read >= NEX_DVC_SERIAL_ACK_LENGTH && response[0] == NEX_DVC_RSP_GET_STRING)
+        if (read >= NEX_DVC_CMD_ACK_LENGTH && response[0] == NEX_DVC_RSP_GET_STRING)
         {
-            const int length = read - NEX_DVC_SERIAL_ACK_LENGTH;
+            const int length = read - NEX_DVC_CMD_ACK_LENGTH;
 
             text[length] = '\0';
 
-            memcpy(text, response + NEX_DVC_SERIAL_START_LENGTH, length);
+            memcpy(text, response + NEX_DVC_CMD_START_LENGTH, length - NEX_DVC_CMD_END_LENGTH);
 
             return length;
         }
@@ -267,12 +269,12 @@ extern "C"
         NEX_CHECK((response_buffer != NULL), "response_buffer error(NULL)", -1);
 
         const uart_port_t uart_num = p_nextion_driver_obj.uart_num;
-        const uint8_t ending[] = {NEX_DVC_SERIAL_END_SEQUENCE};
+        const uint8_t ending[] = {NEX_DVC_CMD_END_SEQUENCE};
 
         xSemaphoreTake(p_nextion_driver_obj.command_mutex, portMAX_DELAY);
 
         uart_write_bytes(uart_num, command, strlen(command));
-        uart_write_bytes(uart_num, (char *)ending, NEX_DVC_SERIAL_END_LENGTH);
+        uart_write_bytes(uart_num, (char *)ending, NEX_DVC_CMD_END_LENGTH);
 
         int read = -1;
 
@@ -313,13 +315,13 @@ extern "C"
                 switch (event.type)
                 {
                 case UART_DATA:
-                    if (uart_read_bytes(uart_num, buffer, event.size, portMAX_DELAY) >= NEX_DVC_SERIAL_ACK_LENGTH)
+                    if (uart_read_bytes(uart_num, buffer, event.size, portMAX_DELAY) >= NEX_DVC_CMD_ACK_LENGTH)
                     {
                         int length = event.size;
                         uint8_t code = buffer[0];
 
                         // Is it well-formed; has the endings?
-                        if ((buffer[length - 1] == NEX_DVC_SERIAL_END_VALUE && buffer[length - 2] == NEX_DVC_SERIAL_END_VALUE && buffer[length - 3] == NEX_DVC_SERIAL_END_VALUE))
+                        if ((buffer[length - 1] == NEX_DVC_CMD_END_VALUE && buffer[length - 2] == NEX_DVC_CMD_END_VALUE && buffer[length - 3] == NEX_DVC_CMD_END_VALUE))
                         {
                             if (NEX_DVC_CODE_IS_EVENT(code, length))
                             {
@@ -401,7 +403,7 @@ extern "C"
     bool _get_event_object(uint8_t code, uint8_t *buffer, int length, nextion_event_t *event)
     {
         NEX_CHECK((buffer != NULL), "buffer error(NULL)", false);
-        NEX_CHECK((length >= NEX_DVC_SERIAL_ACK_LENGTH), "length error(<NEX_DVC_SERIAL_ACK_LENGTH>)", false);
+        NEX_CHECK((length >= NEX_DVC_CMD_ACK_LENGTH), "length error(<NEX_DVC_SERIAL_ACK_LENGTH>)", false);
         NEX_CHECK((event != NULL), "event error(NULL)", false);
 
         bool is_ok = true;
