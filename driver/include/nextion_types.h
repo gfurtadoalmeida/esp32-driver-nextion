@@ -12,8 +12,8 @@ extern "C"
      */
     typedef enum
     {
-        NEXTION_DEVICE_STATE, /*!< Device state change occurred. */
-        NEXTION_TOUCH_STATE   /*!< Touch event occurred. */
+        NEXTION_EVENT_DEVICE, /*!< Device state change occurred. */
+        NEXTION_EVENT_TOUCH   /*!< Touch event occurred. */
     } nextion_event_type_t;
 
     /**
@@ -60,8 +60,8 @@ extern "C"
     {
         nextion_event_type_t type; /*!< Event type. */
         union {
-            nextion_device_state_t device_state; /*!< Device state. Use when "type == NEXTION_DEVICE_STATE" */
-            nextion_touch_t touch;               /*!< Touch state. Use when "type == NEXTION_TOUCH_STATE" */
+            nextion_device_state_t device_state; /*!< Device state. Use when "type == NEXTION_EVENT_DEVICE" */
+            nextion_touch_t touch;               /*!< Touch state. Use when "type == NEXTION_EVENT_TOUCH" */
         };
     } nextion_event_t;
 

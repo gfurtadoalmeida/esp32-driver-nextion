@@ -28,7 +28,7 @@ void app_main(void)
         return;
     }
 
-    nex_err_t code = nextion_send_command("page 7\0");
+    nex_err_t code = nextion_send_command("page 7");
 
     if (NEX_DVC_CODE_IS_SUCCESS(code))
     {
@@ -39,16 +39,16 @@ void app_main(void)
             xQueueReceive(p_event_queue, &event, pdMS_TO_TICKS(100));
 
             // Was my button (with id 4) released?
-            if (event.type == NEXTION_TOUCH_STATE && event.touch.state == NEXTION_TOUCH_RELEASED && event.touch.component_id == 4)
+            if (event.type == NEXTION_EVENT_TOUCH && event.touch.state == NEXTION_TOUCH_RELEASED && event.touch.component_id == 4)
             {
                 char city[50];
                 int temperature;
 
                 // Get the city name.
-                nextion_get_text("get t0.txt\0", city);
+                nextion_get_text("get t0.txt", city);
 
                 // Get the temperature.
-                nextion_get_number("get n0.val\0", &temperature);
+                nextion_get_number("get n0.val", &temperature);
 
                 ESP_LOGI(TAG, "City: %s", city);
                 ESP_LOGI(TAG, "Temperature: %d", temperature);

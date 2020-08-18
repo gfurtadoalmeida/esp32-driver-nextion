@@ -29,6 +29,9 @@ extern "C"
 
     /**
      * @brief Does the necessary initialization before any action can be done.
+     *
+     * @details Will send some commands to the display to configure it.
+     *
      * @return NEX_OK when success or NEX_FAIL.
      */
     nex_err_t nextion_driver_init();
@@ -41,7 +44,7 @@ extern "C"
 
     /**
      * @brief Checks if the driver is installed.
-     * @return True if installed or false.
+     * @return True if installed, otherwise false.
      */
     bool nextion_is_driver_installed();
 
@@ -57,10 +60,8 @@ extern "C"
     /**
      * @brief Sends a command that retrieves a null-terminated string.
      *
-     * @details The caller is responsible for freeing the returned string.
-     *
      * @param command A null-terminated string with the command to be sent.
-     * @param[in] text Location where the retrieved text will be stored. Must take in account the null-terminator.
+     * @param[in] text Location where the retrieved text will be stored. Must take the null-terminator into account.
      *
      * @return -1 if error, otherwise the text length without the null-terminator.
      */

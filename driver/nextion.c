@@ -3,7 +3,7 @@
 
 // When building using VSCode tooling, the necessary
 // variables are not injected in build time.
-//#include "../../../build/config/sdkconfig.h"
+#include "../../../build/config/sdkconfig.h"
 
 #include <string.h>
 #include "esp_log.h"
@@ -122,7 +122,7 @@ extern "C"
     {
         // The logic relies on receiving responses in all
         // cases, be it success or failure.
-        nex_err_t code = nextion_send_command("bkcmd=3\0");
+        nex_err_t code = nextion_send_command("bkcmd=3");
 
         if (!NEX_DVC_CODE_IS_SUCCESS(code))
         {
@@ -135,7 +135,7 @@ extern "C"
         // Reason: the device sends the message so fast
         // that, sometimes 2 messages are sent as one.
         // As it's not soo important, I'm cutting it out.
-        code = nextion_send_command("sendxy=0\0");
+        code = nextion_send_command("sendxy=0");
 
         if (!NEX_DVC_CODE_IS_SUCCESS(code))
         {
@@ -254,7 +254,7 @@ extern "C"
     //   1. Acquire a mutex, to prevent multiple calls.
     //   2. Get the invoking task handle and save on the driver obj.
     //   3. Write to the UART.
-    //   4. Wait for a notification on the task handle.
+    //   4. Wait for a notification on the task handle (or timeout).
     //  _uart_event_task
     //   5. Copy the received data to the global buffer.
     //   6. Set the received length on the driver obj.
@@ -411,14 +411,14 @@ extern "C"
         switch (code)
         {
         case NEX_DVC_EVT_HARDWARE_START_RESET:
-            event->type = NEXTION_DEVICE_STATE;
+            event->type = NEXTION_EVENT_DEVICE;
             event->device_state = NEXTION_DEVICE_STARTED;
             break;
 
         case NEX_DVC_EVT_TOUCH_OCCURRED:
             if (length == 7)
             {
-                event->type = NEXTION_TOUCH_STATE;
+                event->type = NEXTION_EVENT_TOUCH;
                 event->touch.page_id = buffer[1];
                 event->touch.component_id = buffer[2];
 
@@ -450,32 +450,32 @@ extern "C"
         break;
 
         case NEX_DVC_EVT_HARDWARE_SLEEP_AUTOMATIC:
-            event->type = NEXTION_DEVICE_STATE;
+            event->type = NEXTION_EVENT_DEVICE;
             event->device_state = NEXTION_DEVICE_AUTO_SLEEP;
             break;
 
         case NEX_DVC_EVT_HARDWARE_WAKE_AUTOMATIC:
-            event->type = NEXTION_DEVICE_STATE;
+            event->type = NEXTION_EVENT_DEVICE;
             event->device_state = NEXTION_DEVICE_AUTO_WAKE;
             break;
 
         case NEX_DVC_EVT_HARDWARE_READY:
-            event->type = NEXTION_DEVICE_STATE;
+            event->type = NEXTION_EVENT_DEVICE;
             event->device_state = NEXTION_DEVICE_READY;
             break;
 
         case NEX_DVC_EVT_HARDWARE_UPGRADE:
-            event->type = NEXTION_DEVICE_STATE;
+            event->type = NEXTION_EVENT_DEVICE;
             event->device_state = NEXTION_DEVICE_UPGRADING;
             break;
 
         case NEX_DVC_EVT_TRANSPARENT_DATA_FINISHED:
-            event->type = NEXTION_DEVICE_STATE;
+            event->type = NEXTION_EVENT_DEVICE;
             event->device_state = NEXTION_DEVICE_TRANSP_DATA_FINISHED;
             break;
 
         case NEX_DVC_EVT_TRANSPARENT_DATA_READY:
-            event->type = NEXTION_DEVICE_STATE;
+            event->type = NEXTION_EVENT_DEVICE;
             event->device_state = NEXTION_DEVICE_TRANSP_DATA_READY;
             break;
 
