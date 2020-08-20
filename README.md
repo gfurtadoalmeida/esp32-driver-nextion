@@ -15,7 +15,7 @@ Everything is based on Nextion [instruction set](https://nextion.tech/instructio
 
 ### Using ESP-IDF
 
-1. Clone or download this repository and copy the folder ["components/nextion"](/tree/master/components/nextion) to the components folder of your ESP-IDF project.
+1. Clone or download this repository and copy the folder ["components/nextion"](/components/nextion/) to the components folder of your ESP-IDF project.
 2. Configure it in `menuconfig -> Component config -> Nextion Display` _(optional)_.
 3. Include `nextion.h` in your code.
 
@@ -56,7 +56,7 @@ lib_deps =
 
 ## Testing
 
-Upload [test_display.hmi](/tree/master/components/nextion/test/hmi) on your Nextion display before testing. Be aware that the display project was built using Nextion Editor 1.16.1; you might need to [upgrade your display](https://nextion.tech/faq-items/using-legacy-nextion-devices/) before uploading this project.  
+Upload [test_display.hmi](/components/nextion/test/hmi/) on your Nextion display before testing. Be aware that the display project was built using Nextion Editor 1.16.1; you might need to [upgrade your display](https://nextion.tech/faq-items/using-legacy-nextion-devices/) before uploading this project.  
 
 The task watchdog for CPU0 is disabled on the test project. It is needed so we can interact with the test tool.  
 
