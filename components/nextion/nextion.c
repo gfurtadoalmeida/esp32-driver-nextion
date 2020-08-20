@@ -3,7 +3,7 @@
 
 // When building using VSCode tooling, the necessary
 // variables are not injected in build time.
-#include "../../../build/config/sdkconfig.h"
+//#include "../../../build/config/sdkconfig.h"
 
 #include <string.h>
 #include "esp_log.h"
@@ -103,7 +103,7 @@ extern "C"
             return NEX_FAIL;
         }
 
-        if (xTaskCreate(_uart_event_task, "nex_uart_event_task", 2048, NULL, 8, &p_nextion_driver_obj.uart_task) != pdPASS)
+        if (xTaskCreate(_uart_event_task, "nex_uart_task", 2048, NULL, 8, &p_nextion_driver_obj.uart_task) != pdPASS)
         {
             ESP_LOGE(NEXTION_TAG, "could not create uart task");
 
@@ -218,7 +218,7 @@ extern "C"
 
             text[length] = '\0';
 
-            memcpy(text, response + NEX_DVC_CMD_START_LENGTH, length - NEX_DVC_CMD_END_LENGTH);
+            memcpy(text, response + NEX_DVC_CMD_START_LENGTH, length);
 
             return length;
         }

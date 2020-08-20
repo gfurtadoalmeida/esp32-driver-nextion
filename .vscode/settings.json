@@ -17,7 +17,9 @@
       "**/.DS_Store": true,
       "build/": true,
       "debug.log": true,
-      "sdkconfig.old": true
+      "sdkconfig.old": true,
+      "test/build/": true,
+      "test/sdkconfig.old": true
     },
     "files.associations": {
       "sdkconfig": "c",
@@ -36,7 +38,9 @@
       "stdarg.h": "c",
       "xiosbase": "c",
       "istream": "c",
-      "*.ipp": "c"
+      "*.ipp": "c",
+      "task.h": "c",
+      "limits.h": "c"
     },
     "idf.port": "/dev/ttyUSB1",
     "idf.portWin": "COM4",

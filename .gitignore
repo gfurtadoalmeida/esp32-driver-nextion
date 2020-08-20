@@ -1,8 +1,9 @@
 # ESP-IDF project files
 build/
-sdkconfig
 sdkconfig.old
 debug.log
+test/build/
+test/sdkconfig.old
 
 # Prerequisites
 *.d
