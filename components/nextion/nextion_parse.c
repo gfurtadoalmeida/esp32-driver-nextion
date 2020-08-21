@@ -37,12 +37,13 @@ extern "C"
         return -1;
     }
 
-    bool nextion_parse_assemble_event(uint8_t code, const uint8_t *buffer, int length, nextion_event_t *event)
+    bool nextion_parse_assemble_event(const uint8_t *buffer, int length, nextion_event_t *event)
     {
         NEX_CHECK((buffer != NULL), "buffer error(NULL)", false);
-        NEX_CHECK((length >= NEX_DVC_CMD_ACK_LENGTH), "length error(<NEX_DVC_SERIAL_ACK_LENGTH>)", false);
+        NEX_CHECK((length >= NEX_DVC_CMD_ACK_LENGTH), "length error(<NEX_DVC_CMD_ACK_LENGTH)", false);
         NEX_CHECK((event != NULL), "event error(NULL)", false);
 
+        const uint8_t code = buffer[0];
         bool is_ok = true;
 
         switch (code)
@@ -72,26 +73,42 @@ extern "C"
             {
                 is_ok = false;
 
-                ESP_LOGW(NEXTION_TAG, "touch event with invalid length (%d<7)", length);
+                ESP_LOGW(NEXTION_TAG, "touch event length error(%d<>7)", length);
             }
-
             break;
 
         case NEX_DVC_EVT_TOUCH_COORDINATE_AWAKE:
         case NEX_DVC_EVT_TOUCH_COORDINATE_ASLEEP:
-        {
-            is_ok = false;
+            if (length == 9)
+            {
+                event->type = NEXTION_EVENT_TOUCH_COORD;
+                event->touch_coord.x = ((uint16_t)buffer[1] << 8) | (uint16_t)buffer[2];
+                event->touch_coord.y = ((uint16_t)buffer[3] << 8) | (uint16_t)buffer[4];
+                event->touch_coord.exited_sleep = code == NEX_DVC_EVT_TOUCH_COORDINATE_ASLEEP;
 
-            ESP_LOGE(NEXTION_TAG, "touch coord event is not supported");
-        }
-        break;
+                if (buffer[5] == 1U)
+                {
+                    event->touch_coord.state = NEXTION_TOUCH_PRESSED;
+                }
+                else
+                {
+                    event->touch_coord.state = NEXTION_TOUCH_RELEASED;
+                }
+            }
+            else
+            {
+                is_ok = false;
 
-        case NEX_DVC_EVT_HARDWARE_SLEEP_AUTOMATIC:
+                ESP_LOGW(NEXTION_TAG, "touch coord length error(%d<>9)", length);
+            }
+            break;
+
+        case NEX_DVC_EVT_HARDWARE_AUTO_SLEEP:
             event->type = NEXTION_EVENT_DEVICE;
             event->device_state = NEXTION_DEVICE_AUTO_SLEEP;
             break;
 
-        case NEX_DVC_EVT_HARDWARE_WAKE_AUTOMATIC:
+        case NEX_DVC_EVT_HARDWARE_AUTO_WAKE:
             event->type = NEXTION_EVENT_DEVICE;
             event->device_state = NEXTION_DEVICE_AUTO_WAKE;
             break;
@@ -117,7 +134,7 @@ extern "C"
             break;
 
         default:
-            ESP_LOGW(NEXTION_TAG, "event with unknown code %u", code);
+            ESP_LOGE(NEXTION_TAG, "event code unknown %u", code);
 
             is_ok = false;
         }

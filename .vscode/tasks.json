@@ -248,7 +248,7 @@
             }
         },
         {
-            "label": "Build Test - Build test project",
+            "label": "Build Test",
             "type": "shell",
             "command": "${config:idf.pythonBinPath} ${config:idf.espIdfPath}/tools/idf.py build",
             "windows": {
@@ -295,7 +295,7 @@
             }
         },
         {
-            "label": "Clean test - Clean the test project",
+            "label": "Clean test",
             "type": "shell",
             "command": "${config:idf.pythonBinPath} ${config:idf.espIdfPath}/tools/idf.py fullclean",
             "windows": {
@@ -338,7 +338,7 @@
             ]
         },
         {
-            "label": "Flash test - Flash the test project to the device",
+            "label": "Flash test",
             "type": "shell",
             "command": "${config:idf.pythonBinPath} ${config:idf.espIdfPath}/tools/idf.py flash -p ${config:idf.port} -b ${config:idf.baudRate}",
             "windows": {
@@ -381,7 +381,7 @@
             ]
         },
         {
-            "label": "Monitor test: Start the monitor for test run",
+            "label": "Monitor test",
             "type": "shell",
             "command": "${config:idf.pythonBinPath} ${config:idf.espIdfPath}/tools/idf.py monitor -p ${config:idf.port}",
             "windows": {
@@ -393,6 +393,25 @@
                     "PATH": "${config:idf.customExtraPaths}"
                 }
             }
+        },
+        {
+            "label": "Build, flash and start a monitor for the test",
+            "type": "shell",
+            "command": "${config:idf.pythonBinPath} ${config:idf.espIdfPath}/tools/idf.py monitor -p ${config:idf.port}",
+            "windows": {
+                "command": "${config:idf.pythonBinPathWin} ${config:idf.espIdfPathWin}\\tools\\idf.py monitor -p ${config:idf.portWin}"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/test",
+                "env": {
+                    "PATH": "${config:idf.customExtraPaths}"
+                }
+            },
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Build test",
+                "Flash test"
+            ]
         }
     ]
 }

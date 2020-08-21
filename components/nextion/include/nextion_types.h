@@ -7,17 +7,18 @@ extern "C"
 #endif
 
     /**
-     * @typedef
+     * @typedef nextion_event_type_t
      * @brief Nextion display event type.
      */
     typedef enum
     {
-        NEXTION_EVENT_DEVICE, /*!< Device state change occurred. */
-        NEXTION_EVENT_TOUCH   /*!< Touch event occurred. */
+        NEXTION_EVENT_DEVICE,     /*!< Device state change occurred. */
+        NEXTION_EVENT_TOUCH,      /*!< Touch event occurred. */
+        NEXTION_EVENT_TOUCH_COORD /*!< Touch event, with coordinates, occurred. */
     } nextion_event_type_t;
 
     /**
-     * @typedef
+     * @typedef nextion_device_state_t
      * @brief Nextion display device state.
      */
     typedef enum
@@ -32,7 +33,7 @@ extern "C"
     } nextion_device_state_t;
 
     /**
-     * @typedef
+     * @typedef nextion_touch_state_t
      * @brief Nextion display touch state.
      */
     typedef enum
@@ -42,7 +43,7 @@ extern "C"
     } nextion_touch_state_t;
 
     /**
-     * @typedef
+     * @typedef nextion_touch_t
      * @brief Nextion display touch data.
      */
     typedef struct
@@ -53,7 +54,19 @@ extern "C"
     } nextion_touch_t;
 
     /**
-     * @typedef
+     * @typedef nextion_touch_coord_t
+     * @brief Nextion display touch coordinate data.
+     */
+    typedef struct
+    {
+        unsigned short x;            /*!< X coordinate. */
+        unsigned short y;            /*!< Y coordinate. */
+        bool exited_sleep;           /*!< If the touch happened while the device was asleep, and now it is awake. */
+        nextion_touch_state_t state; /*!< Touch state. */
+    } nextion_touch_coord_t;
+
+    /**
+     * @typedef nextion_event_t
      * @brief Nextion display event.
      */
     typedef struct
@@ -61,7 +74,8 @@ extern "C"
         nextion_event_type_t type; /*!< Event type. */
         union {
             nextion_device_state_t device_state; /*!< Device state. Use when "type == NEXTION_EVENT_DEVICE" */
-            nextion_touch_t touch;               /*!< Touch state. Use when "type == NEXTION_EVENT_TOUCH" */
+            nextion_touch_t touch;               /*!< Touch state. Use when "type == NEXTION_EVENT_TOUCH"  */
+            nextion_touch_coord_t touch_coord;   /*!< Touch state. Use when "type == NEXTION_EVENT_TOUCH_COORD" */
         };
     } nextion_event_t;
 

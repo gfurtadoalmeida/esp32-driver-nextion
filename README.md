@@ -37,7 +37,7 @@ lib_deps =
     |-- nextion             : The driver
         |-- include         : Includes that can be used by dependent projects
         |-- private_include : Includes that only the driver can use
-        |-- test            : Tests! 💪
+        |-- test            : Tests
             |-- hmi         : Nextion display project used for testing
 |-- examples                : Some usage examples
 |-- main                    : Where debugging happens
@@ -68,6 +68,8 @@ For your sanity sake, power your display with a decent power source (5V +700 mA)
 2. Flash the test project: `ctrl+shif+p -> Task: Run Task -> Flash test`
 3. Monitor the test run: `ctrl+shif+p -> Task: Run Task -> Monitor test`
 
+You can do it in one command using `ctrl+shif+p -> Task: Run Task -> Build, flash and start a monitor for the test`
+
 ### With ESP-IDF
 
 All commands must be run on the test runner folder.
@@ -78,7 +80,7 @@ All commands must be run on the test runner folder.
 
 ## To Do
 
+* [ ] Documentation
 * [ ] Helper functions covering all methods
 * [ ] Macro helpers for command creation
-* [ ] Discover how to handle touch events with coordinates
 * [ ] Publish on PlatformIO

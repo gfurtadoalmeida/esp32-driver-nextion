@@ -3,6 +3,7 @@
 #include "driver/gpio.h"
 #include "freertos/queue.h"
 #include "unity.h"
+#include "unity_test_runner.h"
 #include "nextion.h"
 
 #ifdef __cplusplus
@@ -18,7 +19,7 @@ extern "C"
 
     static QueueHandle_t p_event_queue;
 
-    TEST_CASE("Can get text from a text component", "[nex-get-text]")
+    TEST_CASE("Can get text from a text component", "[command]")
     {
         INSTALL()
 
@@ -31,7 +32,7 @@ extern "C"
         TEST_ASSERT_EQUAL_STRING("test text", text);
     }
 
-    TEST_CASE("Can get a number from a number component", "[nex-get-number]")
+    TEST_CASE("Can get a number from a number component", "[command]")
     {
         INSTALL()
 

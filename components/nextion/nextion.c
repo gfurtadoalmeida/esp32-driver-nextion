@@ -39,8 +39,6 @@ extern "C"
     // Private methods declarations.
     int _send_command(const char *command, uint8_t **response_buffer);
     static void _uart_event_task(void *pvParameters);
-    int _find_message_length(const uint8_t *buffer, int buffer_length);
-    bool _assemble_event_object(uint8_t code, const uint8_t *buffer, int length, nextion_event_t *event);
 
     // Global variables.
     static nextion_driver_obj_t p_nextion_driver_obj;
@@ -114,26 +112,10 @@ extern "C"
 
     nex_err_t nextion_driver_init()
     {
-        // The logic relies on receiving responses in all
-        // cases, be it success or failure.
-        nex_err_t code = nextion_send_command("bkcmd=3");
-
-        if (!NEX_DVC_CODE_IS_SUCCESS(code))
+        // The logic relies on receiving responses in all cases.
+        if (!NEX_DVC_CODE_IS_SUCCESS(nextion_send_command("bkcmd=3")))
         {
             ESP_LOGE(NEXTION_TAG, "could not send 'bkcmd=3'");
-
-            return NEX_FAIL;
-        }
-
-        // Touch coordinate events are not supported.
-        // Reason: the device sends the message so fast
-        // that, sometimes 2 messages are sent as one.
-        // As it's not soo important, I'm cutting it out.
-        code = nextion_send_command("sendxy=0");
-
-        if (!NEX_DVC_CODE_IS_SUCCESS(code))
-        {
-            ESP_LOGE(NEXTION_TAG, "could not send 'sendxy=0'");
 
             return NEX_FAIL;
         }
@@ -299,7 +281,7 @@ extern "C"
         uart_event_t event;
         nextion_event_t nextion_event;
 
-        // Will hold 5 messages at most. In my testings the device sent only 2 ACK (4 bytes),
+        // Will hold 5 messages at most. During my tests the device sent only 2 ACK (4 bytes),
         // at the same time. This must not be a problem.
         const int buffer_length = 5 * CONFIG_NEX_RESP_MSG_MAX_LENGTH;
         uint8_t *buffer = (uint8_t *)malloc(buffer_length);
@@ -343,7 +325,7 @@ extern "C"
                         {
                             if (event_enabled)
                             {
-                                if (nextion_parse_assemble_event(code, buffer_adv, message_length, &nextion_event))
+                                if (nextion_parse_assemble_event(buffer_adv, message_length, &nextion_event))
                                 {
                                     if (xQueueSend(event_queue, &nextion_event, NEX_EVENT_QUEUE_WAIT_TIME) != pdTRUE)
                                     {

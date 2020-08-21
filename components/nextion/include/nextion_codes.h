@@ -8,6 +8,10 @@ extern "C"
 {
 #endif
 
+    /**
+     * @typedef nex_err_t
+     * @brief Base type for responses.
+     */
     typedef uint32_t nex_err_t;
 
     // All values below must have the same value as defined
@@ -21,10 +25,24 @@ extern "C"
     // NEX_DVC_EVT_         = Event sent by the device.
     // NEX_DVC_RSP_         = Instruction executed and returned data.
 
+/**
+ * Failure.
+ */
 #define NEX_FAIL 0x00U
+
+/**
+ * Success.
+ */
 #define NEX_OK 0x01U
 
+/**
+ * Verifiy if a code means success.
+ */
 #define NEX_DVC_CODE_IS_SUCCESS(code) (code == NEX_DVC_INSTRUCTION_OK)
+
+/**
+ * Verify if a code represents an event.
+ */
 #define NEX_DVC_CODE_IS_EVENT(code, length) ((code >= NEX_DVC_EVT_TOUCH_OCCURRED && code != NEX_DVC_RSP_SENDME_RESULT && code != NEX_DVC_RSP_GET_STRING && code != NEX_DVC_RSP_GET_NUMBER) || (code == NEX_DVC_EVT_HARDWARE_START_RESET && length == 6))
 
 /* ========================================
@@ -228,13 +246,13 @@ extern "C"
  * Device entered the sleep mode automatically.
  * Format: 0x86 0xFF 0xFF 0xFF
  */
-#define NEX_DVC_EVT_HARDWARE_SLEEP_AUTOMATIC 0x86U
+#define NEX_DVC_EVT_HARDWARE_AUTO_SLEEP 0x86U
 
 /**
  * Device left the sleep mode automatically.
  * Format: 0x87 0xFF 0xFF 0xFF
  */
-#define NEX_DVC_EVT_HARDWARE_WAKE_AUTOMATIC 0x87U
+#define NEX_DVC_EVT_HARDWARE_AUTO_WAKE 0x87U
 
 /**
  * Device has powered up and initilized successfully.

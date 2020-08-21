@@ -6,7 +6,14 @@ extern "C"
 {
 #endif
 
+/**
+ * Minimum baud rate accepted.
+ */
 #define NEX_SERIAL_BAUD_RATE_MIN 9600
+
+/**
+ * Maximum baud rate accepted.
+ */
 #define NEX_SERIAL_BAUD_RATE_MAX 921600
 
 /**

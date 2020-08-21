@@ -40,7 +40,8 @@
       "istream": "c",
       "*.ipp": "c",
       "task.h": "c",
-      "limits.h": "c"
+      "limits.h": "c",
+      "unity_test_runner.h": "c"
     },
     "idf.port": "/dev/ttyUSB1",
     "idf.portWin": "COM4",

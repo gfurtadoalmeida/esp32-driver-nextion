@@ -25,13 +25,12 @@ extern "C"
      *
      * @details The buffer must contain a complete message.
      *
-     * @param code Message code; the first byte of a message.
      * @param buffer Buffer containing a message.
      * @param length Buffer length.
      * @param[out] event Event assembled from a message.
      * @return True when success or false.
      */
-    bool nextion_parse_assemble_event(uint8_t code, const uint8_t *buffer, int length, nextion_event_t *event);
+    bool nextion_parse_assemble_event(const uint8_t *buffer, int length, nextion_event_t *event);
 
 #ifdef __cplusplus
 }
