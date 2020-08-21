@@ -10,6 +10,8 @@
 #include "nextion_config.h"
 #include "nextion_constants.h"
 #include "nextion_codes.h"
+#include "nextion_common.h"
+#include "nextion_buffer.h"
 #include "nextion.h"
 
 #ifdef __cplusplus
@@ -17,16 +19,8 @@ extern "C"
 {
 #endif
 
-#define NEX_UART_BUFFER_SIZE (CONFIG_NEX_UART_BUFFER_MULT * CONFIG_NEX_RESP_MSG_MAX_LENGTH)
 #define NEX_EVENT_QUEUE_WAIT_TIME (pdMS_TO_TICKS(CONFIG_NEX_EVENT_QUEUE_WAIT_TIME_MS))
 #define NEX_RESP_WAIT_TIME (pdMS_TO_TICKS(CONFIG_NEX_RESP_WAIT_TIME_MS))
-
-#define NEX_CHECK(a, str, ret_val)                                        \
-    if (!(a))                                                             \
-    {                                                                     \
-        ESP_LOGE(NEXTION_TAG, "%s(%d): %s", __FUNCTION__, __LINE__, str); \
-        return (ret_val);                                                 \
-    }
 
     typedef struct
     {
@@ -45,10 +39,10 @@ extern "C"
     // Private methods declarations.
     int _send_command(const char *command, uint8_t **response_buffer);
     static void _uart_event_task(void *pvParameters);
-    bool _get_event_object(uint8_t code, uint8_t *buffer, int length, nextion_event_t *event);
+    int _find_message_length(const uint8_t *buffer, int buffer_length);
+    bool _assemble_event_object(uint8_t code, const uint8_t *buffer, int length, nextion_event_t *event);
 
     // Global variables.
-    static const char *NEXTION_TAG = "nextion";
     static nextion_driver_obj_t p_nextion_driver_obj;
 
     nex_err_t nextion_driver_install(uart_port_t uart_num, int baud_rate, int tx_io_num, int rx_io_num, int queue_size, QueueHandle_t *event_queue)
@@ -74,7 +68,7 @@ extern "C"
         // will lead to error.
         ESP_ERROR_CHECK(uart_param_config(uart_num, &uart_config));
         ESP_ERROR_CHECK(uart_set_pin(uart_num, tx_io_num, rx_io_num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
-        ESP_ERROR_CHECK(uart_driver_install(uart_num, NEX_UART_BUFFER_SIZE, 0, CONFIG_NEX_UART_QUEUE_SIZE, &p_nextion_driver_obj.uart_queue, 0));
+        ESP_ERROR_CHECK(uart_driver_install(uart_num, CONFIG_NEX_UART_RECV_BUFFER_SIZE, 0, CONFIG_NEX_UART_QUEUE_SIZE, &p_nextion_driver_obj.uart_queue, 0));
 
         if (event_queue != NULL)
         {
@@ -304,67 +298,90 @@ extern "C"
 
         uart_event_t event;
         nextion_event_t nextion_event;
-        uint8_t *buffer = (uint8_t *)malloc(CONFIG_NEX_RESP_MSG_MAX_LENGTH);
+
+        // Will hold 5 messages at most. In my testings the device sent only 2 ACK (4 bytes),
+        // at the same time. This must not be a problem.
+        const int buffer_length = 5 * CONFIG_NEX_RESP_MSG_MAX_LENGTH;
+        uint8_t *buffer = (uint8_t *)malloc(buffer_length);
+
+        int buffer_pos = 0;
 
         for (;;)
         {
+            bzero(buffer, CONFIG_NEX_RESP_MSG_MAX_LENGTH);
+
             if (xQueueReceive(uart_queue, (void *)&event, (portTickType)portMAX_DELAY))
             {
-                bzero(buffer, CONFIG_NEX_RESP_MSG_MAX_LENGTH);
-
                 switch (event.type)
                 {
                 case UART_DATA:
-                    if (uart_read_bytes(uart_num, buffer, event.size, portMAX_DELAY) >= NEX_DVC_CMD_ACK_LENGTH)
-                    {
-                        int length = event.size;
-                        uint8_t code = buffer[0];
+                {
+                    int space_remaining = buffer_length - buffer_pos;
 
-                        // Is it well-formed; has the endings?
-                        if ((buffer[length - 1] == NEX_DVC_CMD_END_VALUE && buffer[length - 2] == NEX_DVC_CMD_END_VALUE && buffer[length - 3] == NEX_DVC_CMD_END_VALUE))
+                    // The buffer will act like a circular one.
+                    // If we can't fill it, just zero and start from beggining.
+                    if (event.size > space_remaining)
+                    {
+                        buffer_pos = 0;
+                        space_remaining = buffer_length;
+
+                        bzero(buffer, CONFIG_NEX_RESP_MSG_MAX_LENGTH);
+                    }
+
+                    // From here below this is the only way to access the buffer.
+                    uint8_t *buffer_adv = buffer + buffer_pos;
+
+                    uart_read_bytes(uart_num, buffer_adv, event.size, portMAX_DELAY);
+
+                    int message_length = nextion_buffer_find_message_length(buffer_adv, space_remaining);
+
+                    if (message_length > -1)
+                    {
+                        uint8_t code = buffer_adv[0];
+
+                        if (NEX_DVC_CODE_IS_EVENT(code, message_length))
                         {
-                            if (NEX_DVC_CODE_IS_EVENT(code, length))
+                            if (event_enabled)
                             {
-                                if (event_enabled)
+                                if (nextion_buffer_assemble_event(code, buffer_adv, message_length, &nextion_event))
                                 {
-                                    if (_get_event_object(code, buffer, length, &nextion_event))
+                                    if (xQueueSend(event_queue, &nextion_event, NEX_EVENT_QUEUE_WAIT_TIME) != pdTRUE)
                                     {
-                                        if (xQueueSend(event_queue, &nextion_event, NEX_EVENT_QUEUE_WAIT_TIME) != pdTRUE)
-                                        {
-                                            ESP_LOGW(NEXTION_TAG, "could not send event object to queue");
-                                        }
-                                    }
-                                    else
-                                    {
-                                        ESP_LOGE(NEXTION_TAG, "could not get event object");
+                                        ESP_LOGW(NEXTION_TAG, "could not send event to queue");
                                     }
                                 }
-                            }
-                            else
-                            {
-                                memcpy(p_nextion_driver_obj.command_response, buffer, length);
-
-                                p_nextion_driver_obj.command_response_length = length;
-
-                                xTaskNotifyGive(p_nextion_driver_obj.command_task);
+                                else
+                                {
+                                    ESP_LOGE(NEXTION_TAG, "could not assemble event");
+                                }
                             }
                         }
                         else
                         {
-                            p_nextion_driver_obj.command_response_length = -1;
+                            memcpy(p_nextion_driver_obj.command_response, buffer_adv, message_length);
 
-                            // In case of error, free the task.
-                            // We don't know if it's blocked or not, so just free it.
+                            p_nextion_driver_obj.command_response_length = message_length;
+
                             xTaskNotifyGive(p_nextion_driver_obj.command_task);
-
-                            ESP_LOGW(NEXTION_TAG, "message size error(no endings)");
                         }
+
+                        buffer_pos += message_length;
                     }
-                    else
+                    else if (space_remaining < NEX_DVC_CMD_ACK_LENGTH)
                     {
-                        ESP_LOGW(NEXTION_TAG, "message size error(<NEX_DVC_SERIAL_ACK_LENGTH)");
+                        // If it haven't found a message and cannot fill a whole ACK,
+                        // give up, zero the buffer and release the task.
+                        // It means the buffer was not big enough or there is a bug anywhere.
+
+                        p_nextion_driver_obj.command_response_length = -1;
+                        buffer_pos = 0;
+
+                        bzero(buffer, CONFIG_NEX_RESP_MSG_MAX_LENGTH);
+
+                        xTaskNotifyGive(p_nextion_driver_obj.command_task);
                     }
-                    break;
+                }
+                break;
 
                 case UART_FIFO_OVF:
                     ESP_LOGW(NEXTION_TAG, "hw fifo overflow, might need flow control");
@@ -398,94 +415,6 @@ extern "C"
         free(buffer);
         buffer = NULL;
         vTaskDelete(NULL);
-    }
-
-    bool _get_event_object(uint8_t code, uint8_t *buffer, int length, nextion_event_t *event)
-    {
-        NEX_CHECK((buffer != NULL), "buffer error(NULL)", false);
-        NEX_CHECK((length >= NEX_DVC_CMD_ACK_LENGTH), "length error(<NEX_DVC_SERIAL_ACK_LENGTH>)", false);
-        NEX_CHECK((event != NULL), "event error(NULL)", false);
-
-        bool is_ok = true;
-
-        switch (code)
-        {
-        case NEX_DVC_EVT_HARDWARE_START_RESET:
-            event->type = NEXTION_EVENT_DEVICE;
-            event->device_state = NEXTION_DEVICE_STARTED;
-            break;
-
-        case NEX_DVC_EVT_TOUCH_OCCURRED:
-            if (length == 7)
-            {
-                event->type = NEXTION_EVENT_TOUCH;
-                event->touch.page_id = buffer[1];
-                event->touch.component_id = buffer[2];
-
-                if (buffer[3] == 1U)
-                {
-                    event->touch.state = NEXTION_TOUCH_PRESSED;
-                }
-                else
-                {
-                    event->touch.state = NEXTION_TOUCH_RELEASED;
-                }
-            }
-            else
-            {
-                is_ok = false;
-
-                ESP_LOGW(NEXTION_TAG, "touch event with invalid length (%d<7)", length);
-            }
-
-            break;
-
-        case NEX_DVC_EVT_TOUCH_COORDINATE_AWAKE:
-        case NEX_DVC_EVT_TOUCH_COORDINATE_ASLEEP:
-        {
-            is_ok = false;
-
-            ESP_LOGE(NEXTION_TAG, "touch coord event is not supported");
-        }
-        break;
-
-        case NEX_DVC_EVT_HARDWARE_SLEEP_AUTOMATIC:
-            event->type = NEXTION_EVENT_DEVICE;
-            event->device_state = NEXTION_DEVICE_AUTO_SLEEP;
-            break;
-
-        case NEX_DVC_EVT_HARDWARE_WAKE_AUTOMATIC:
-            event->type = NEXTION_EVENT_DEVICE;
-            event->device_state = NEXTION_DEVICE_AUTO_WAKE;
-            break;
-
-        case NEX_DVC_EVT_HARDWARE_READY:
-            event->type = NEXTION_EVENT_DEVICE;
-            event->device_state = NEXTION_DEVICE_READY;
-            break;
-
-        case NEX_DVC_EVT_HARDWARE_UPGRADE:
-            event->type = NEXTION_EVENT_DEVICE;
-            event->device_state = NEXTION_DEVICE_UPGRADING;
-            break;
-
-        case NEX_DVC_EVT_TRANSPARENT_DATA_FINISHED:
-            event->type = NEXTION_EVENT_DEVICE;
-            event->device_state = NEXTION_DEVICE_TRANSP_DATA_FINISHED;
-            break;
-
-        case NEX_DVC_EVT_TRANSPARENT_DATA_READY:
-            event->type = NEXTION_EVENT_DEVICE;
-            event->device_state = NEXTION_DEVICE_TRANSP_DATA_READY;
-            break;
-
-        default:
-            ESP_LOGW(NEXTION_TAG, "event with unknown code %u", code);
-
-            is_ok = false;
-        }
-
-        return is_ok;
     }
 
 #ifdef __cplusplus

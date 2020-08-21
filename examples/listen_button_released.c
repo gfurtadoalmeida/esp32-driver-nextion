@@ -28,7 +28,7 @@ void app_main(void)
         return;
     }
 
-    nex_err_t code = nextion_send_command("page 7");
+    nex_err_t code = nextion_send_command("page 0");
 
     if (NEX_DVC_CODE_IS_SUCCESS(code))
     {
@@ -36,27 +36,26 @@ void app_main(void)
 
         while (1)
         {
-            xQueueReceive(p_event_queue, &event, pdMS_TO_TICKS(100));
-
-            // Was my button (with id 4) released?
-            if (event.type == NEXTION_EVENT_TOUCH && event.touch.state == NEXTION_TOUCH_RELEASED && event.touch.component_id == 4)
+            while (xQueueReceive(p_event_queue, &event, pdMS_TO_TICKS(100)) == pdTRUE)
             {
-                char city[50];
-                int temperature;
+                // Was my button (with id 4) released?
+                if (event.type == NEXTION_EVENT_TOUCH && event.touch.state == NEXTION_TOUCH_RELEASED)
+                {
+                    char city[50];
+                    int temperature;
 
-                // Get the city name.
-                nextion_get_text("get t0.txt", city);
+                    // Get the city name.
+                    nextion_get_text("get t0.txt", city);
 
-                // Get the temperature.
-                nextion_get_number("get n0.val", &temperature);
+                    // Get the temperature.
+                    nextion_get_number("get n0.val", &temperature);
 
-                ESP_LOGI(TAG, "City: %s", city);
-                ESP_LOGI(TAG, "Temperature: %d", temperature);
-
-                break;
+                    ESP_LOGI(TAG, "City: %s", city);
+                    ESP_LOGI(TAG, "Temperature: %d", temperature);
+                }
             }
 
-            vTaskDelay(pdMS_TO_TICKS(1000));
+            vTaskDelay(pdMS_TO_TICKS(2000));
         }
     }
 

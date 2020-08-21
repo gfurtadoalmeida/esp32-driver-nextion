@@ -18,7 +18,7 @@ extern "C"
 
     static QueueHandle_t p_event_queue;
 
-    TEST_CASE("Can get text from a text component", "[get-text]")
+    TEST_CASE("Can get text from a text component", "[nex-get-text]")
     {
         INSTALL()
 
@@ -31,7 +31,7 @@ extern "C"
         TEST_ASSERT_EQUAL_STRING("test text", text);
     }
 
-    TEST_CASE("Can get a number from a number component", "[get-number]")
+    TEST_CASE("Can get a number from a number component", "[nex-get-number]")
     {
         INSTALL()
 

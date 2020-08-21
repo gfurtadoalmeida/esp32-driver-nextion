@@ -67,7 +67,13 @@ extern "C"
  * Character used to separate the params from the command.
  * e.g.: addt 1,0,320ÿÿÿ
  */
-#define NEX_DVC_CMD_PARAMS_SEPARATOR ' '
+#define NEX_DVC_CMD_PARAMS_DIVISOR ' '
+
+/**
+ * Character used to separate params from other params.
+ * e.g.: wept 1,0,320ÿÿÿ
+ */
+#define NEX_DVC_CMD_PARAMS_SEPARATOR ','
 
 /**
  * The max size, in bytes, that can be sent using the
