@@ -11,7 +11,7 @@
 #include "nextion_constants.h"
 #include "nextion_codes.h"
 #include "nextion_common.h"
-#include "nextion_buffer.h"
+#include "nextion_parse.h"
 #include "nextion.h"
 
 #ifdef __cplusplus
@@ -333,7 +333,7 @@ extern "C"
 
                     uart_read_bytes(uart_num, buffer_adv, event.size, portMAX_DELAY);
 
-                    int message_length = nextion_buffer_find_message_length(buffer_adv, space_remaining);
+                    int message_length = nextion_parse_find_message_length(buffer_adv, space_remaining);
 
                     if (message_length > -1)
                     {
@@ -343,7 +343,7 @@ extern "C"
                         {
                             if (event_enabled)
                             {
-                                if (nextion_buffer_assemble_event(code, buffer_adv, message_length, &nextion_event))
+                                if (nextion_parse_assemble_event(code, buffer_adv, message_length, &nextion_event))
                                 {
                                     if (xQueueSend(event_queue, &nextion_event, NEX_EVENT_QUEUE_WAIT_TIME) != pdTRUE)
                                     {

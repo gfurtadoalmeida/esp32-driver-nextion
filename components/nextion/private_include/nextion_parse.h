@@ -1,5 +1,5 @@
-#ifndef __NEXTION_BUFFER_H__
-#define __NEXTION_BUFFER_H__
+#ifndef __NEXTION_PARSE_H__
+#define __NEXTION_PARSE_H__
 
 #include <stdint.h>
 #include "nextion_types.h"
@@ -18,7 +18,7 @@ extern "C"
      * @param length Buffer length.
      * @return -1 if not found, otherwise the message length.
      */
-    int nextion_buffer_find_message_length(const uint8_t *buffer, int length);
+    int nextion_parse_find_message_length(const uint8_t *buffer, int length);
 
     /**
      * @brief Assembles a event from a buffer.
@@ -31,10 +31,10 @@ extern "C"
      * @param[out] event Event assembled from a message.
      * @return True when success or false.
      */
-    bool nextion_buffer_assemble_event(uint8_t code, const uint8_t *buffer, int length, nextion_event_t *event);
+    bool nextion_parse_assemble_event(uint8_t code, const uint8_t *buffer, int length, nextion_event_t *event);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif //__NEXTION_BUFFER_H__
+#endif //__NEXTION_PARSE_H__

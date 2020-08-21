@@ -1,17 +1,17 @@
-#ifndef __NEXTION_BUFFER_C__
-#define __NEXTION_BUFFER_C__
+#ifndef __NEXTION_PARSE_C__
+#define __NEXTION_PARSE_C__
 
 #include "nextion_constants.h"
 #include "nextion_codes.h"
 #include "nextion_common.h"
-#include "nextion_buffer.h"
+#include "nextion_parse.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-    int nextion_buffer_find_message_length(const uint8_t *buffer, int length)
+    int nextion_parse_find_message_length(const uint8_t *buffer, int length)
     {
         NEX_CHECK((buffer != NULL), "buffer error(NULL)", -1);
 
@@ -37,7 +37,7 @@ extern "C"
         return -1;
     }
 
-    bool nextion_buffer_assemble_event(uint8_t code, const uint8_t *buffer, int length, nextion_event_t *event)
+    bool nextion_parse_assemble_event(uint8_t code, const uint8_t *buffer, int length, nextion_event_t *event)
     {
         NEX_CHECK((buffer != NULL), "buffer error(NULL)", false);
         NEX_CHECK((length >= NEX_DVC_CMD_ACK_LENGTH), "length error(<NEX_DVC_SERIAL_ACK_LENGTH>)", false);
@@ -129,4 +129,4 @@ extern "C"
 }
 #endif
 
-#endif //__NEXTION_BUFFER_C__
+#endif //__NEXTION_PARSE_C__

@@ -31,7 +31,7 @@ extern "C"
 /**
  * UART receiver buffer size.
  */
-#define CONFIG_NEX_UART_RECV_BUFFER_SIZE 5
+#define CONFIG_NEX_UART_RECV_BUFFER_SIZE 256
 #endif
 
 #ifndef CONFIG_NEX_UART_QUEUE_SIZE

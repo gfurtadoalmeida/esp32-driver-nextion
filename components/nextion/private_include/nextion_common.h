@@ -20,6 +20,9 @@ extern "C"
  * @param condition Condition to evaluate.
  * @param message Message to be written if the condition fails.
  * @param return_value Value to be returned if the condition fails.
+ *
+ * @return If the condition fails the method will return what was passed on
+ * "return_value" parameter, otherwise the method will continue.
  */
 #define NEX_CHECK(condition, message, return_value)                           \
     if (!(condition))                                                         \

@@ -1,6 +1,6 @@
 #include "unity.h"
 #include "nextion_constants.h"
-#include "nextion_buffer.h"
+#include "nextion_parse.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -11,7 +11,7 @@ extern "C"
     {
         const uint8_t buffer[8] = {0x01, NEX_DVC_CMD_END_VALUE, 0x01, NEX_DVC_CMD_END_VALUE, NEX_DVC_CMD_END_VALUE, NEX_DVC_CMD_END_VALUE, 0x05, 0x05};
 
-        int length = nextion_buffer_find_message_length(buffer, 8);
+        int length = nextion_parse_find_message_length(buffer, 8);
 
         TEST_ASSERT_EQUAL_INT(6, length);
     }
