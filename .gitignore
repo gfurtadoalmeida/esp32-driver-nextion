@@ -4,6 +4,7 @@
 # The code there is not important and must not
 # be versioned.
 main/
+main/main.c
 
 # ESP-IDF project files
 build/

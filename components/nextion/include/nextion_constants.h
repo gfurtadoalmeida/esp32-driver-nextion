@@ -45,7 +45,7 @@ extern "C"
 #define NEX_DVC_CMD_ACK_LENGTH (NEX_DVC_CMD_START_LENGTH + NEX_DVC_CMD_END_LENGTH)
 
 /**
- * The maximum number of bytes a event can return.
+ * The maximum number of bytes a non-text event can return.
  */
 #define NEX_DVC_EVT_MAX_RESPONSE_LENGTH 9
 

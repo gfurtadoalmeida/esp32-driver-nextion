@@ -11,7 +11,7 @@ menu "Nextion Display"
 
     config NEX_RESP_MSG_MAX_LENGTH
         int "Max response message size"
-        range 4 512
+        range 36 512
         default 140
         help
             The maximum size of a response message.

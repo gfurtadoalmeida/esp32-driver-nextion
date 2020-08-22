@@ -1,8 +1,8 @@
 #ifndef __NEXTION_PARSE_H__
 #define __NEXTION_PARSE_H__
 
-#include <stdint.h>
 #include "nextion_types.h"
+#include "ringbuffer.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -12,25 +12,25 @@ extern "C"
     /**
      * @brief Verifies if a buffer contains a complete message.
      *
-     * @details Search from index 0 to length-1.
+     * @details Search from index 0 to length-1 and does not modifies the
+     * ring buffer read position.
      *
-     * @param buffer Buffer to search on.
-     * @param length Buffer length.
+     * @param ring_buffer Ring buffer to search on.
      * @return -1 if not found, otherwise the message length.
      */
-    int nextion_parse_find_message_length(const uint8_t *buffer, int length);
+    int nextion_parse_find_message_length(const ringbuffer_handle_t ring_buffer);
 
     /**
      * @brief Assembles a event from a buffer.
      *
-     * @details The buffer must contain a complete message.
+     * @details It will advance the ring buffer read position.
      *
-     * @param buffer Buffer containing a message.
-     * @param length Buffer length.
+     * @param ring_buffer Ring buffer containing a message.
+     * @param message_length Length of the message containing the event.
      * @param[out] event Event assembled from a message.
      * @return True when success or false.
      */
-    bool nextion_parse_assemble_event(const uint8_t *buffer, int length, nextion_event_t *event);
+    bool nextion_parse_assemble_event(const ringbuffer_handle_t ring_buffer, int message_length, nextion_event_t *event);
 
 #ifdef __cplusplus
 }

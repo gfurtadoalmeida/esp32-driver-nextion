@@ -3,7 +3,7 @@
 
 // When building using VSCode tooling, the necessary
 // variables are not injected in build time.
-//#include "../../../build/config/sdkconfig.h"
+#include "../../../build/config/sdkconfig.h"
 
 #include <string.h>
 #include "esp_log.h"
@@ -13,6 +13,7 @@
 #include "nextion_common.h"
 #include "nextion_parse.h"
 #include "nextion.h"
+#include "ringbuffer.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -281,51 +282,52 @@ extern "C"
         uart_event_t event;
         nextion_event_t nextion_event;
 
-        // Will hold 5 messages at most. During my tests the device sent only 2 ACK (4 bytes),
-        // at the same time. This must not be a problem.
-        const int buffer_length = 5 * CONFIG_NEX_RESP_MSG_MAX_LENGTH;
-        uint8_t *buffer = (uint8_t *)malloc(buffer_length);
-
-        int buffer_pos = 0;
+        // Will hold 3 "messages max length" at most. During my tests the
+        // device sent only 2 ACK (4 bytes), at the same time. This must not be a problem.
+        ringbuffer_handle_t ring_buffer = ringbuffer_create(3 * CONFIG_NEX_RESP_MSG_MAX_LENGTH);
+        uint8_t staging[CONFIG_NEX_RESP_MSG_MAX_LENGTH];
+        int peek_holder = 0;
 
         for (;;)
         {
-            bzero(buffer, CONFIG_NEX_RESP_MSG_MAX_LENGTH);
-
             if (xQueueReceive(uart_queue, (void *)&event, (portTickType)portMAX_DELAY))
             {
                 switch (event.type)
                 {
                 case UART_DATA:
                 {
-                    int space_remaining = buffer_length - buffer_pos;
+                    uart_read_bytes(uart_num, staging, event.size, portMAX_DELAY);
 
-                    // The buffer will act like a circular one.
-                    // If we can't fill it, just zero and start from beggining.
-                    if (event.size > space_remaining)
+                    // If it can't write, free the task and flush everything.
+                    // Something is very wrong.
+                    if (!ringbuffer_write_bytes(ring_buffer, staging, event.size))
                     {
-                        buffer_pos = 0;
-                        space_remaining = buffer_length;
+                        ESP_LOGE(NEXTION_TAG, "could not write to ring buffer");
 
-                        bzero(buffer, CONFIG_NEX_RESP_MSG_MAX_LENGTH);
+                        uart_flush_input(uart_num);
+
+                        p_nextion_driver_obj.command_response_length = -1;
+
+                        xTaskNotifyGive(p_nextion_driver_obj.command_task);
+
+                        break;
                     }
 
-                    // From here below this is the only way to access the buffer.
-                    uint8_t *buffer_adv = buffer + buffer_pos;
+                    int message_length = nextion_parse_find_message_length(ring_buffer);
 
-                    uart_read_bytes(uart_num, buffer_adv, event.size, portMAX_DELAY);
-
-                    int message_length = nextion_parse_find_message_length(buffer_adv, space_remaining);
-
-                    if (message_length > -1)
+                    while (message_length > -1)
                     {
-                        uint8_t code = buffer_adv[0];
+                        uint8_t code = 0;
+
+                        ringbuffer_peek(ring_buffer, &peek_holder, &code);
+
+                        peek_holder = 0;
 
                         if (NEX_DVC_CODE_IS_EVENT(code, message_length))
                         {
                             if (event_enabled)
                             {
-                                if (nextion_parse_assemble_event(buffer_adv, message_length, &nextion_event))
+                                if (nextion_parse_assemble_event(ring_buffer, message_length, &nextion_event))
                                 {
                                     if (xQueueSend(event_queue, &nextion_event, NEX_EVENT_QUEUE_WAIT_TIME) != pdTRUE)
                                     {
@@ -340,27 +342,14 @@ extern "C"
                         }
                         else
                         {
-                            memcpy(p_nextion_driver_obj.command_response, buffer_adv, message_length);
+                            ringbuffer_read_bytes(ring_buffer, p_nextion_driver_obj.command_response, message_length);
 
                             p_nextion_driver_obj.command_response_length = message_length;
 
                             xTaskNotifyGive(p_nextion_driver_obj.command_task);
                         }
 
-                        buffer_pos += message_length;
-                    }
-                    else if (space_remaining < NEX_DVC_CMD_ACK_LENGTH)
-                    {
-                        // If it haven't found a message and cannot fill a whole ACK,
-                        // give up, zero the buffer and release the task.
-                        // It means the buffer was not big enough or there is a bug anywhere.
-
-                        p_nextion_driver_obj.command_response_length = -1;
-                        buffer_pos = 0;
-
-                        bzero(buffer, CONFIG_NEX_RESP_MSG_MAX_LENGTH);
-
-                        xTaskNotifyGive(p_nextion_driver_obj.command_task);
+                        message_length = nextion_parse_find_message_length(ring_buffer);
                     }
                 }
                 break;
@@ -394,8 +383,8 @@ extern "C"
             }
         }
 
-        free(buffer);
-        buffer = NULL;
+        ringbuffer_free(ring_buffer);
+        ring_buffer = NULL;
         vTaskDelete(NULL);
     }
 

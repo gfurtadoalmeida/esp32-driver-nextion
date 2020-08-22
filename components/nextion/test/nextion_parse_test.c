@@ -3,13 +3,18 @@
 #include "nextion_constants.h"
 #include "nextion_codes.h"
 #include "nextion_parse.h"
+#include "ringbuffer.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#define TEST_ASSERT_EVENT_ASSEMBLE(buffer, buffer_length, event) TEST_ASSERT_TRUE(nextion_parse_assemble_event(buffer, buffer_length, &event));
+#define TEST_ASSERT_EVENT_ASSEMBLE(buffer, message_length, event)                        \
+    ringbuffer_handle_t ring_buffer = ringbuffer_create(message_length);                 \
+    ringbuffer_write_bytes(ring_buffer, buffer, message_length);                         \
+    TEST_ASSERT_TRUE(nextion_parse_assemble_event(ring_buffer, message_length, &event)); \
+    ringbuffer_free(ring_buffer);
 
 #define TEST_ASSERT_EVENT_ASSEMBLE_DEVICE_STATE(event_code, expected_device_state)                               \
     nextion_event_t event;                                                                                       \
@@ -21,8 +26,13 @@ extern "C"
     TEST_CASE("Can find a message in a buffer", "[parse][msg]")
     {
         const uint8_t buffer[8] = {0x01, NEX_DVC_CMD_END_VALUE, 0x01, NEX_DVC_CMD_END_VALUE, NEX_DVC_CMD_END_VALUE, NEX_DVC_CMD_END_VALUE, 0x05, 0x05};
+        ringbuffer_handle_t ring_buffer = ringbuffer_create(8);
 
-        int length = nextion_parse_find_message_length(buffer, 8);
+        ringbuffer_write_bytes(ring_buffer, buffer, 8);
+
+        int length = nextion_parse_find_message_length(ring_buffer);
+
+        ringbuffer_free(ring_buffer);
 
         TEST_ASSERT_EQUAL_INT(6, length);
     }
@@ -98,6 +108,19 @@ extern "C"
     TEST_CASE("Can assembly NEXTION_DEVICE_TRANSP_DATA_READY", "[parse][event]")
     {
         TEST_ASSERT_EVENT_ASSEMBLE_DEVICE_STATE(NEX_DVC_EVT_TRANSPARENT_DATA_READY, NEXTION_DEVICE_TRANSP_DATA_READY);
+    }
+
+    TEST_CASE("Cannot assembly a unknow event", "[parse][event]")
+    {
+        ringbuffer_handle_t ring_buffer = ringbuffer_create(4);
+        const uint8_t buffer[4] = {UINT8_MAX, NEX_DVC_CMD_END_VALUE, NEX_DVC_CMD_END_VALUE, NEX_DVC_CMD_END_VALUE};
+        nextion_event_t event;
+
+        ringbuffer_write_bytes(ring_buffer, buffer, 4);
+
+        TEST_ASSERT_FALSE(nextion_parse_assemble_event(ring_buffer, 4, &event));
+
+        ringbuffer_free(ring_buffer);
     }
 
 #ifdef __cplusplus

@@ -11,21 +11,23 @@ extern "C"
 {
 #endif
 
-    int nextion_parse_find_message_length(const uint8_t *buffer, int length)
+    int nextion_parse_find_message_length(const ringbuffer_handle_t ring_buffer)
     {
-        NEX_CHECK((buffer != NULL), "buffer error(NULL)", -1);
+        NEX_CHECK((ring_buffer != NULL), "ring_buffer error(NULL)", -1);
 
         int end_count = 0;
+        int holder = 0;
+        uint8_t value = 0;
 
-        for (int i = 0; i < length; i++)
+        while (ringbuffer_peek(ring_buffer, &holder, &value))
         {
-            if (buffer[i] == NEX_DVC_CMD_END_VALUE)
+            if (value == NEX_DVC_CMD_END_VALUE)
             {
                 end_count++;
 
                 if (end_count == NEX_DVC_CMD_END_LENGTH)
                 {
-                    return i + 1;
+                    return holder;
                 }
 
                 continue;
@@ -37,11 +39,20 @@ extern "C"
         return -1;
     }
 
-    bool nextion_parse_assemble_event(const uint8_t *buffer, int length, nextion_event_t *event)
+    bool nextion_parse_assemble_event(const ringbuffer_handle_t ring_buffer, const int message_length, nextion_event_t *event)
     {
-        NEX_CHECK((buffer != NULL), "buffer error(NULL)", false);
-        NEX_CHECK((length >= NEX_DVC_CMD_ACK_LENGTH), "length error(<NEX_DVC_CMD_ACK_LENGTH)", false);
+        NEX_CHECK((ring_buffer != NULL), "ring_buffer error(NULL)", false);
+        NEX_CHECK((message_length >= NEX_DVC_CMD_ACK_LENGTH), "message_length error(<NEX_DVC_CMD_ACK_LENGTH)", false);
         NEX_CHECK((event != NULL), "event error(NULL)", false);
+
+        uint8_t buffer[NEX_DVC_EVT_MAX_RESPONSE_LENGTH];
+
+        if (!ringbuffer_read_bytes(ring_buffer, buffer, message_length))
+        {
+            ESP_LOGE(NEXTION_TAG, "could not read from ring buffer");
+
+            return false;
+        }
 
         const uint8_t code = buffer[0];
         bool is_ok = true;
@@ -54,7 +65,7 @@ extern "C"
             break;
 
         case NEX_DVC_EVT_TOUCH_OCCURRED:
-            if (length == 7)
+            if (message_length == 7)
             {
                 event->type = NEXTION_EVENT_TOUCH;
                 event->touch.page_id = buffer[1];
@@ -73,13 +84,13 @@ extern "C"
             {
                 is_ok = false;
 
-                ESP_LOGW(NEXTION_TAG, "touch event length error(%d<>7)", length);
+                ESP_LOGW(NEXTION_TAG, "touch event length error(%d<>7)", message_length);
             }
             break;
 
         case NEX_DVC_EVT_TOUCH_COORDINATE_AWAKE:
         case NEX_DVC_EVT_TOUCH_COORDINATE_ASLEEP:
-            if (length == 9)
+            if (message_length == 9)
             {
                 event->type = NEXTION_EVENT_TOUCH_COORD;
                 event->touch_coord.x = ((uint16_t)buffer[1] << 8) | (uint16_t)buffer[2];
@@ -99,7 +110,7 @@ extern "C"
             {
                 is_ok = false;
 
-                ESP_LOGW(NEXTION_TAG, "touch coord length error(%d<>9)", length);
+                ESP_LOGW(NEXTION_TAG, "touch coord length error(%d<>9)", message_length);
             }
             break;
 

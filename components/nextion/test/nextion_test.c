@@ -11,13 +11,13 @@ extern "C"
 {
 #endif
 
+    static QueueHandle_t p_event_queue;
+
 #define INSTALL()                                                                          \
     nextion_driver_install(UART_NUM_2, 9600, GPIO_NUM_17, GPIO_NUM_16, 5, &p_event_queue); \
     nextion_driver_init();
 
 #define DELETE() nextion_driver_delete();
-
-    static QueueHandle_t p_event_queue;
 
     TEST_CASE("Can get text from a text component", "[command]")
     {
