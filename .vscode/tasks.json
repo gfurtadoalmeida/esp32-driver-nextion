@@ -248,7 +248,7 @@
             }
         },
         {
-            "label": "Build Test",
+            "label": "Build test",
             "type": "shell",
             "command": "${config:idf.pythonBinPath} ${config:idf.espIdfPath}/tools/idf.py build",
             "windows": {
@@ -395,7 +395,7 @@
             }
         },
         {
-            "label": "Build, flash and start a monitor for the test",
+            "label": "Build, flash and start a monitor for the tests",
             "type": "shell",
             "command": "${config:idf.pythonBinPath} ${config:idf.espIdfPath}/tools/idf.py monitor -p ${config:idf.port}",
             "windows": {

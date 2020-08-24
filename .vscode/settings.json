@@ -56,7 +56,9 @@
       "optional": "c",
       "system_error": "c",
       "type_traits": "c",
-      "xtr1common": "c"
+      "xtr1common": "c",
+      "malloc.h": "c",
+      "cstdlib": "c"
     },
     "idf.port": "/dev/ttyUSB1",
     "idf.portWin": "COM4",

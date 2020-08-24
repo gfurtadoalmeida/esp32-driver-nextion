@@ -110,7 +110,7 @@ extern "C"
         TEST_ASSERT_EVENT_ASSEMBLE_DEVICE_STATE(NEX_DVC_EVT_TRANSPARENT_DATA_READY, NEXTION_DEVICE_TRANSP_DATA_READY);
     }
 
-    TEST_CASE("Cannot assembly a unknow event", "[parse][event]")
+    TEST_CASE("Cannot assembly a unknown event", "[parse][event]")
     {
         ringbuffer_handle_t ring_buffer = ringbuffer_create(4);
         const uint8_t buffer[4] = {UINT8_MAX, NEX_DVC_CMD_END_VALUE, NEX_DVC_CMD_END_VALUE, NEX_DVC_CMD_END_VALUE};

@@ -1,5 +1,5 @@
-#ifndef __NEXTION_CONFIG__
-#define __NEXTION_CONFIG__
+#ifndef __NEXTION_CONFIG_H__
+#define __NEXTION_CONFIG_H__
 
 #ifdef __cplusplus
 extern "C"
@@ -45,4 +45,4 @@ extern "C"
 }
 #endif
 
-#endif //__NEXTION_C__
+#endif //__NEXTION_CONFIG_H__

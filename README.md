@@ -15,19 +15,9 @@ Everything is based on Nextion [instruction set](https://nextion.tech/instructio
 
 ### Using ESP-IDF
 
-1. Clone or download this repository and copy the folder ["components/nextion"](/components/nextion/) to the components folder of your ESP-IDF project.
+1. Clone this repository using `git clone --recursive` and copy the folder ["components/nextion"](/components/nextion/) to the components folder of your ESP-IDF project.
 2. Configure it in `menuconfig -> Component config -> Nextion Display` _(optional)_.
 3. Include `nextion.h` in your code.
-
-### Using PlatformIO _(pending)_ ⚠️
-
-On the `env` section of `platformio.ini`, add the following:
-
-```ini
-[env]
-lib_deps =
-  esp32-nextion
-```
 
 ## Project Structure
 
@@ -68,7 +58,7 @@ For your sanity sake, power your display with a decent power source (5V +700 mA)
 2. Flash the test project: `ctrl+shif+p -> Task: Run Task -> Flash test`
 3. Monitor the test run: `ctrl+shif+p -> Task: Run Task -> Monitor test`
 
-You can do it in one command using `ctrl+shif+p -> Task: Run Task -> Build, flash and start a monitor for the test`
+You can do it in one command using `ctrl+shif+p -> Task: Run Task -> Build, flash and start a monitor for the tests`
 
 ### With ESP-IDF
 
