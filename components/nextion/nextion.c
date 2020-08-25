@@ -1,6 +1,3 @@
-#ifndef __NEXTION_C__
-#define __NEXTION_C__
-
 // When building using VSCode tooling, the necessary
 // variables are not injected in build time.
 #include "../../../build/config/sdkconfig.h"
@@ -30,7 +27,7 @@ extern "C"
         TaskHandle_t uart_task;          // UART task to process the "uart_queue" messages.
         SemaphoreHandle_t command_mutex; // Mutex to synchronize UART operations.
         TaskHandle_t command_task;       // Task handle used for task notification between "_send_command" and "uart_task".
-        uint8_t *command_response;       // Buffer for the last command response data. Not user for events.
+        uint8_t *command_response;       // Buffer for the last command response data. Not used for events.
         int command_response_length;     // Size, in bytes, of the last command response data.
         QueueHandle_t event_queue;       // Event queue where device events will be sent.
         bool event_enabled;              // If it can send events.
@@ -71,7 +68,7 @@ extern "C"
 
         if (event_queue != NULL)
         {
-            QueueHandle_t queue_handle = xQueueCreate(queue_size, sizeof(nextion_event_t));
+            const QueueHandle_t queue_handle = xQueueCreate(queue_size, sizeof(nextion_event_t));
 
             if (queue_handle == 0)
             {
@@ -113,7 +110,7 @@ extern "C"
 
     nex_err_t nextion_driver_init()
     {
-        // The logic relies on receiving responses in all cases.
+        // This driver's logics relies on receiving responses in all cases.
         if (!NEX_DVC_CODE_IS_SUCCESS(nextion_send_command("bkcmd=3")))
         {
             ESP_LOGE(NEXTION_TAG, "could not send 'bkcmd=3'");
@@ -214,6 +211,8 @@ extern "C"
 
         if (read == 8 && response[0] == NEX_DVC_RSP_GET_NUMBER)
         {
+            // Number: 4 bytes and signed = int32_t.
+            // Sent in little endian format.
             *number = (int)(((uint32_t)response[4] << 24) | ((uint32_t)response[3] << 16) | ((uint32_t)response[2] << 8) | (uint32_t)response[1]);
 
             return true;
@@ -223,13 +222,14 @@ extern "C"
     }
 
     // Private Section
+    //
     // Only the methods below are allowed to read and write
-    // the UART directly.
+    // to the UART directly.
     //
     // How does a "send command" works?
     //  _send_command
     //   1. Acquire a mutex, to prevent multiple calls.
-    //   2. Get the invoking task handle and save on the driver obj.
+    //   2. Get the invoking task handle and save it on the driver obj.
     //   3. Write to the UART.
     //   4. Wait for a notification on the task handle (or timeout).
     //  _uart_event_task
@@ -282,8 +282,9 @@ extern "C"
         uart_event_t event;
         nextion_event_t nextion_event;
 
-        // Will hold 3 "messages max length" at most. During my tests the
-        // device sent only 2 ACK (4 bytes), at the same time. This must not be a problem.
+        // The ring buffer will hold "3 * CONFIG_NEX_RESP_MSG_MAX_LENGTH" at most. During my tests the
+        // device sent only 2 ACKs at the same time (totaling 8 bytes). This must not be a problem
+        // as the minimum CONFIG_NEX_RESP_MSG_MAX_LENGTH is 36 bytes (9 ACKs).
         ringbuffer_handle_t ring_buffer = ringbuffer_create(3 * CONFIG_NEX_RESP_MSG_MAX_LENGTH);
         uint8_t staging[CONFIG_NEX_RESP_MSG_MAX_LENGTH];
         int peek_holder = 0;
@@ -313,12 +314,22 @@ extern "C"
                         break;
                     }
 
+                    // Questions:
+                    //   - Why is it reading from 0 to length every time?
+                    //   - Can't it hold the last read position and read from it next time?
+                    // Answer:
+                    //  - Yes but no.
+                    //  - As 99.9% of the messages are 4 bytes in size, therefore
+                    //    fitting in the UART FiFo and UART ring buffer, 99.9% of the
+                    //    time one full read will be enough.
+                    //  - I don't want to make it more complex than it already is.
                     int message_length = nextion_parse_find_message_length(ring_buffer);
 
                     while (message_length > -1)
                     {
                         uint8_t code = 0;
 
+                        // The first byte of a message is always the response code.
                         ringbuffer_peek(ring_buffer, &peek_holder, &code);
 
                         peek_holder = 0;
@@ -377,7 +388,7 @@ extern "C"
                     break;
 
                 default:
-                    ESP_LOGI(NEXTION_TAG, "uart event type: %d", event.type);
+                    ESP_LOGI(NEXTION_TAG, "uart event type ignored: %d", event.type);
                     break;
                 }
             }
@@ -391,5 +402,3 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-
-#endif //__NEXTION_C__

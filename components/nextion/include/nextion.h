@@ -60,6 +60,9 @@ extern "C"
     /**
      * @brief Sends a command that retrieves a null-terminated string.
      *
+     * @details It's the caller responsibility to allocate a buffer big enough to
+     * hold the text returned.
+     *
      * @param command A null-terminated string with the command to be sent.
      * @param[in] text Location where the retrieved text will be stored. Must take the null-terminator into account.
      *

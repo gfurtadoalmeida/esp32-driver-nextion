@@ -1,6 +1,3 @@
-#ifndef __NEXTION_PARSE_C__
-#define __NEXTION_PARSE_C__
-
 #include "nextion_constants.h"
 #include "nextion_codes.h"
 #include "nextion_common.h"
@@ -93,6 +90,8 @@ extern "C"
             if (message_length == 9)
             {
                 event->type = NEXTION_EVENT_TOUCH_COORD;
+                // Coordinates: 2 bytes and unsigned = uint16_t.
+                // Sent in big endian format.
                 event->touch_coord.x = ((uint16_t)buffer[1] << 8) | (uint16_t)buffer[2];
                 event->touch_coord.y = ((uint16_t)buffer[3] << 8) | (uint16_t)buffer[4];
                 event->touch_coord.exited_sleep = code == NEX_DVC_EVT_TOUCH_COORDINATE_ASLEEP;
@@ -156,5 +155,3 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-
-#endif //__NEXTION_PARSE_C__
