@@ -27,12 +27,22 @@ Everything is based on Nextion [instruction set](https://nextion.tech/instructio
     |-- nextion             : The driver
         |-- include         : Includes that can be used by dependent projects
         |-- private_include : Includes that only the driver can use
+        |-- src             : Where ".c" files resides
         |-- test            : Tests
-            |-- hmi         : Nextion display project used for testing
+            | -- nextion
+                 |-- hmi    : Nextion display project used for testing
 |-- examples                : Some usage examples
 |-- main                    : Where debugging happens
 |-- test                    : Test runner
 ```
+
+## Development Guidelines
+
+* The code must run on any ESP32+ hardware.
+* Create tests for every new functionality.
+* Only use `stdint.h` when:
+  * The returned value, from the display, has a specific size (e.g.: returned numbers are always 32 bits signed).
+  * You really need a specific size (e.g.: RGB565 is always 16 bits unsigned).
 
 ## Building
 
@@ -46,7 +56,7 @@ Everything is based on Nextion [instruction set](https://nextion.tech/instructio
 
 ## Testing
 
-Upload [test_display.hmi](/components/nextion/test/hmi/) on your Nextion display before testing. Be aware that the display project was built using Nextion Editor 1.16.1; you might need to [upgrade your display](https://nextion.tech/faq-items/using-legacy-nextion-devices/) before uploading this project.  
+Upload [test_display.hmi](/components/nextion/test/nextion/hmi/) on your Nextion display before testing. Be aware that the display project was built using Nextion Editor 1.16.1; you might need to [upgrade your display](https://nextion.tech/faq-items/using-legacy-nextion-devices/) before uploading this project.  
 
 The task watchdog for CPU0 is disabled on the test project. It is needed so we can interact with the test tool.  
 

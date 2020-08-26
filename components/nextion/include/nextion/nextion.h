@@ -3,8 +3,8 @@
 
 #include "driver/uart.h"
 #include "freertos/queue.h"
-#include "nextion_codes.h"
-#include "nextion_types.h"
+#include "codes.h"
+#include "types.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -78,7 +78,7 @@ extern "C"
      *
      * @return False if error, otherwise true.
      */
-    bool nextion_get_number(const char *command, int *number);
+    bool nextion_get_number(const char *command, int32_t *number);
 
 #ifdef __cplusplus
 }

@@ -58,7 +58,8 @@
       "type_traits": "c",
       "xtr1common": "c",
       "malloc.h": "c",
-      "cstdlib": "c"
+      "cstdlib": "c",
+      "constants.h": "c"
     },
     "idf.port": "/dev/ttyUSB1",
     "idf.portWin": "COM4",

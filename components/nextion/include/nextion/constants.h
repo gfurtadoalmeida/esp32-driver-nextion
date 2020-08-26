@@ -9,29 +9,29 @@ extern "C"
 /**
  * Minimum baud rate accepted.
  */
-#define NEX_SERIAL_BAUD_RATE_MIN 9600
+#define NEX_SERIAL_BAUD_RATE_MIN 9600U
 
 /**
  * Maximum baud rate accepted.
  */
-#define NEX_SERIAL_BAUD_RATE_MAX 921600
+#define NEX_SERIAL_BAUD_RATE_MAX 921600U
 
 /**
  * Number of bytes used to identify a response type.
  */
-#define NEX_DVC_CMD_START_LENGTH 1
+#define NEX_DVC_CMD_START_LENGTH 1U
 
 /**
  * Number of bytes used to identify the end of a response.
  */
-#define NEX_DVC_CMD_END_LENGTH 3
+#define NEX_DVC_CMD_END_LENGTH 3U
 
 /**
  * Character used to identify the end of a response.
  * All commands end with {0xFF, 0xFF, 0xFF}
  * i.e: {255, 255, 255} or {ÿ, ÿ, ÿ}
  */
-#define NEX_DVC_CMD_END_VALUE ((uint8_t)0xFF)
+#define NEX_DVC_CMD_END_VALUE ((uint8_t)0xFFU)
 
 /**
  * Sequence that determines the end of a command and response.
@@ -47,17 +47,17 @@ extern "C"
 /**
  * The maximum number of bytes a non-text event can return.
  */
-#define NEX_DVC_EVT_MAX_RESPONSE_LENGTH 9
+#define NEX_DVC_EVT_MAX_RESPONSE_LENGTH 9U
 
 /**
  * The maximum length of a page name.
  */
-#define NEX_DVC_PAGE_MAX_NAME_LENGTH 14
+#define NEX_DVC_PAGE_MAX_NAME_LENGTH 14U
 
 /**
  * The maximum length of a component name.
  */
-#define NEX_DVC_COMPONENT_MAX_NAME_LENGTH 14
+#define NEX_DVC_COMPONENT_MAX_NAME_LENGTH 14U
 
 /**
  * Max reference length: (max page name length + "." + max component name length).
@@ -87,13 +87,13 @@ extern "C"
  * "Transaprent Data" mode.
  * Size: (all commands + terminations + data).
  */
-#define NEX_DVC_TRANSPARENT_DATA_MAX_DATA_SIZE 1023
+#define NEX_DVC_TRANSPARENT_DATA_MAX_DATA_SIZE 1023U
 
 /**
  * Time, in milliseconds, that a device needs
  * to enter the "Transparent Data" mode.
  */
-#define NEX_DVC_TRANSPARENT_DATA_WAIT_TIME_MS 5
+#define NEX_DVC_TRANSPARENT_DATA_WAIT_TIME_MS 5U
 
 #ifdef __cplusplus
 }

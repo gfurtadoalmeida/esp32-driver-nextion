@@ -1,3 +1,0 @@
-[submodule "components/nextion/components/rb-srsw"]
-	path = components/nextion/components/rb-srsw
-	url = https://github.com/gfurtadoalmeida/esp32-ringbuffer-srsw.git

@@ -1,4 +1,4 @@
-#include "rgb565.h"
+#include "rgb565/rgb565.h"
 
 #ifdef __cplusplus
 extern "C"

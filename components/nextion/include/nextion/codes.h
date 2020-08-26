@@ -10,7 +10,9 @@ extern "C"
 
     /**
      * @typedef nex_err_t
-     * @brief Base type for responses.
+     * @brief Response code.
+     * @details Nextion return codes are unsigned byte, therefore
+     * we're going to use unsigned int.
      */
     typedef uint32_t nex_err_t;
 

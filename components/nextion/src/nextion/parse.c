@@ -1,7 +1,7 @@
-#include "nextion_constants.h"
-#include "nextion_codes.h"
-#include "nextion_common.h"
-#include "nextion_parse.h"
+#include "common.h"
+#include "nextion/parse.h"
+#include "nextion/constants.h"
+#include "nextion/codes.h"
 
 #ifdef __cplusplus
 extern "C"

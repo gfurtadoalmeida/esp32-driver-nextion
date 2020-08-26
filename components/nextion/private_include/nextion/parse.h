@@ -1,8 +1,8 @@
 #ifndef __NEXTION_PARSE_H__
 #define __NEXTION_PARSE_H__
 
-#include "nextion_types.h"
-#include "ringbuffer.h"
+#include "nextion/types.h"
+#include "ringbuffer/ringbuffer.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -30,7 +30,7 @@ extern "C"
      * @param[out] event Event assembled from a message.
      * @return True when success or false.
      */
-    bool nextion_parse_assemble_event(const ringbuffer_handle_t ring_buffer, int message_length, nextion_event_t *event);
+    bool nextion_parse_assemble_event(const ringbuffer_handle_t ring_buffer, const int message_length, nextion_event_t *event);
 
 #ifdef __cplusplus
 }

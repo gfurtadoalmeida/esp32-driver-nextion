@@ -9,7 +9,7 @@
 #include "esp_log.h"
 #include "driver/uart.h"
 #include "driver/gpio.h"
-#include "nextion.h"
+#include "nextion/nextion.h"
 
 const static char *TAG = "example";
 static QueueHandle_t p_event_queue;

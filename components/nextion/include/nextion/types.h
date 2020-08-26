@@ -1,6 +1,8 @@
 #ifndef __NEXTION_TYPES_H__
 #define __NEXTION_TYPES_H__
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -48,8 +50,8 @@ extern "C"
      */
     typedef struct
     {
-        unsigned char page_id;       /*!< Page id were the touch happened. */
-        unsigned char component_id;  /*!< Component id that was touched. */
+        uint8_t page_id;             /*!< Page id were the touch happened. */
+        uint8_t component_id;        /*!< Component id that was touched. */
         nextion_touch_state_t state; /*!< Touch state. */
     } nextion_touch_t;
 
@@ -59,8 +61,8 @@ extern "C"
      */
     typedef struct
     {
-        unsigned short x;            /*!< X coordinate. */
-        unsigned short y;            /*!< Y coordinate. */
+        uint16_t x;                  /*!< X coordinate. */
+        uint16_t y;                  /*!< Y coordinate. */
         bool exited_sleep;           /*!< If the touch happened while the device was asleep, and now it is awake. */
         nextion_touch_state_t state; /*!< Touch state. */
     } nextion_touch_coord_t;

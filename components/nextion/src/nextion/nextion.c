@@ -4,13 +4,13 @@
 
 #include <string.h>
 #include "esp_log.h"
-#include "nextion_config.h"
-#include "nextion_constants.h"
-#include "nextion_codes.h"
-#include "nextion_common.h"
-#include "nextion_parse.h"
-#include "nextion.h"
-#include "ringbuffer.h"
+#include "common.h"
+#include "ringbuffer/ringbuffer.h"
+#include "nextion/config.h"
+#include "nextion/parse.h"
+#include "nextion/constants.h"
+#include "nextion/codes.h"
+#include "nextion/nextion.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -28,7 +28,7 @@ extern "C"
         SemaphoreHandle_t command_mutex; // Mutex to synchronize UART operations.
         TaskHandle_t command_task;       // Task handle used for task notification between "_send_command" and "uart_task".
         uint8_t *command_response;       // Buffer for the last command response data. Not used for events.
-        int command_response_length;     // Size, in bytes, of the last command response data.
+        int command_response_length;     // Size, in bytes, of the last command response data, or -1 if it failed.
         QueueHandle_t event_queue;       // Event queue where device events will be sent.
         bool event_enabled;              // If it can send events.
         bool is_installed;               // If the driver is installed.
@@ -200,20 +200,19 @@ extern "C"
         return -1;
     }
 
-    bool nextion_get_number(const char *command, int *number)
+    bool nextion_get_number(const char *command, int32_t *number)
     {
         NEX_CHECK((command != NULL), "command error(NULL)", false);
         NEX_CHECK((number != NULL), "number error(NULL)", false);
 
         uint8_t *response = NULL;
-
         const int read = _send_command(command, &response);
 
         if (read == 8 && response[0] == NEX_DVC_RSP_GET_NUMBER)
         {
             // Number: 4 bytes and signed = int32_t.
             // Sent in little endian format.
-            *number = (int)(((uint32_t)response[4] << 24) | ((uint32_t)response[3] << 16) | ((uint32_t)response[2] << 8) | (uint32_t)response[1]);
+            *number = (int32_t)(((uint32_t)response[4] << 24) | ((uint32_t)response[3] << 16) | ((uint32_t)response[2] << 8) | (uint32_t)response[1]);
 
             return true;
         }

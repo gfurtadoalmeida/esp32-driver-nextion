@@ -1,10 +1,9 @@
-#include <limits.h>
 #include "driver/uart.h"
 #include "driver/gpio.h"
 #include "freertos/queue.h"
 #include "unity.h"
 #include "unity_test_runner.h"
-#include "nextion.h"
+#include "nextion/nextion.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -19,7 +18,7 @@ extern "C"
 
 #define DELETE() nextion_driver_delete();
 
-    TEST_CASE("Can get text from a text component", "[command]")
+    TEST_CASE("Can get text from a text component", "[nextion][command]")
     {
         INSTALL()
 
@@ -32,7 +31,7 @@ extern "C"
         TEST_ASSERT_EQUAL_STRING("test text", text);
     }
 
-    TEST_CASE("Can get a number from a number component", "[command]")
+    TEST_CASE("Can get a number from a number component", "[nextion][command]")
     {
         INSTALL()
 
