@@ -17,8 +17,10 @@
       "**/.DS_Store": true,
       "build/": true,
       "debug.log": true,
+      "sdkconfig": true,
       "sdkconfig.old": true,
       "test/build/": true,
+      "test/sdkconfig": true,
       "test/sdkconfig.old": true
     },
     "files.associations": {
