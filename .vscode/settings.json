@@ -59,7 +59,11 @@
       "xtr1common": "c",
       "malloc.h": "c",
       "cstdlib": "c",
-      "constants.h": "c"
+      "constants.h": "c",
+      "codes.h": "c",
+      "common_infra_test.h": "c",
+      "nextion.h": "c",
+      "future": "c"
     },
     "idf.port": "/dev/ttyUSB1",
     "idf.portWin": "COM4",

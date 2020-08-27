@@ -14,7 +14,7 @@ extern "C"
      * @details Nextion return codes are unsigned byte, therefore
      * we're going to use unsigned int.
      */
-    typedef uint32_t nex_err_t;
+    typedef int32_t nex_err_t;
 
     // All values below must have the same value as defined
     // in https://nextion.tech/instruction-set/#s7
@@ -41,6 +41,11 @@ extern "C"
  * Verifiy if a code means success.
  */
 #define NEX_DVC_CODE_IS_SUCCESS(code) (code == NEX_DVC_INSTRUCTION_OK)
+
+/**
+ * Verifiy if a code means failure.
+ */
+#define NEX_DVC_CODE_IS_FAILURE(code) (code == NEX_DVC_INSTRUCTION_FAIL || (code >= NEX_DVC_ERR_INVALID_COMPONENT && code <= NEX_DVC_ERR_REFERENCE_NAME_TOO_LONG))
 
 /**
  * Verify if a code represents an event.

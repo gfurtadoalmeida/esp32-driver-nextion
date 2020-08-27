@@ -1,4 +1,4 @@
-#include "common.h"
+#include "common_infra.h"
 #include "nextion/parse.h"
 #include "nextion/constants.h"
 #include "nextion/codes.h"
@@ -46,7 +46,7 @@ extern "C"
 
         if (!ringbuffer_read_bytes(ring_buffer, buffer, message_length))
         {
-            ESP_LOGE(NEXTION_TAG, "could not read from ring buffer");
+            NEX_LOGE("could not read from ring buffer");
 
             return false;
         }
@@ -81,7 +81,7 @@ extern "C"
             {
                 is_ok = false;
 
-                ESP_LOGW(NEXTION_TAG, "touch event length error(%d<>7)", message_length);
+                NEX_LOGW("touch event length error(%d<>7)", message_length);
             }
             break;
 
@@ -109,7 +109,7 @@ extern "C"
             {
                 is_ok = false;
 
-                ESP_LOGW(NEXTION_TAG, "touch coord length error(%d<>9)", message_length);
+                NEX_LOGW("touch coord length error(%d<>9)", message_length);
             }
             break;
 
@@ -144,7 +144,7 @@ extern "C"
             break;
 
         default:
-            ESP_LOGE(NEXTION_TAG, "event code unknown %u", code);
+            NEX_LOGE("event code unknown %u", code);
 
             is_ok = false;
         }

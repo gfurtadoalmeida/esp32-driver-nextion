@@ -4,7 +4,6 @@
 #include "driver/uart.h"
 #include "freertos/queue.h"
 #include "codes.h"
-#include "types.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -29,9 +28,7 @@ extern "C"
 
     /**
      * @brief Does the necessary initialization before any action can be done.
-     *
      * @details Will send some commands to the display to configure it.
-     *
      * @return NEX_OK when success or NEX_FAIL.
      */
     nex_err_t nextion_driver_init();
@@ -49,36 +46,20 @@ extern "C"
     bool nextion_is_driver_installed();
 
     /**
-     * @brief Sends a command and wait for a simple ACK.
-     *
+     * @brief Sends a command and waits for a simple ACK.
      * @param command A null-terminated string with the command to be sent.
-
-     * @return NEX_FAIL if error, otherwise any "NEX_DVC_" from "nextion_codes.h"
+     * @return NEX_FAIL if error, otherwise any "NEX_DVC_" from "nextion/codes.h"
      */
     nex_err_t nextion_send_command(const char *command);
 
     /**
-     * @brief Sends a command that retrieves a null-terminated string.
-     *
-     * @details It's the caller responsibility to allocate a buffer big enough to
-     * hold the text returned.
-     *
+     * @brief Sends a command and waits for a response. Do not free the buffer.
+     * @note Do not free the buffer.
      * @param command A null-terminated string with the command to be sent.
-     * @param[in] text Location where the retrieved text will be stored. Must take the null-terminator into account.
-     *
-     * @return -1 if error, otherwise the text length without the null-terminator.
+     * @param response_buffer Pointer of a pointer for a uint8_t array.
+     * @return -1 if error, otherwise bytes read.
      */
-    int nextion_get_text(const char *command, char *text);
-
-    /**
-     * @brief Sends a command that retrieves a signed number.
-     *
-     * @param command A null-terminated string with the command to be sent.
-     * @param[in] number Location where the retrieved number will be stored.
-     *
-     * @return False if error, otherwise true.
-     */
-    bool nextion_get_number(const char *command, int32_t *number);
+    int send_command_raw(const char *command, uint8_t **response_buffer);
 
 #ifdef __cplusplus
 }

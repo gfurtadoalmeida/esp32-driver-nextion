@@ -1,9 +1,9 @@
 #ifndef __RINGBUFFER_C__
 #define __RINGBUFFER_C__
 
+#include <malloc.h>
 #include <string.h>
-#include "malloc.h"
-#include "common.h"
+#include "common_infra.h"
 #include "ringbuffer/ringbuffer.h"
 
 #ifdef __cplusplus
