@@ -19,7 +19,7 @@ extern "C"
      * @param[in] text Location where the retrieved text will be stored. Must take the null-terminator into account.
      * @param[i] text_length Location where the text length will be stored.
      *
-     * @return NEX_OK or any NEX_DVC_ERR_.
+     * @return NEX_OK or NEX_DVC_ERR_INVALID_VARIABLE_OR_ATTRIBUTE.
      */
     nex_err_t nextion_get_text(const char *command, char *text, int *text_length);
 
@@ -29,9 +29,16 @@ extern "C"
      * @param command A null-terminated string with the command to be sent.
      * @param[in] number Location where the retrieved number will be stored.
      *
-     * @return NEX_OK or any NEX_DVC_ERR_.
+     * @return NEX_OK or NEX_DVC_ERR_INVALID_VARIABLE_OR_ATTRIBUTE.
      */
     nex_err_t nextion_get_number(const char *command, int32_t *number);
+
+    /**
+     * @brief Refreshes a component, bringing it to front.
+     * @param command A null-terminated string with the component's name or id.
+     * @return NEX_OK or NEX_DVC_ERR_INVALID_COMPONENT.
+     */
+    nex_err_t nextion_refresh_component(char *component_name_or_id);
 
 #ifdef __cplusplus
 }

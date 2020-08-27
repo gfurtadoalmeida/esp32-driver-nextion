@@ -1,5 +1,4 @@
 #include "unity.h"
-#include "unity_test_runner.h"
 #include "rgb565/rgb565.h"
 
 #ifdef __cplusplus

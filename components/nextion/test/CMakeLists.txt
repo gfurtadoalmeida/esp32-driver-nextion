@@ -1,7 +1,6 @@
 file(GLOB srcsNEXTION "nextion/*.c")
 file(GLOB srcsRGB "rgb565/*.c")
 file(GLOB srcsRING "ringbuffer/*.c")
-file(GLOB srcsINFRA "infra/*.c")
 
 idf_component_register(
     SRCS

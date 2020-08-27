@@ -63,7 +63,15 @@
       "codes.h": "c",
       "common_infra_test.h": "c",
       "nextion.h": "c",
-      "future": "c"
+      "future": "c",
+      "unity.h": "c",
+      "unity_fixture.h": "c",
+      "op_screen.h": "c",
+      "parse.h": "c",
+      "unity_fixture_internals.h": "c",
+      "rgb565.h": "c",
+      "op_component.h": "c",
+      "op_page.h": "c"
     },
     "idf.port": "/dev/ttyUSB1",
     "idf.portWin": "COM4",

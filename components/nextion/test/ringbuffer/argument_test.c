@@ -1,5 +1,4 @@
 #include "unity.h"
-#include "unity_test_runner.h"
 #include "ringbuffer/ringbuffer.h"
 
 #ifdef __cplusplus

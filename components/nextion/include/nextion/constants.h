@@ -65,10 +65,10 @@ extern "C"
 #define NEX_DVC_REFERENCE_MAX_LENGTH (NEX_DVC_PAGE_MAX_NAME_LENGTH + 1 + NEX_DVC_COMPONENT_MAX_NAME_LENGTH)
 
 /**
- * Character used to separate the page name from the component name.
- * e.g.: page1.component2
+ * Character used to separate a object from its attribute.
+ * e.g.: page1.component2 / comp1.txt
  */
-#define NEX_DVC_CMD_REFERENCE_SEPARATOR '.'
+#define NEX_DVC_CMD_ATTRIBUTE_SEPARATOR '.'
 
 /**
  * Character used to separate the params from the command.

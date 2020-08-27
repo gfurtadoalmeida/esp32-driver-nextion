@@ -4,6 +4,7 @@
 #include "driver/uart.h"
 #include "freertos/queue.h"
 #include "codes.h"
+#include "types.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -46,20 +47,20 @@ extern "C"
     bool nextion_is_driver_installed();
 
     /**
-     * @brief Sends a command and waits for a simple ACK.
-     * @param command A null-terminated string with the command to be sent.
-     * @return NEX_FAIL if error, otherwise any "NEX_DVC_" from "nextion/codes.h"
-     */
-    nex_err_t nextion_send_command(const char *command);
-
-    /**
      * @brief Sends a command and waits for a response. Do not free the buffer.
      * @note Do not free the buffer.
      * @param command A null-terminated string with the command to be sent.
      * @param response_buffer Pointer of a pointer for a uint8_t array.
      * @return -1 if error, otherwise bytes read.
      */
-    int send_command_raw(const char *command, uint8_t **response_buffer);
+    int nextion_send_command_raw(const char *command, uint8_t **response_buffer);
+
+    /**
+     * @brief Sends a command and waits for a simple ACK.
+     * @param command A null-terminated string with the command to be sent.
+     * @return NEX_FAIL if error, otherwise any "NEX_DVC_" from "nextion/codes.h"
+     */
+    nex_err_t nextion_send_command(const char *command);
 
 #ifdef __cplusplus
 }

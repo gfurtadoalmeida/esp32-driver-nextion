@@ -5,11 +5,14 @@ extern "C"
 {
 #endif
 
-#define DRIVER_INSTALL() nextion_driver_install(UART_NUM_2, 9600, GPIO_NUM_17, GPIO_NUM_16, 5, NULL)
+// This is the only file that can install/delete a driver directly,
+// as it is testing core methods.
+
+#define RAW_INSTALL() nextion_driver_install(TEST_UART_NUM, TEST_UART_BAUD_RATE, TEST_UART_TX_PIN, TEST_UART_RX_PIN, 5, &p_event_queue)
 
     TEST_CASE("Can install driver", "[nextion][core]")
     {
-        nex_err_t code = nextion_driver_install(UART_NUM_2, 9600, GPIO_NUM_17, GPIO_NUM_16, 5, NULL);
+        nex_err_t code = nextion_driver_install(TEST_UART_NUM, TEST_UART_BAUD_RATE, TEST_UART_TX_PIN, TEST_UART_RX_PIN, 5, &p_event_queue);
 
         TEST_ASSERT_NEX_OK(code);
 
@@ -18,7 +21,7 @@ extern "C"
 
     TEST_CASE("Can delete driver when installed", "[nextion][core]")
     {
-        DRIVER_INSTALL();
+        RAW_INSTALL();
 
         nex_err_t code = nextion_driver_delete();
 
@@ -34,7 +37,7 @@ extern "C"
 
     TEST_CASE("Can assert driver is installed when installed", "[nextion][core]")
     {
-        DRIVER_INSTALL();
+        RAW_INSTALL();
 
         bool installed = nextion_is_driver_installed();
 
@@ -52,7 +55,7 @@ extern "C"
 
     TEST_CASE("Can init driver when installed", "[nextion][core]")
     {
-        DRIVER_INSTALL();
+        RAW_INSTALL();
 
         nex_err_t code = nextion_driver_init();
 

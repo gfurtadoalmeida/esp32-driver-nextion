@@ -1,5 +1,4 @@
 #include "unity.h"
-#include "unity_test_runner.h"
 #include "nextion/constants.h"
 #include "nextion/codes.h"
 #include "nextion/parse.h"

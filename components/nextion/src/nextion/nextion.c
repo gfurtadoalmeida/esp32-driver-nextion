@@ -6,11 +6,10 @@
 #include <string.h>
 #include "common_infra.h"
 #include "ringbuffer/ringbuffer.h"
+#include "nextion/nextion.h"
+#include "nextion/constants.h"
 #include "nextion/config.h"
 #include "nextion/parse.h"
-#include "nextion/constants.h"
-#include "nextion/codes.h"
-#include "nextion/nextion.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -174,7 +173,7 @@ extern "C"
         NEX_CHECK((command != NULL), "command error(NULL)", NEX_FAIL);
 
         uint8_t *response = NULL;
-        const int read = send_command_raw(command, &response);
+        const int read = nextion_send_command_raw(command, &response);
 
         if (read == NEX_DVC_CMD_ACK_LENGTH)
         {
@@ -201,7 +200,7 @@ extern "C"
     //   8. Upon notification, continue processing.
     //   9. Release the mutex.
 
-    int send_command_raw(const char *command, uint8_t **response_buffer)
+    int nextion_send_command_raw(const char *command, uint8_t **response_buffer)
     {
         NEX_CHECK((command != NULL), "command error(NULL)", -1);
         NEX_CHECK((response_buffer != NULL), "response_buffer error(NULL)", -1);

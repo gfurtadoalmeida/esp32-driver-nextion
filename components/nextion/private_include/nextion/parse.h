@@ -1,8 +1,8 @@
 #ifndef __NEXTION_PARSE_H__
 #define __NEXTION_PARSE_H__
 
-#include "nextion/types.h"
 #include "ringbuffer/ringbuffer.h"
+#include "nextion/types.h"
 
 #ifdef __cplusplus
 extern "C"

@@ -66,6 +66,14 @@ extern "C"
         return (return_value);                                   \
     }
 
+#define NEX_SEND_COMMAND(command_length, command_format, ...)         \
+    ({                                                                \
+        const int real_length = command_length + 1;                   \
+        char buffer[real_length];                                     \
+        snprintf(buffer, real_length, command_format, ##__VA_ARGS__); \
+        nextion_send_command(buffer);                                 \
+    })
+
 #ifdef __cplusplus
 }
 #endif

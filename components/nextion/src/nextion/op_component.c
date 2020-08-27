@@ -1,7 +1,7 @@
 #include <string.h>
 #include "common_infra.h"
-#include "nextion/constants.h"
 #include "nextion/nextion.h"
+#include "nextion/constants.h"
 #include "nextion/op_component.h"
 
 #ifdef __cplusplus
@@ -15,7 +15,7 @@ extern "C"
         NEX_CHECK((text != NULL), "text error(NULL)", NEX_FAIL);
 
         uint8_t *response = NULL;
-        const int read = send_command_raw(command, &response);
+        const int read = nextion_send_command_raw(command, &response);
 
         if (read >= NEX_DVC_CMD_ACK_LENGTH && response[0] == NEX_DVC_RSP_GET_STRING)
         {
@@ -39,7 +39,7 @@ extern "C"
         NEX_CHECK((number != NULL), "number error(NULL)", NEX_FAIL);
 
         uint8_t *response = NULL;
-        const int read = send_command_raw(command, &response);
+        const int read = nextion_send_command_raw(command, &response);
 
         if (read == 8 && response[0] == NEX_DVC_RSP_GET_NUMBER)
         {
@@ -51,6 +51,11 @@ extern "C"
         }
 
         return response[0];
+    }
+
+    nex_err_t nextion_refresh_component(char *component_name_or_id)
+    {
+        return NEX_SEND_COMMAND(4 + NEX_DVC_COMPONENT_MAX_NAME_LENGTH, "ref %s", component_name_or_id);
     }
 
 #ifdef __cplusplus
