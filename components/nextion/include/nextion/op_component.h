@@ -38,7 +38,7 @@ extern "C"
      * @param command A null-terminated string with the component's name or id.
      * @return NEX_OK or NEX_DVC_ERR_INVALID_COMPONENT.
      */
-    nex_err_t nextion_component_refresh(char *component_name_or_id);
+    nex_err_t nextion_component_refresh(const char *component_name_or_id);
 
     /**
      * @brief Set a component visibility.
@@ -48,7 +48,7 @@ extern "C"
      *
      * @return NEX_OK or NEX_DVC_ERR_INVALID_COMPONENT.
      */
-    nex_err_t nextion_component_set_visibility(char *component_name_or_id, bool visible_or_not);
+    nex_err_t nextion_component_set_visibility(const char *component_name_or_id, bool visible_or_not);
 
     /**
      * @brief Set all components visibility.
@@ -66,7 +66,7 @@ extern "C"
      *
      * @return NEX_OK or NEX_DVC_ERR_INVALID_COMPONENT.
      */
-    nex_err_t nextion_component_set_touchable(char *component_name_or_id, bool touchable_or_not);
+    nex_err_t nextion_component_set_touchable(const char *component_name_or_id, bool touchable_or_not);
 
     /**
      * @brief Set if all components can respond to touch events or not.

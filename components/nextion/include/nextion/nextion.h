@@ -28,7 +28,12 @@ extern "C"
      * access to device events. If set to NULL, driver will not use an event queue.
      * @return NEX_OK when success or NEX_FAIL.
      */
-    nex_err_t nextion_driver_install(uart_port_t uart_num, int baud_rate, int tx_io_num, int rx_io_num, int queue_size, QueueHandle_t *event_queue);
+    nex_err_t nextion_driver_install(uart_port_t uart_num,
+                                     int baud_rate,
+                                     int tx_io_num,
+                                     int rx_io_num,
+                                     int queue_size,
+                                     QueueHandle_t *event_queue);
 
     /**
      * @brief Does the necessary initialization before any action can be done.

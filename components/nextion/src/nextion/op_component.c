@@ -53,12 +53,12 @@ extern "C"
         return response[0];
     }
 
-    nex_err_t nextion_component_refresh(char *component_name_or_id)
+    nex_err_t nextion_component_refresh(const char *component_name_or_id)
     {
         return NEX_SEND_COMMAND(4 + NEX_DVC_COMPONENT_MAX_NAME_LENGTH, "ref %s", component_name_or_id);
     }
 
-    nex_err_t nextion_component_set_visibility(char *component_name_or_id, bool visible_or_not)
+    nex_err_t nextion_component_set_visibility(const char *component_name_or_id, bool visible_or_not)
     {
         return NEX_SEND_COMMAND(6 + NEX_DVC_COMPONENT_MAX_NAME_LENGTH, "vis %s,%d", component_name_or_id, visible_or_not);
     }
@@ -68,7 +68,7 @@ extern "C"
         return NEX_SEND_COMMAND(9, "vis 255,%d", visible_or_not);
     }
 
-    nex_err_t nextion_component_set_touchable(char *component_name_or_id, bool touchable_or_not)
+    nex_err_t nextion_component_set_touchable(const char *component_name_or_id, bool touchable_or_not)
     {
         return NEX_SEND_COMMAND(6 + NEX_DVC_COMPONENT_MAX_NAME_LENGTH, "tsw %s,%d", component_name_or_id, touchable_or_not);
     }

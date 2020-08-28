@@ -13,11 +13,18 @@ extern "C"
 #define CONFIG_NEX_EVENT_QUEUE_WAIT_TIME_MS 50
 #endif
 
-#ifndef CONFIG_NEX_RESP_WAIT_TIME_MS
+#ifndef CONFIG_NEX_REQ_MSG_MAX_LENGTH
 /**
  * Device response wait time (ms).
  */
-#define CONFIG_NEX_RESP_WAIT_TIME_MS 1000
+#define CONFIG_NEX_REQ_MSG_MAX_LENGTH 35
+#endif
+
+#ifndef CONFIG_NEX_RESP_MSG_MAX_LENGTH
+/**
+ * Max response message size.
+ */
+#define CONFIG_NEX_RESP_MSG_MAX_LENGTH (NEX_DVC_CMD_ACK_LENGTH + 100) // 1 text response with 100 chars.
 #endif
 
 #ifndef CONFIG_NEX_RESP_NO_BKCMD_WAIT_TIME_MS
@@ -27,11 +34,11 @@ extern "C"
 #define CONFIG_NEX_RESP_NO_BKCMD_WAIT_TIME_MS 50
 #endif
 
-#ifndef CONFIG_NEX_RESP_MSG_MAX_LENGTH
+#ifndef CONFIG_NEX_RESP_WAIT_TIME_MS
 /**
- * Max response message size.
+ * Device response wait time (ms).
  */
-#define CONFIG_NEX_RESP_MSG_MAX_LENGTH (NEX_DVC_CMD_ACK_LENGTH + 100) // 1 text response with 100 chars.
+#define CONFIG_NEX_RESP_WAIT_TIME_MS 1000
 #endif
 
 #ifndef CONFIG_NEX_UART_RECV_BUFFER_SIZE

@@ -1,4 +1,5 @@
 #include "common_infra.h"
+#include "nextion/config.h"
 #include "nextion/nextion.h"
 #include "nextion/op_drawing.h"
 
@@ -40,6 +41,66 @@ extern "C"
     nex_err_t nextion_draw_circle(uint16_t cx, uint16_t cy, uint16_t radius, rgb565_t color)
     {
         return NEX_SEND_COMMAND(30, "cir %d,%d,%d,%d", cx, cy, radius, color);
+    }
+
+    nex_err_t nextion_draw_picture(uint8_t picture_id, uint16_t x, uint16_t y)
+    {
+        return NEX_SEND_COMMAND(25, "pic %d,%d,%d", x, y, picture_id);
+    }
+
+    nex_err_t nextion_draw_crop_picture(uint8_t picture_id,
+                                        uint16_t src_x,
+                                        uint16_t src_y,
+                                        uint16_t width,
+                                        uint16_t height,
+                                        uint16_t dest_x,
+                                        uint16_t dest_y)
+    {
+        return NEX_SEND_COMMAND(45,
+                                "xpic %d,%d,%d,%d,%d,%d,%d",
+                                src_x,
+                                src_y,
+                                width,
+                                height,
+                                dest_x,
+                                dest_y,
+                                picture_id);
+    }
+
+    nex_err_t nextion_draw_text(uint16_t x,
+                                uint16_t y,
+                                uint16_t fill_area_width,
+                                uint16_t fill_area_height,
+                                uint8_t font_id,
+                                uint8_t background_picture_id,
+                                rgb565_t background_color,
+                                rgb565_t text_color,
+                                horizontal_align_t horizontal_alignment,
+                                vertical_align_t vertical_alignment,
+                                background_fill_mode_t background_fill,
+                                const char *text)
+    {
+        // It's not a problem having a background value if the fill mode is "none".
+        uint16_t background_value = background_picture_id;
+
+        if (background_fill == BACKG_FILL_COLOR)
+        {
+            background_value = background_color;
+        }
+
+        return NEX_SEND_COMMAND(65 + CONFIG_NEX_REQ_MSG_MAX_LENGTH,
+                                "xstr %d,%d,%d,%d,%d,%d,%d,%d,%d,%d,\"%s\"",
+                                x,
+                                y,
+                                fill_area_width,
+                                fill_area_height,
+                                font_id,
+                                text_color,
+                                background_value,
+                                horizontal_alignment,
+                                vertical_alignment,
+                                background_fill,
+                                text);
     }
 
 #ifdef __cplusplus

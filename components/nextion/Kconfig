@@ -9,9 +9,17 @@ menu "Nextion Display"
             an event. In case it is not possible to enqueue, the event
             will be dropped.
 
+    config NEX_REQ_MSG_MAX_LENGTH
+        int "Max request message size"
+        range 35 512
+        default 140
+        help
+            The maximum size of a request message.
+            Usually, the biggest messages are the ones that send text.
+
     config NEX_RESP_MSG_MAX_LENGTH
         int "Max response message size"
-        range 36 512
+        range 35 512
         default 140
         help
             The maximum size of a response message.
