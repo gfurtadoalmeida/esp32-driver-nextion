@@ -74,7 +74,8 @@
       "rgb565.h": "c",
       "op_component.h": "c",
       "op_page.h": "c",
-      "op_drawing.h": "c"
+      "op_drawing.h": "c",
+      "common_infra.h": "c"
     },
     "idf.port": "/dev/ttyUSB1",
     "idf.portWin": "COM4",
