@@ -48,6 +48,7 @@ extern "C"
      * @return NEX_OK or NEX_DVC_ERR_INVALID_WAVEFORM.
      */
     nex_err_t nextion_waveform_clear(uint8_t waveform_id);
+
 #ifdef __cplusplus
 }
 #endif

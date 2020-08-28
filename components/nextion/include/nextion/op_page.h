@@ -26,6 +26,7 @@ extern "C"
      * @return NEX_OK or NEX_FAIL.
      */
     nex_err_t nextion_page_refresh();
+
 #ifdef __cplusplus
 }
 #endif

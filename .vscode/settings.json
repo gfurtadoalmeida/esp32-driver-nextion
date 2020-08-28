@@ -73,7 +73,8 @@
       "unity_fixture_internals.h": "c",
       "rgb565.h": "c",
       "op_component.h": "c",
-      "op_page.h": "c"
+      "op_page.h": "c",
+      "op_drawing.h": "c"
     },
     "idf.port": "/dev/ttyUSB1",
     "idf.portWin": "COM4",

@@ -19,16 +19,21 @@ extern "C"
      * article: http://www.barth-dev.de/online/rgb565-color-picker/#
      */
 
-#define RGB565_COLOR_BLACK ((uint16_t)0b0000000000000000)
-#define RGB565_COLOR_BLUE ((uint16_t)0b0000000000011111)
-#define RGB565_COLOR_GREEN ((uint16_t)0b0000011111100000)
-#define RGB565_COLOR_GRAY ((uint16_t)0b1000010000110000)
-#define RGB565_COLOR_BROWN ((uint16_t)0b1011110001000000)
-#define RGB565_COLOR_RED ((uint16_t)0b1111100000000000)
-#define RGB565_COLOR_YELLOW ((uint16_t)0b1111111111100000)
-#define RGB565_COLOR_WHITE ((uint16_t)0b1111111111111111)
+    /**
+     * RGB565 color type.
+     */
+    typedef uint16_t rgb565_t;
 
-    uint16_t rgb565_convert_from_888(uint8_t red, uint8_t green, uint8_t blue);
+#define RGB565_COLOR_BLACK ((rgb565_t)0b0000000000000000)
+#define RGB565_COLOR_BLUE ((rgb565_t)0b0000000000011111)
+#define RGB565_COLOR_GREEN ((rgb565_t)0b0000011111100000)
+#define RGB565_COLOR_GRAY ((rgb565_t)0b1000010000110000)
+#define RGB565_COLOR_BROWN ((rgb565_t)0b1011110001000000)
+#define RGB565_COLOR_RED ((rgb565_t)0b1111100000000000)
+#define RGB565_COLOR_YELLOW ((rgb565_t)0b1111111111100000)
+#define RGB565_COLOR_WHITE ((rgb565_t)0b1111111111111111)
+
+    rgb565_t rgb565_convert_from_888(uint8_t red, uint8_t green, uint8_t blue);
 
 #ifdef __cplusplus
 }

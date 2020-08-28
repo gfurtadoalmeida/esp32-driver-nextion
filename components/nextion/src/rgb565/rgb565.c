@@ -5,7 +5,7 @@ extern "C"
 {
 #endif
 
-    uint16_t rgb565_convert_from_888(uint8_t red, uint8_t green, uint8_t blue)
+    rgb565_t rgb565_convert_from_888(uint8_t red, uint8_t green, uint8_t blue)
     {
         return (((red & 0b11111000) << 8) + ((green & 0b11111100) << 3) + (blue >> 3));
     }
