@@ -1,5 +1,5 @@
+#include <string.h>
 #include "common_infra.h"
-#include "nextion/config.h"
 #include "nextion/nextion.h"
 #include "nextion/op_drawing.h"
 
@@ -88,7 +88,9 @@ extern "C"
             background_value = background_color;
         }
 
-        return NEX_SEND_COMMAND(65 + CONFIG_NEX_REQ_MSG_MAX_LENGTH,
+        const int text_length = strlen(text);
+
+        return NEX_SEND_COMMAND(68 + text_length,
                                 "xstr %d,%d,%d,%d,%d,%d,%d,%d,%d,%d,\"%s\"",
                                 x,
                                 y,
