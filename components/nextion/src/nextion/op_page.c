@@ -9,10 +9,10 @@ extern "C"
 {
 #endif
 
-    nex_err_t nextion_get_page(uint8_t *page_id)
+    nex_err_t nextion_page_get(uint8_t *page_id)
     {
         uint8_t *response = NULL;
-        const int read = nextion_send_command_raw("sendme", &response);
+        const int read = nextion_send_command_raw("sendme", &response, NEX_RESP_WAIT_TIME);
 
         if (read == 5 && response[0] == NEX_DVC_RSP_SENDME_RESULT)
         {
@@ -24,12 +24,12 @@ extern "C"
         return response[0];
     }
 
-    nex_err_t nextion_set_page(uint8_t page_id)
+    nex_err_t nextion_page_set(uint8_t page_id)
     {
         return NEX_SEND_COMMAND(8, "page %d", page_id);
     }
 
-    nex_err_t nextion_refresh_page()
+    nex_err_t nextion_page_refresh()
     {
         return NEX_SEND_COMMAND(5, "ref 0");
     }

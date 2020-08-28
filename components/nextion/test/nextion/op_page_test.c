@@ -10,12 +10,12 @@ extern "C"
     {
         DRIVER_INSTALL()
 
-        nextion_set_page(1);
+        nextion_page_set(1);
 
         uint8_t page_id;
-        nex_err_t code = nextion_get_page(&page_id);
+        nex_err_t code = nextion_page_get(&page_id);
 
-        nextion_set_page(0);
+        nextion_page_set(0);
 
         TEST_ASSERT_NEX_OK(code);
         TEST_ASSERT_EQUAL_INT(1, page_id);
@@ -25,9 +25,9 @@ extern "C"
     {
         DRIVER_INSTALL()
 
-        nex_err_t code = nextion_set_page(1);
+        nex_err_t code = nextion_page_set(1);
 
-        nextion_set_page(0);
+        nextion_page_set(0);
 
         TEST_ASSERT_NEX_OK(code);
     }
@@ -36,7 +36,7 @@ extern "C"
     {
         DRIVER_INSTALL()
 
-        nex_err_t code = nextion_set_page(UINT8_MAX);
+        nex_err_t code = nextion_page_set(UINT8_MAX);
 
         TEST_ASSERT_EQUAL_INT(NEX_DVC_ERR_INVALID_PAGE, code);
     }
@@ -45,7 +45,7 @@ extern "C"
     {
         DRIVER_INSTALL()
 
-        nex_err_t code = nextion_refresh_page();
+        nex_err_t code = nextion_page_refresh();
 
         TEST_ASSERT_NEX_OK(code);
     }

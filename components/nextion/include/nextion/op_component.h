@@ -38,7 +38,7 @@ extern "C"
      * @param command A null-terminated string with the component's name or id.
      * @return NEX_OK or NEX_DVC_ERR_INVALID_COMPONENT.
      */
-    nex_err_t nextion_refresh_component(char *component_name_or_id);
+    nex_err_t nextion_component_refresh(char *component_name_or_id);
 
 #ifdef __cplusplus
 }

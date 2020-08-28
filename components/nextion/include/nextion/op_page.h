@@ -13,19 +13,19 @@ extern "C"
      * @brief Get the active page id.
      * @return NEX_OK or NEX_FAIL.
      */
-    nex_err_t nextion_get_page(uint8_t *page_id);
+    nex_err_t nextion_page_get(uint8_t *page_id);
 
     /**
      * @brief Changes to another page.
      * @return NEX_OK or NEX_DVC_ERR_INVALID_PAGE.
      */
-    nex_err_t nextion_set_page(uint8_t page_id);
+    nex_err_t nextion_page_set(uint8_t page_id);
 
     /**
      * @brief Refreshes the current page.
      * @return NEX_OK or NEX_FAIL.
      */
-    nex_err_t nextion_refresh_page();
+    nex_err_t nextion_page_refresh();
 #ifdef __cplusplus
 }
 #endif

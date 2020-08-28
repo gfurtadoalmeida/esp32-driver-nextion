@@ -55,7 +55,7 @@ extern "C"
     {
         DRIVER_INSTALL()
 
-        nex_err_t code = nextion_refresh_component("n0");
+        nex_err_t code = nextion_component_refresh("n0");
 
         TEST_ASSERT_NEX_OK(code);
     }
@@ -64,7 +64,7 @@ extern "C"
     {
         DRIVER_INSTALL()
 
-        nex_err_t code = nextion_refresh_component("n99");
+        nex_err_t code = nextion_component_refresh("n99");
 
         TEST_ASSERT_EQUAL_INT(NEX_DVC_ERR_INVALID_COMPONENT, code);
     }

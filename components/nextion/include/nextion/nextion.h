@@ -11,6 +11,9 @@ extern "C"
 {
 #endif
 
+#define NEX_RESP_WAIT_TIME (pdMS_TO_TICKS(CONFIG_NEX_RESP_WAIT_TIME_MS))
+#define NEX_RESP_NO_BKCMD_WAIT_TIME (pdMS_TO_TICKS(CONFIG_NEX_RESP_NO_BKCMD_WAIT_TIME_MS))
+
     /**
      * @brief Installs the Nextion driver.
      *
@@ -48,12 +51,16 @@ extern "C"
 
     /**
      * @brief Sends a command and waits for a response. Do not free the buffer.
+     *
      * @note Do not free the buffer.
+     *
      * @param command A null-terminated string with the command to be sent.
      * @param response_buffer Pointer of a pointer for a uint8_t array.
+     * @param ticksToWait Wait message timeout.
+     *
      * @return -1 if error, otherwise bytes read.
      */
-    int nextion_send_command_raw(const char *command, uint8_t **response_buffer);
+    int nextion_send_command_raw(const char *command, uint8_t **response_buffer, TickType_t ticksToWait);
 
     /**
      * @brief Sends a command and waits for a simple ACK.

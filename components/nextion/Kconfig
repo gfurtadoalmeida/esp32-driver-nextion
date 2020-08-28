@@ -5,7 +5,7 @@ menu "Nextion Display"
         range 10 1000
         default 50
         help
-            Time, in millisecods, to wait for the event queue to enqueue
+            Time, in milliseconds, to wait for the event queue to enqueue
             an event. In case it is not possible to enqueue, the event
             will be dropped.
 
@@ -22,7 +22,15 @@ menu "Nextion Display"
         range 10 10000
         default 1000
         help
-            Time, in millisecods, to wait for a response from the display.
+            Time, in milliseconds, to wait for a response from the display.
+
+    config NEX_RESP_NO_BKCMD_WAIT_TIME_MS
+        int "Response wait time for no response operations (ms)"
+        range 10 10000
+        default 1000
+        help
+            Time, in milliseconds, to wait for a response that will only
+            come in case of failure; the operation does not respects "bkcmd".
 
     config NEX_UART_RECV_BUFFER_SIZE
         int "UART receiver buffer size"

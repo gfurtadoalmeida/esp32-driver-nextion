@@ -20,6 +20,13 @@ extern "C"
 #define CONFIG_NEX_RESP_WAIT_TIME_MS 1000
 #endif
 
+#ifndef CONFIG_NEX_RESP_NO_BKCMD_WAIT_TIME_MS
+/**
+ * Device response wait time (ms), when responding only when failure.
+ */
+#define CONFIG_NEX_RESP_NO_BKCMD_WAIT_TIME_MS 50
+#endif
+
 #ifndef CONFIG_NEX_RESP_MSG_MAX_LENGTH
 /**
  * Max response message size.

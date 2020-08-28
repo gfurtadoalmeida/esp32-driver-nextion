@@ -17,7 +17,6 @@ extern "C"
 #endif
 
 #define NEX_EVENT_QUEUE_WAIT_TIME (pdMS_TO_TICKS(CONFIG_NEX_EVENT_QUEUE_WAIT_TIME_MS))
-#define NEX_RESP_WAIT_TIME (pdMS_TO_TICKS(CONFIG_NEX_RESP_WAIT_TIME_MS))
 
     typedef struct
     {
@@ -173,7 +172,7 @@ extern "C"
         NEX_CHECK((command != NULL), "command error(NULL)", NEX_FAIL);
 
         uint8_t *response = NULL;
-        const int read = nextion_send_command_raw(command, &response);
+        const int read = nextion_send_command_raw(command, &response, NEX_RESP_WAIT_TIME);
 
         if (read == NEX_DVC_CMD_ACK_LENGTH)
         {
@@ -200,7 +199,7 @@ extern "C"
     //   8. Upon notification, continue processing.
     //   9. Release the mutex.
 
-    int nextion_send_command_raw(const char *command, uint8_t **response_buffer)
+    int nextion_send_command_raw(const char *command, uint8_t **response_buffer, TickType_t ticksToWait)
     {
         NEX_CHECK((command != NULL), "command error(NULL)", -1);
         NEX_CHECK((response_buffer != NULL), "response_buffer error(NULL)", -1);
@@ -210,21 +209,21 @@ extern "C"
 
         xSemaphoreTake(p_nextion_driver_obj.command_mutex, portMAX_DELAY);
 
-        uart_write_bytes(uart_num, command, strlen(command));
-        uart_write_bytes(uart_num, (char *)ending, NEX_DVC_CMD_END_LENGTH);
-
         int read = -1;
 
         p_nextion_driver_obj.command_task = xTaskGetCurrentTaskHandle();
 
-        if (ulTaskNotifyTake(pdTRUE, NEX_RESP_WAIT_TIME))
+        uart_write_bytes(uart_num, command, strlen(command));
+        uart_write_bytes(uart_num, (char *)ending, NEX_DVC_CMD_END_LENGTH);
+
+        if (ulTaskNotifyTake(pdTRUE, ticksToWait))
         {
             *response_buffer = p_nextion_driver_obj.command_response;
             read = p_nextion_driver_obj.command_response_length;
         }
         else
         {
-            NEX_LOGE("read timeout");
+            NEX_LOGE("response wait timeout");
         }
 
         xSemaphoreGive(p_nextion_driver_obj.command_mutex);
