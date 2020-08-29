@@ -110,6 +110,8 @@ extern "C"
         if (!nextion_is_driver_installed())
             return NEX_FAIL;
 
+        ESP_ERROR_CHECK(uart_flush_input(p_nextion_driver_obj.uart_num));
+
         // This driver's logics relies on receiving responses in all cases.
         if (!NEX_DVC_CODE_IS_SUCCESS(nextion_send_command("bkcmd=3")))
         {
