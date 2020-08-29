@@ -17,7 +17,7 @@ extern "C"
      *
      * @param command A null-terminated string with the command to be sent.
      * @param[in] text Location where the retrieved text will be stored. Must take the null-terminator into account.
-     * @param[i] text_length Location where the text length will be stored.
+     * @param[in] text_length Location where the text length will be stored.
      *
      * @return NEX_OK or NEX_DVC_ERR_INVALID_VARIABLE_OR_ATTRIBUTE.
      */

@@ -86,6 +86,68 @@ extern "C"
         TEST_ASSERT_NEX_OK(code);
     }
 
+    TEST_CASE("Can get a component text", "[nextion][op_comp]")
+    {
+        DRIVER_INSTALL()
+
+        char text[10];
+        int length;
+        nex_err_t code = nextion_component_get_text("t0", text, &length);
+
+        TEST_ASSERT_NEX_OK(code);
+        TEST_ASSERT_EQUAL_INT(9, length);
+        TEST_ASSERT_EQUAL_STRING("test text", text);
+    }
+
+    TEST_CASE("Can get a component number", "[nextion][op_comp]")
+    {
+        DRIVER_INSTALL()
+
+        int number;
+        nex_err_t code = nextion_component_get_number("n0", &number);
+
+        TEST_ASSERT_NEX_OK(code);
+        TEST_ASSERT_EQUAL_INT(50, number);
+    }
+
+    TEST_CASE("Can get a component boolean", "[nextion][op_comp]")
+    {
+        DRIVER_INSTALL()
+
+        bool value;
+        nex_err_t code = nextion_component_get_boolean("c0", &value);
+
+        TEST_ASSERT_NEX_OK(code);
+        TEST_ASSERT_TRUE(value);
+    }
+
+    TEST_CASE("Can set a component text", "[nextion][op_comp]")
+    {
+        DRIVER_INSTALL()
+
+        nex_err_t code = nextion_component_set_text("b0", "Button!");
+
+        TEST_ASSERT_NEX_OK(code);
+    }
+
+    TEST_CASE("Can set a component number", "[nextion][op_comp]")
+    {
+        DRIVER_INSTALL()
+
+        nex_err_t code = nextion_component_set_number("x0", 100);
+
+        TEST_ASSERT_NEX_OK(code);
+    }
+
+    TEST_CASE("Can set a component boolean", "[nextion][op_comp]")
+    {
+        DRIVER_INSTALL()
+
+        nex_err_t code = nextion_component_set_boolean("r0", false);
+
+        TEST_ASSERT_NEX_OK(code);
+    }
+
 #ifdef __cplusplus
 }
 #endif

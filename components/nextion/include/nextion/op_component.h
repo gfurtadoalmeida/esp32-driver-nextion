@@ -12,7 +12,7 @@ extern "C"
     /**
      * @brief Refreshes a component, bringing it to front.
      * @param command A null-terminated string with the component's name or id.
-     * @return NEX_OK or NEX_DVC_ERR_INVALID_COMPONENT.
+     * @return NEX_OK or NEX_FAIL | NEX_DVC_ERR_INVALID_COMPONENT.
      */
     nex_err_t nextion_component_refresh(const char *component_name_or_id);
 
@@ -22,7 +22,7 @@ extern "C"
      * @param command A null-terminated string with the component's name or id.
      * @param visible_or_not True make it visible; false make it invisible.
      *
-     * @return NEX_OK or NEX_DVC_ERR_INVALID_COMPONENT.
+     * @return NEX_OK or NEX_FAIL | NEX_DVC_ERR_INVALID_COMPONENT.
      */
     nex_err_t nextion_component_set_visibility(const char *component_name_or_id, bool visible_or_not);
 
@@ -40,7 +40,7 @@ extern "C"
      * @param command A null-terminated string with the component's name or id.
      * @param touchable_or_not True make it touchable; false make it untouchable.
      *
-     * @return NEX_OK or NEX_DVC_ERR_INVALID_COMPONENT.
+     * @return NEX_OK or NEX_FAIL | NEX_DVC_ERR_INVALID_COMPONENT.
      */
     nex_err_t nextion_component_set_touchable(const char *component_name_or_id, bool touchable_or_not);
 
@@ -51,6 +51,64 @@ extern "C"
      * @return NEX_OK or NEX_DVC_ERR_INVALID_COMPONENT.
      */
     nex_err_t nextion_component_set_touchable_all(bool touchable_or_not);
+
+    /**
+     * @brief Get a component ".txt" value.
+     *
+     * @details It's the caller responsibility to allocate a buffer big enough to
+     * hold the text returned.
+     *
+     * @param component_name A null-terminated string with the component name.
+     * @param[in] text Location where the retrieved text will be stored. Must take the null-terminator into account.
+     * @param[in] text_length Location where the text length will be stored.
+     *
+     * @return NEX_OK or NEX_FAIL | NEX_DVC_ERR_INVALID_VARIABLE_OR_ATTRIBUTE | NEX_DVC_ERR_INVALID_COMPONENT.
+     */
+    nex_err_t nextion_component_get_text(const char *component_name, char *text, int *text_length);
+
+    /**
+     * @brief Get a component ".val" value.
+     *
+     * @param component_name A null-terminated string with the component name.
+     * @param[in] number Location where the retrieved number will be stored.
+     *
+     * @return NEX_OK or NEX_FAIL | NEX_DVC_ERR_INVALID_VARIABLE_OR_ATTRIBUTE | NEX_DVC_ERR_INVALID_COMPONENT.
+     */
+    nex_err_t nextion_component_get_number(const char *component_name, int32_t *number);
+
+    /**
+     * @brief Get a component ".val" value converted to boolean.
+     *
+     * @param component_name A null-terminated string with the component name.
+     * @param[in] value Location where the retrieved boolean will be stored.
+     *
+     * @return NEX_OK or NEX_FAIL | NEX_DVC_ERR_INVALID_VARIABLE_OR_ATTRIBUTE | NEX_DVC_ERR_INVALID_COMPONENT.
+     */
+    nex_err_t nextion_component_get_boolean(const char *component_name, bool *value);
+
+    /**
+     * @brief Set a component ".txt" value.
+     * @param component_name A null-terminated string with the component name.
+     * @param[in] text A null-terminated string with the text.
+     * @return NEX_OK or NEX_FAIL | NEX_DVC_ERR_INVALID_VARIABLE_OR_ATTRIBUTE | NEX_DVC_ERR_INVALID_COMPONENT.
+     */
+    nex_err_t nextion_component_set_text(const char *component_name, char *text);
+
+    /**
+     * @brief Set a component ".val" value.
+     * @param component_name A null-terminated string with the component name.
+     * @param[in] text A null-terminated string with the text.
+     * @return NEX_OK or NEX_FAIL | NEX_DVC_ERR_INVALID_VARIABLE_OR_ATTRIBUTE | NEX_DVC_ERR_INVALID_COMPONENT.
+     */
+    nex_err_t nextion_component_set_number(const char *component_name, int32_t number);
+
+    /**
+     * @brief Set a component ".val" value, converted as boolean.
+     * @param component_name A null-terminated string with the component name.
+     * @param[in] text A null-terminated string with the text.
+     * @return NEX_OK or NEX_FAIL | NEX_DVC_ERR_INVALID_VARIABLE_OR_ATTRIBUTE | NEX_DVC_ERR_INVALID_COMPONENT.
+     */
+    nex_err_t nextion_component_set_boolean(const char *component_name, bool value);
 
 #ifdef __cplusplus
 }

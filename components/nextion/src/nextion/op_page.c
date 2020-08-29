@@ -11,6 +11,8 @@ extern "C"
 
     nex_err_t nextion_page_get(uint8_t *page_id)
     {
+        NEX_CHECK((page_id != NULL), "page_id error(NULL)", NEX_FAIL);
+
         uint8_t *response = NULL;
         const int read = nextion_send_command_raw("sendme", &response, NEX_RESP_WAIT_TIME);
 

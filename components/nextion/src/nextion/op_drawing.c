@@ -80,6 +80,8 @@ extern "C"
                                 background_fill_mode_t background_fill,
                                 const char *text)
     {
+        NEX_CHECK((text != NULL), "text error(NULL)", NEX_FAIL);
+
         // It's not a problem having a background value if the fill mode is "none".
         uint16_t background_value = background_picture_id;
 

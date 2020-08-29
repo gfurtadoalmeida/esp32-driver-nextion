@@ -175,7 +175,7 @@ extern "C"
      * @param background_fill Background fill mode.
      * @param text Null-terminated text to be drawn.
      *
-     * @return NEX_OK or NEX_DVC_ERR_INVALID_FONT | NEX_DVC_ERR_INVALID_PICTURE.
+     * @return NEX_OK or NEX_FAIL | NEX_DVC_ERR_INVALID_FONT | NEX_DVC_ERR_INVALID_PICTURE.
      */
     nex_err_t nextion_draw_text(uint16_t x,
                                 uint16_t y,
