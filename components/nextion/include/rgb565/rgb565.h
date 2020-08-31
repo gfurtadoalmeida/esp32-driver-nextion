@@ -33,6 +33,15 @@ extern "C"
 #define RGB565_COLOR_YELLOW ((rgb565_t)0b1111111111100000)
 #define RGB565_COLOR_WHITE ((rgb565_t)0b1111111111111111)
 
+    /**
+     * @brief Converts a RGB color into RGB565.
+     *
+     * @param red Red value, from 0 to 255.
+     * @param green Green value, from 0 to 255.
+     * @param blue Blue value, from 0 to 255.
+     *
+     * @return RGB565 color.
+     */
     rgb565_t rgb565_convert_from_888(uint8_t red, uint8_t green, uint8_t blue);
 
 #ifdef __cplusplus
