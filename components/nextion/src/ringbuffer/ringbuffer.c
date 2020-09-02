@@ -48,7 +48,7 @@ extern "C"
 
         ringbuffer_t *ring = (ringbuffer_t *)handle;
 
-        bzero(ring->buffer, ring->length);
+        memset(ring->buffer, 0, ring->length);
 
         ring->read_pos = 0;
         ring->write_pos = 0;
