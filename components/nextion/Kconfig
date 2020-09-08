@@ -1,44 +1,11 @@
 menu "Nextion Display"
 
-    config NEX_EVENT_QUEUE_WAIT_TIME_MS
-        int "Event queue wait time (ms)"
-        range 10 1000
-        default 50
-        help
-            Time, in milliseconds, to wait for the event queue to enqueue
-            an event. In case it is not possible to enqueue, the event
-            will be dropped.
-
-    config NEX_REQ_MSG_MAX_LENGTH
-        int "Max request message size"
-        range 35 512
-        default 140
-        help
-            The maximum size of a request message.
-            Usually, the biggest messages are the ones that send text.
-
-    config NEX_RESP_MSG_MAX_LENGTH
-        int "Max response message size"
-        range 35 512
-        default 140
-        help
-            The maximum size of a response message.
-            Usually, the biggest messages are the ones that retrieve text.
-
     config NEX_RESP_WAIT_TIME_MS
         int "Response wait time (ms)"
         range 10 10000
         default 1000
         help
             Time, in milliseconds, to wait for a response from the display.
-
-    config NEX_RESP_NO_BKCMD_WAIT_TIME_MS
-        int "Response wait time for no response operations (ms)"
-        range 10 10000
-        default 1000
-        help
-            Time, in milliseconds, to wait for a response that will only
-            come in case of failure; the operation does not respects "bkcmd".
 
     config NEX_UART_RECV_BUFFER_SIZE
         int "UART receiver buffer size"

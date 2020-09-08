@@ -1,5 +1,5 @@
-#ifndef __COMMON_INFRA_H__
-#define __COMMON_INFRA_H__
+#ifndef __NEXTION_ESP32_COMMON_INFRA_H__
+#define __NEXTION_ESP32_COMMON_INFRA_H__
 
 #include "esp_log.h"
 
@@ -66,16 +66,8 @@ extern "C"
         return (return_value);                                   \
     }
 
-#define NEX_SEND_COMMAND(command_length, command_format, ...)         \
-    ({                                                                \
-        const int real_length = command_length + 1;                   \
-        char buffer[real_length];                                     \
-        snprintf(buffer, real_length, command_format, ##__VA_ARGS__); \
-        nextion_send_command(buffer);                                 \
-    })
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif //__COMMON_INFRA_H__
+#endif //__NEXTION_ESP32_COMMON_INFRA_H__

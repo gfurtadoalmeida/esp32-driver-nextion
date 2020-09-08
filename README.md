@@ -1,15 +1,15 @@
 # ESP32 Nextion Display Driver
 
-A simple and small ESP32 driver for any [Nextion](https://nextion.tech/) HMI display.  
-Written in **C** using the [ESP-IDF](https://github.com/espressif/esp-idf) framework.  
+ESP32 driver for [Nextion](https://nextion.tech/) HMI displays.  
+ 
 
-Everything is based on Nextion [instruction set](https://nextion.tech/instruction-set/).  
+## Characteristics
 
-## Capabilities
-
-* Send commands.
-* Listen to device events.
-* Configuration via [menuconfig](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/kconfig.html) _(Kconfig)_.
+* Written in **C** using the [ESP-IDF](https://github.com/espressif/esp-idf) framework.
+* Unopinionated: you get the functions and that's it.
+* Multi-display: you can use it with as many displays you connect.
+* Based on Nextion [instruction set](https://nextion.tech/instruction-set/).
+* Configurable using [menuconfig](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/kconfig.html) _(Kconfig)_.
 
 ## Installation Instructions
 
@@ -17,14 +17,15 @@ Everything is based on Nextion [instruction set](https://nextion.tech/instructio
 
 1. Clone this repository using `git clone --recursive` and copy the folder ["components/nextion"](/components/nextion/) to the components folder of your ESP-IDF project.
 2. Configure it in `menuconfig -> Component config -> Nextion Display` _(optional)_.
-3. Include `nextion.h` in your code.
+3. Include `nextion-esp32.h` in your code.
 
 ## Project Structure
 
 ```text
-/esp32-driver-nextion
+/
 |-- components
     |-- nextion             : The driver
+        | external          : External libraries
         |-- include         : Includes that can be used by dependent projects
         |-- private_include : Includes that only the driver can use
         |-- src             : Where ".c" files resides
@@ -40,9 +41,10 @@ Everything is based on Nextion [instruction set](https://nextion.tech/instructio
 
 * The code must run on any ESP32+ hardware.
 * Create tests for every new functionality.
-* Only use `stdint.h` when:
-  * The returned value, from the display, has a specific size (e.g.: returned numbers are always 32 bits signed).
-  * You really need a specific size (e.g.: RGB565 is always 16 bits unsigned).
+
+## Dependencies
+
+* [iot-lib-nextion](https://github.com/gfurtadoalmeida/iot-lib-nextion)
 
 ## Building
 
@@ -81,6 +83,3 @@ All commands must be run on the test runner folder.
 ## To Do
 
 * [ ] Documentation
-* [ ] Helper functions covering all methods
-* [ ] Macro helpers for command creation
-* [ ] Publish on PlatformIO

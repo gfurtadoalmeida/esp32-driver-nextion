@@ -9,57 +9,102 @@
 #include "esp_log.h"
 #include "driver/uart.h"
 #include "driver/gpio.h"
-#include "nextion/nextion.h"
+#include "nextion/nextion-esp32.h"
+#include "nextion/page.h"
+#include "nextion/component.h"
 
 const static char *TAG = "example";
-static QueueHandle_t p_event_queue;
+
+static nextion_handle_t nextion_handle;
+static TaskHandle_t task_interface_handle;
+
+void process_touch_event(const nextion_handle_t handle,
+                         uint8_t page_id,
+                         uint8_t component_id,
+                         nextion_touch_state_t state)
+{
+    if (page_id == 0 && component_id == 3 && state == NEXTION_TOUCH_RELEASED)
+    {
+        char city[50];
+        int32_t temperature;
+
+        // Get the city name.
+        if (nextion_component_get_text(handle, "t0", city, 50, NULL) == NEX_OK)
+        {
+            ESP_LOGI(TAG, "City: %s", city);
+        }
+        else
+        {
+            ESP_LOGE(TAG, "could not get city");
+        }
+
+        // Get the temperature.
+        if (nextion_component_get_number(handle, "n0", &temperature) == NEX_OK)
+        {
+            ESP_LOGI(TAG, "Temperature: %d", temperature);
+        }
+        else
+        {
+            ESP_LOGE(TAG, "could not get temperature");
+        }
+    }
+}
+
+void do_interface_logic()
+{
+    do
+    {
+        nextion_event_process(nextion_handle);
+
+        ESP_LOGI(TAG, "waiting for button 3 'b0' from page 0 to be pressed.");
+
+        vTaskDelay(pdMS_TO_TICKS(300));
+    } while (true);
+}
 
 void app_main(void)
 {
-    if (nextion_driver_install(UART_NUM_2, 9600, GPIO_NUM_17, GPIO_NUM_16, 5, &p_event_queue) != NEX_OK)
+    nextion_handle = nextion_driver_install(UART_NUM_2, 9600, GPIO_NUM_17, GPIO_NUM_16);
+
+    if (nextion_handle == NULL)
     {
         ESP_LOGE(TAG, "could not install nextion driver");
         return;
     }
 
-    if (nextion_driver_init() != NEX_OK)
+    if (nextion_init(nextion_handle) != NEX_OK)
     {
-        ESP_LOGE(TAG, "could not init nextion driver");
+        ESP_LOGE(TAG, "could not init nextion device");
         return;
     }
 
-    nex_err_t code = nextion_send_command("page 0");
+    nextion_event_callback_t callback;
+    callback.on_touch = &process_touch_event;
 
-    if (NEX_DVC_CODE_IS_SUCCESS(code))
+    nextion_event_callback_set(nextion_handle, callback);
+
+    nex_err_t code = nextion_page_set(nextion_handle, "0");
+
+    if (!NEX_DVC_CODE_IS_SUCCESS(code))
     {
-        nextion_event_t event;
-
-        while (1)
-        {
-            while (xQueueReceive(p_event_queue, &event, pdMS_TO_TICKS(100)) == pdTRUE)
-            {
-                // Was my button (with id 4) released?
-                if (event.type == NEXTION_EVENT_TOUCH && event.touch.state == NEXTION_TOUCH_RELEASED)
-                {
-                    char city[50];
-                    int temperature;
-
-                    // Get the city name.
-                    nextion_get_text("get t0.txt", city);
-
-                    // Get the temperature.
-                    nextion_get_number("get n0.val", &temperature);
-
-                    ESP_LOGI(TAG, "City: %s", city);
-                    ESP_LOGI(TAG, "Temperature: %d", temperature);
-                }
-            }
-
-            vTaskDelay(pdMS_TO_TICKS(2000));
-        }
+        ESP_LOGE(TAG, "could not change to page 0");
+        return;
     }
 
-    if (nextion_driver_delete() != NEX_OK)
+    if (xTaskCreate(do_interface_logic,
+                    "do_interface_logic",
+                    4096,
+                    NULL,
+                    20,
+                    &task_interface_handle) != pdPASS)
+    {
+        ESP_LOGE(TAG, "could not create task");
+        return;
+    }
+
+    vTaskSuspend(NULL);
+
+    if (!nextion_driver_delete(nextion_handle))
     {
         ESP_LOGE(TAG, "could not delete nextion driver");
     }
