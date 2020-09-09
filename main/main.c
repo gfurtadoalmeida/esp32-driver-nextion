@@ -1,4 +1,4 @@
-#include "nextion.h"
+#include "nextion/nextion-esp32.h"
 
 /* This file serve two purposes:
  *   1. Illustrate the layout of an ESP-IDF project.

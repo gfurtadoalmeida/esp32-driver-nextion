@@ -1,7 +1,3 @@
-// When building using VSCode tooling, the necessary
-// variables are not injected in build time.
-#include "../../../build/config/sdkconfig.h"
-
 #include "common_infra.h"
 #include "config.h"
 #include "nextion/base/kernel.h"
