@@ -88,7 +88,7 @@ extern "C"
 
     nex_kernel_err_t esp32_nextion_kernel_comm_write(void *caller_object, const uint8_t *buffer, size_t length)
     {
-        return uart_write_bytes(((nextion_driver_t *)caller_object)->uart_num, buffer, length) > -1 ? NEX_KERNEL_OK : NEX_KERNEL_FAIL;
+        return uart_write_bytes(((nextion_driver_t *)caller_object)->uart_num, (void *)buffer, length) > -1 ? NEX_KERNEL_OK : NEX_KERNEL_FAIL;
     }
 
 #ifdef __cplusplus
