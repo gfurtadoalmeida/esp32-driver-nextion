@@ -16,6 +16,9 @@ pool:
   - ESP-IDF -equals True
 
 steps:
+- checkout: self
+  lfs: false
+  submodules: recursive
 - task: PowerShell@2
   inputs:
     targetType: 'inline'
