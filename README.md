@@ -1,7 +1,7 @@
 # ESP32 Nextion Display Driver
 
+![Azure DevOps builds](https://img.shields.io/azure-devops/build/gfurtadoalmeida/GitHub/39?)  
 ESP32 driver for [Nextion](https://nextion.tech/) HMI displays.  
- 
 
 ## Characteristics
 

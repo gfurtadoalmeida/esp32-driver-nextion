@@ -17,15 +17,28 @@ pool:
 
 steps:
 - checkout: self
+  displayName: Checkout
   lfs: false
   submodules: recursive
 - task: PowerShell@2
+  displayName: Build Lib
   inputs:
     targetType: 'inline'
     failOnStderr: true
     script: |
       cd "$(Build.Repository.LocalPath)"
-      
+
+      &"C:\espidfsources\export.ps1"
+      &python.exe "C:\espidfsources\tools\idf.py" "set-target" "esp32"
+      &python.exe "C:\espidfsources\tools\idf.py" "build"
+- task: PowerShell@2
+  displayName: Build Test
+  inputs:
+    targetType: 'inline'
+    failOnStderr: true
+    script: |
+      cd "$(Build.Repository.LocalPath)\test"
+
       &"C:\espidfsources\export.ps1"
       &python.exe "C:\espidfsources\tools\idf.py" "set-target" "esp32"
       &python.exe "C:\espidfsources\tools\idf.py" "build"
