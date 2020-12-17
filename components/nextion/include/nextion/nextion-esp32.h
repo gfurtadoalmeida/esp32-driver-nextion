@@ -30,6 +30,7 @@ extern "C"
                                             int rx_io_num);
     /**
      * @brief Deletes a Nextion driver and context.
+     * @note It will call "nextion_free".
      * @param handle Nextion driver.
      * @return True if success, otherwise false.
      */

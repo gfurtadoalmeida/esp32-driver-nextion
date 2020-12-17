@@ -1,6 +1,5 @@
 #include "common_infra.h"
 #include "config.h"
-#include "nextion/base/kernel.h"
 #include "nextion/nextion-esp32.h"
 
 #ifdef __cplusplus
@@ -8,17 +7,23 @@ extern "C"
 {
 #endif
 
+    nex_comm_err_t _comm_init(const nextion_comm_t *self);
+    nex_comm_err_t _comm_free(const nextion_comm_t *self);
+    nex_comm_err_t _comm_read(const nextion_comm_t *self, uint8_t *byte);
+    nex_comm_err_t _comm_write(const nextion_comm_t *self, const uint8_t *buffer, size_t buffer_length);
+
+    static nextion_comm_vtable_t _vtable = {
+        _comm_init,
+        _comm_free,
+        _comm_read,
+        _comm_write};
+
     typedef struct
     {
+        nextion_comm_t comm;
         uart_port_t uart_num; // UART port number.
         bool is_installed;    // If the driver is installed.
     } nextion_driver_t;
-
-    nex_kernel_err_t esp32_nextion_kernel_comm_read(void *caller_object, uint8_t *byte);
-    nex_kernel_err_t esp32_nextion_kernel_comm_write(void *caller_object, const uint8_t *buffer, size_t length);
-
-    nex_kernel_err_t (*nextion_kernel_comm_read)(void *, uint8_t *) = &esp32_nextion_kernel_comm_read;
-    nex_kernel_err_t (*nextion_kernel_comm_write)(void *, const uint8_t *, size_t) = &esp32_nextion_kernel_comm_write;
 
     nextion_handle_t nextion_driver_install(uart_port_t uart_num, int baud_rate, int tx_io_num, int rx_io_num)
     {
@@ -41,13 +46,14 @@ extern "C"
         ESP_ERROR_CHECK(uart_set_pin(uart_num, tx_io_num, rx_io_num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
         ESP_ERROR_CHECK(uart_driver_install(uart_num, CONFIG_NEX_UART_RECV_BUFFER_SIZE, 0, CONFIG_NEX_UART_QUEUE_SIZE, NULL, 0));
 
-        nextion_driver_t *handle = (nextion_driver_t *)malloc(sizeof(nextion_driver_t));
-        handle->uart_num = uart_num;
-        handle->is_installed = true;
+        nextion_driver_t *driver = (nextion_driver_t *)malloc(sizeof(nextion_driver_t));
+        driver->uart_num = uart_num;
+        driver->is_installed = true;
+        driver->comm.vtable = &_vtable;
 
         NEX_LOGI("driver installed");
 
-        return nextion_create(handle);
+        return nextion_create((nextion_comm_t *)driver);
     }
 
     bool nextion_driver_delete(nextion_handle_t handle)
@@ -56,13 +62,13 @@ extern "C"
 
         NEX_LOGI("deleting driver");
 
-        nextion_driver_t *driver = (nextion_driver_t *)nextion_caller_object_get(handle);
+        nextion_driver_t *driver = (nextion_driver_t *)nextion_comm_get(handle);
 
         ESP_ERROR_CHECK(uart_driver_delete(driver->uart_num));
 
-        free(driver);
-
         nextion_free(handle);
+
+        free(driver);
 
         handle = NULL;
 
@@ -71,24 +77,37 @@ extern "C"
         return true;
     }
 
-    nex_kernel_err_t esp32_nextion_kernel_comm_read(void *caller_object, uint8_t *byte)
+    nex_comm_err_t _comm_init(const nextion_comm_t *self)
     {
-        int bytes_count = uart_read_bytes(((nextion_driver_t *)caller_object)->uart_num,
+        return NEX_COMM_OK;
+    }
+
+    nex_comm_err_t _comm_free(const nextion_comm_t *self)
+    {
+        return NEX_COMM_OK;
+    }
+
+    nex_comm_err_t _comm_read(const nextion_comm_t *self, uint8_t *byte)
+    {
+        int bytes_count = uart_read_bytes(((nextion_driver_t *)self)->uart_num,
                                           byte,
                                           1,
                                           pdMS_TO_TICKS(CONFIG_NEX_RESP_WAIT_TIME_MS));
         if (bytes_count > 0)
-            return NEX_KERNEL_OK;
+            return NEX_COMM_OK;
 
         if (bytes_count == 0)
-            return NEX_KERNEL_TIMEOUT;
+            return NEX_COMM_TIMEOUT;
 
-        return NEX_KERNEL_FAIL;
+        return NEX_COMM_FAIL;
     }
 
-    nex_kernel_err_t esp32_nextion_kernel_comm_write(void *caller_object, const uint8_t *buffer, size_t length)
+    nex_comm_err_t _comm_write(const nextion_comm_t *self, const uint8_t *buffer, size_t buffer_length)
     {
-        return uart_write_bytes(((nextion_driver_t *)caller_object)->uart_num, (void *)buffer, length) > -1 ? NEX_KERNEL_OK : NEX_KERNEL_FAIL;
+        if (uart_write_bytes(((nextion_driver_t *)self)->uart_num, (void *)buffer, buffer_length) > -1)
+            return NEX_COMM_OK;
+        else
+            return NEX_COMM_FAIL;
     }
 
 #ifdef __cplusplus

@@ -3,7 +3,7 @@ menu "Nextion Display"
     config NEX_RESP_WAIT_TIME_MS
         int "Response wait time (ms)"
         range 10 10000
-        default 1000
+        default 20
         help
             Time, in milliseconds, to wait for a response from the display.
 

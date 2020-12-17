@@ -35,13 +35,20 @@ extern "C"
     {
         nextion_handle_t handle = nextion_driver_install(TEST_UART_NUM, TEST_UART_BAUD_RATE, TEST_UART_TX_PIN, TEST_UART_RX_PIN);
 
+        nex_err_t init_code = ;
+
+        if (nextion_init(handle) != NEX_OK)
+        {
+            TEST_FAIL_MESSAGE("Could not init the driver.");
+        }
+
         uint8_t page_id = 255;
         nex_err_t code = nextion_page_get(handle, &page_id);
 
         nextion_driver_delete(handle);
 
-        TEST_ASSERT_EQUAL(0, page_id);
         TEST_ASSERT_EQUAL(NEX_OK, code);
+        TEST_ASSERT_EQUAL(0, page_id);
     }
 
 #ifdef __cplusplus

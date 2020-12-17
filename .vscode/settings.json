@@ -78,7 +78,7 @@
       "common_infra.h": "c"
     },
     "idf.port": "/dev/ttyUSB1",
-    "idf.portWin": "COM4",
+    "idf.portWin": "COM3",
     "idf.openOcdConfigs": [
       "interface/ftdi/ft232h-module-swd.cfg",
       "target/esp32.cfg",

@@ -7,7 +7,7 @@ ESP32 driver for [Nextion](https://nextion.tech/) HMI displays.
 
 * Written in **C** using the [ESP-IDF](https://github.com/espressif/esp-idf) framework.
 * Unopinionated: you get the functions and that's it.
-* Multi-display: you can use it with as many displays you connect.
+* Multi-display: you can connect to as many displays as you want.
 * Based on Nextion [instruction set](https://nextion.tech/instruction-set/).
 * Configurable using [menuconfig](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/kconfig.html) _(Kconfig)_.
 
@@ -44,11 +44,18 @@ ESP32 driver for [Nextion](https://nextion.tech/) HMI displays.
 
 ## Dependencies
 
-* [iot-lib-nextion](https://github.com/gfurtadoalmeida/iot-lib-nextion)
+* [iot-lib-nextion](https://github.com/gfurtadoalmeida/iot-lib-nextion): portable Nextion library.
+
+## Build Requirements
+
+* [CMake](https://cmake.org/): 3.5+, must be on PATH environment variable.
+* [ESP-IDF](https://github.com/espressif/esp-idf): use the the last stable one.
 
 ## Building
 
 ### On VS Code
+
+It's highly recommended to install the official [ESP-IDF Extension](https://marketplace.visualstudio.com/items?itemName=espressif.esp-idf-extension), for a better experience.
 
 ```ctrl+shif+b``` or ```ctrl+shif+p -> Task: Run Task -> Build```
 
@@ -58,11 +65,11 @@ ESP32 driver for [Nextion](https://nextion.tech/) HMI displays.
 
 ## Testing
 
-Upload [test_display.hmi](/components/nextion/test/nextion/hmi/) on your Nextion display before testing. Be aware that the display project was built using Nextion Editor 1.16.1; you might need to [upgrade your display](https://nextion.tech/faq-items/using-legacy-nextion-devices/) before uploading this project.  
+Upload [test_display.hmi](/components/nextion/test/nextion/hmi/) on your Nextion display before testing. Be aware that the display project was built using Nextion Editor 1.61.2; you might need to [upgrade your display](https://nextion.tech/faq-items/using-legacy-nextion-devices/) before uploading this project.  
 
 The task watchdog for CPU0 is disabled on the test project. It is needed so we can interact with the test tool.  
 
-For your sanity sake, power your display with a decent power source (5V +700 mA), otherwise you'll waste 4+ hours debugging just to discover that the power source was the culprit. 🤦‍♂️
+The baudrate is set to 115200 on the display `program.s` and ESP32 [common_infra_test.h](/components/nextion/test/common_infra_test.h)
 
 ### On VS Code
 
@@ -74,7 +81,8 @@ You can do it in one command using `ctrl+shif+p -> Task: Run Task -> Build, flas
 
 ### With ESP-IDF
 
-All commands must be run on the test runner folder.
+All commands must be run on the test runner folder.  
+Change the COM port to the one you're using.
 
 1. Build the test project: `idf.py build`
 2. Flash the test project: `idf.py flash -p COM4`
