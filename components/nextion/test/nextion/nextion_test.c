@@ -35,8 +35,6 @@ extern "C"
     {
         nextion_handle_t handle = nextion_driver_install(TEST_UART_NUM, TEST_UART_BAUD_RATE, TEST_UART_TX_PIN, TEST_UART_RX_PIN);
 
-        nex_err_t init_code = ;
-
         if (nextion_init(handle) != NEX_OK)
         {
             TEST_FAIL_MESSAGE("Could not init the driver.");
