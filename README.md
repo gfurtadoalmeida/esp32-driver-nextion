@@ -11,9 +11,7 @@ ESP32 driver for [Nextion](https://nextion.tech/) HMI displays.
 * Based on Nextion [instruction set](https://nextion.tech/instruction-set/).
 * Configurable using [menuconfig](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/kconfig.html) _(Kconfig)_.
 
-## Installation Instructions
-
-### Using ESP-IDF
+## Installation
 
 1. Clone this repository using `git clone --recursive` and copy the folder ["components/nextion"](/components/nextion/) to the components folder of your ESP-IDF project.
 2. Configure it in `menuconfig -> Component config -> Nextion Display` _(optional)_.
@@ -32,7 +30,7 @@ ESP32 driver for [Nextion](https://nextion.tech/) HMI displays.
         |-- test            : Tests
             | -- nextion
                  |-- hmi    : Nextion display project used for testing
-|-- examples                : Some usage examples
+|-- examples                : Usage examples
 |-- main                    : Where debugging happens
 |-- test                    : Test runner
 ```
@@ -46,12 +44,12 @@ ESP32 driver for [Nextion](https://nextion.tech/) HMI displays.
 
 * [iot-lib-nextion](https://github.com/gfurtadoalmeida/iot-lib-nextion): portable Nextion library.
 
-## Build Requirements
+## Building 🔨
+
+### Requirements
 
 * [CMake](https://cmake.org/): 3.5+, must be on PATH environment variable.
 * [ESP-IDF](https://github.com/espressif/esp-idf): use the the last stable one.
-
-## Building
 
 ### On VS Code
 
@@ -63,7 +61,21 @@ It's highly recommended to install the official [ESP-IDF Extension](https://mark
 
 ```idf.py build``` on the root folder.
 
-## Testing
+## Debugging 🧩
+
+On the [/.debug](/.debug/) folder you'll find interface configuration files for debug boards. Choose one and copy it to the `%IDF_TOOLS_PATH%\tools\openocd-esp32\{version}\openocd-esp32\share\openocd\scripts\interface` folder.
+
+Boards:
+
+* [CJMCU-FTDI-2232HL](https://www.aliexpress.com/wholesale?SearchText=cjmcu+2232hl)
+
+Driver configuration:
+
+1. Install the latest [FTDI VPC Driver](https://www.ftdichip.com/Drivers/VCP.htm).
+2. Plug the debug board.
+3. Open [Zadig](https://zadig.akeo.ie/) and replace the `Dual RS232-HS (Interface 0)` driver with WinUSB (`Options->List all devices`).
+
+## Testing 🧪
 
 Upload [test_display.hmi](/components/nextion/test/nextion/hmi/) on your Nextion display before testing. Be aware that the display project was built using Nextion Editor 1.61.2; you might need to [upgrade your display](https://nextion.tech/faq-items/using-legacy-nextion-devices/) before uploading this project.  
 
@@ -87,7 +99,3 @@ Change the COM port to the one you're using.
 1. Build the test project: `idf.py build`
 2. Flash the test project: `idf.py flash -p COM4`
 3. Monitor the test run: `idf.py monitor -p COM4`
-
-## To Do
-
-* [ ] Documentation
