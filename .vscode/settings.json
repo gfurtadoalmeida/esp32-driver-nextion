@@ -1,87 +1,31 @@
 {
-    "C_Cpp.clang_format_style": "Visual Studio",
-    "editor.formatOnSave": false,
-    "[cpp]": {
-      "editor.quickSuggestions": true
-    },
-    "[c]": {
-      "editor.quickSuggestions": true
-    },
-    "C_Cpp.intelliSenseEngineFallback": "Enabled",
-    "cmake.configureOnOpen": false,
-    "files.exclude": {
-      "**/.git": true,
-      "**/.svn": true,
-      "**/.hg": true,
-      "**/CVS": true,
-      "**/.DS_Store": true,
-      "build/": true,
-      "debug.log": true,
-      "sdkconfig": true,
-      "sdkconfig.old": true,
-      "test/build/": true,
-      "test/sdkconfig": true,
-      "test/sdkconfig.old": true
-    },
-    "files.associations": {
-      "sdkconfig": "c",
-      "cstddef": "cpp",
-      "limits": "cpp",
-      "memory": "cpp",
-      "mutex": "cpp",
-      "vector": "cpp",
-      "xhash": "cpp",
-      "xtree": "cpp",
-      "xutility": "cpp",
-      "*.inc": "c",
-      "xlocale": "c",
-      "xstring": "c",
-      "array": "c",
-      "stdarg.h": "c",
-      "xiosbase": "c",
-      "istream": "c",
-      "*.ipp": "c",
-      "task.h": "c",
-      "limits.h": "c",
-      "unity_test_runner.h": "c",
-      "algorithm": "c",
-      "chrono": "c",
-      "codecvt": "c",
-      "complex": "c",
-      "deque": "c",
-      "list": "c",
-      "numeric": "c",
-      "random": "c",
-      "xmemory": "c",
-      "esp_heap_caps.h": "c",
-      "functional": "c",
-      "optional": "c",
-      "system_error": "c",
-      "type_traits": "c",
-      "xtr1common": "c",
-      "malloc.h": "c",
-      "cstdlib": "c",
-      "constants.h": "c",
-      "codes.h": "c",
-      "common_infra_test.h": "c",
-      "nextion.h": "c",
-      "future": "c",
-      "unity.h": "c",
-      "unity_fixture.h": "c",
-      "op_screen.h": "c",
-      "parse.h": "c",
-      "unity_fixture_internals.h": "c",
-      "rgb565.h": "c",
-      "op_component.h": "c",
-      "op_page.h": "c",
-      "op_drawing.h": "c",
-      "common_infra.h": "c"
-    },
-    "idf.port": "/dev/ttyUSB1",
-    "idf.portWin": "COM3",
-    "idf.openOcdConfigs": [
-      "interface/ftdi/ft232h-module-swd.cfg",
-      "target/esp32.cfg",
-      "board/esp-wroom-32.cfg"
-    ]
-  }
+  "C_Cpp.clang_format_style": "Visual Studio",
+  "editor.formatOnSave": false,
+  "[cpp]": {
+    "editor.quickSuggestions": true
+  },
+  "[c]": {
+    "editor.quickSuggestions": true
+  },
+  "C_Cpp.intelliSenseEngineFallback": "Enabled",
+  "cmake.configureOnOpen": false,
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "build/": true,
+    "debug.log": true,
+    "sdkconfig": true,
+    "sdkconfig.old": true,
+    "test/build/": true,
+    "test/sdkconfig.old": true
+  },
+  "idf.port": "/dev/ttyUSB1",
+  "idf.portWin": "COM3",
+  "idf.openOcdConfigs": [
+    "interface/cjmcu-ftdi-2232HL.cfg",
+    "board/esp-wroom-32.cfg"
+  ]
+}
