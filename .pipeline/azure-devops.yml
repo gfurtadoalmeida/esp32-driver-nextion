@@ -9,36 +9,34 @@ trigger:
       - 'test/*'
 
 pool:
-  name: default
-  # This project must be built on a machine
-  # with ESP-IDF installed.
-  demands:
-  - ESP-IDF -equals True
+  vmImage: 'ubuntu-latest'
 
 steps:
 - checkout: self
   displayName: Checkout
   lfs: false
   submodules: recursive
+- task: Docker@2
+  displayName: Login Docker
+  inputs:
+    containerRegistry: 'Docker Registry'
+    command: 'login'
+    addPipelineData: false
 - task: PowerShell@2
-  displayName: Build Lib
+  displayName: Pull ESP-IDF Image
   inputs:
     targetType: 'inline'
     failOnStderr: true
-    script: |
-      cd "$(Build.Repository.LocalPath)"
-
-      &"C:\espidfsources\export.ps1"
-      &python.exe "C:\espidfsources\tools\idf.py" "set-target" "esp32"
-      &python.exe "C:\espidfsources\tools\idf.py" "build"
+    script: docker pull espressif/idf:latest
+- task: PowerShell@2
+  displayName: Build
+  inputs:
+    targetType: 'inline'
+    failOnStderr: true
+    script: docker run --rm -e LC_ALL='C.UTF-8' -v $(Build.Repository.LocalPath):/project -w /project espressif/idf idf.py build
 - task: PowerShell@2
   displayName: Build Test
   inputs:
     targetType: 'inline'
     failOnStderr: true
-    script: |
-      cd "$(Build.Repository.LocalPath)\test"
-
-      &"C:\espidfsources\export.ps1"
-      &python.exe "C:\espidfsources\tools\idf.py" "set-target" "esp32"
-      &python.exe "C:\espidfsources\tools\idf.py" "build"
+    script: docker run --rm -e LC_ALL='C.UTF-8' -v $(Build.Repository.LocalPath)/test:/project -w /project espressif/idf idf.py build
