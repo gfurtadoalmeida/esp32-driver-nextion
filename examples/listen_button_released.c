@@ -64,7 +64,7 @@ void do_interface_logic()
 
 void app_main(void)
 {
-    nextion_handle = nextion_driver_install(UART_NUM_2, 115200, GPIO_NUM_17, GPIO_NUM_16);
+    nextion_handle = nextion_driver_install(UART_NUM_2, 9600, GPIO_NUM_17, GPIO_NUM_16);
 
     if (nextion_handle == NULL)
     {
@@ -83,9 +83,7 @@ void app_main(void)
 
     nextion_event_callback_set(nextion_handle, callback);
 
-    nex_err_t code = nextion_page_set(nextion_handle, "0");
-
-    if (!NEX_DVC_CODE_IS_SUCCESS(code))
+    if (nextion_page_set(nextion_handle, "0") != NEX_OK)
     {
         ESP_LOGE(TAG, "could not change to page 0");
         return;

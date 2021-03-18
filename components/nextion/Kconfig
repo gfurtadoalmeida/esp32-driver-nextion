@@ -1,14 +1,21 @@
 menu "Nextion Display"
 
-    config NEX_RESP_WAIT_TIME_MS
+    config CONFIG_NEX_UART_RECV_WAIT_TIME_MS
         int "Response wait time (ms)"
-        range 10 10000
+        range 10 1000
         default 20
         help
             Time, in milliseconds, to wait for a response from the display.
 
+    config CONFIG_NEX_UART_TRANS_WAIT_TIME_MS
+        int "Transmit wait time (ms)"
+        range 10 1000
+        default 20
+        help
+            Time, in milliseconds, to wait for a transmission from the ESP32.
+
     config NEX_UART_RECV_BUFFER_SIZE
-        int "UART receiver buffer size"
+        int "UART receiver buffer size (bytes)"
         range 128 2048
         default 256
         help
@@ -16,12 +23,5 @@ menu "Nextion Display"
 
             Use a big size if you intend to receive a lot of event messages
             in a short time span and/or the event message processing is slow.
-
-    config NEX_UART_QUEUE_SIZE
-        int "UART queue size"
-        range 1 100
-        default 10
-        help
-            The UART queue size.
 
 endmenu # Nextion Configuration

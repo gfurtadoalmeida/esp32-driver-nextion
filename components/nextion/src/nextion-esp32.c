@@ -29,7 +29,7 @@ extern "C"
     {
         NEX_CHECK((baud_rate >= NEX_SERIAL_BAUD_RATE_MIN || baud_rate <= NEX_SERIAL_BAUD_RATE_MAX), "baud_rate error", NULL);
 
-        NEX_LOGI("installing driver on uart: %d", uart_num);
+        NEX_LOGI("installing driver on uart %d with baud rate %d", uart_num, baud_rate);
 
         const uart_config_t uart_config = {
             .baud_rate = baud_rate,
@@ -44,7 +44,7 @@ extern "C"
         // will lead to error.
         ESP_ERROR_CHECK(uart_param_config(uart_num, &uart_config));
         ESP_ERROR_CHECK(uart_set_pin(uart_num, tx_io_num, rx_io_num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
-        ESP_ERROR_CHECK(uart_driver_install(uart_num, CONFIG_NEX_UART_RECV_BUFFER_SIZE, 0, CONFIG_NEX_UART_QUEUE_SIZE, NULL, 0));
+        ESP_ERROR_CHECK(uart_driver_install(uart_num, CONFIG_NEX_UART_RECV_BUFFER_SIZE, 0, 0, NULL, 0));
 
         nextion_driver_t *driver = (nextion_driver_t *)malloc(sizeof(nextion_driver_t));
         driver->uart_num = uart_num;
@@ -92,7 +92,7 @@ extern "C"
         int bytes_count = uart_read_bytes(((nextion_driver_t *)self)->uart_num,
                                           byte,
                                           1,
-                                          pdMS_TO_TICKS(CONFIG_NEX_RESP_WAIT_TIME_MS));
+                                          pdMS_TO_TICKS(CONFIG_NEX_UART_RECV_WAIT_TIME_MS));
         if (bytes_count > 0)
             return NEX_COMM_OK;
 
@@ -104,10 +104,23 @@ extern "C"
 
     nex_comm_err_t _comm_write(const nextion_comm_t *self, const uint8_t *buffer, size_t buffer_length)
     {
-        if (uart_write_bytes(((nextion_driver_t *)self)->uart_num, (void *)buffer, buffer_length) > -1)
+        uart_port_t port = ((nextion_driver_t *)self)->uart_num;
+
+        if (uart_write_bytes(port, (void *)buffer, buffer_length) > -1)
+        {
+            if (uart_wait_tx_done(port, pdMS_TO_TICKS(CONFIG_NEX_UART_TRANS_WAIT_TIME_MS)) != ESP_OK)
+            {
+                NEX_LOGE("Failure on waiting for transmission completion");
+
+                return NEX_COMM_FAIL;
+            }
+
             return NEX_COMM_OK;
-        else
-            return NEX_COMM_FAIL;
+        }
+
+        NEX_LOGE("No bytes were written to the communication port");
+
+        return NEX_COMM_FAIL;
     }
 
 #ifdef __cplusplus
