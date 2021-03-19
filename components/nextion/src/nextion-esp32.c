@@ -7,10 +7,10 @@ extern "C"
 {
 #endif
 
-    nex_comm_err_t _comm_init(const nextion_comm_t *self);
-    nex_comm_err_t _comm_free(const nextion_comm_t *self);
-    nex_comm_err_t _comm_read(const nextion_comm_t *self, uint8_t *byte);
-    nex_comm_err_t _comm_write(const nextion_comm_t *self, const uint8_t *buffer, size_t buffer_length);
+    nex_comm_err_t _comm_init(nextion_comm_t *self);
+    nex_comm_err_t _comm_free(nextion_comm_t *self);
+    nex_comm_err_t _comm_read(nextion_comm_t *self, uint8_t *byte);
+    nex_comm_err_t _comm_write(nextion_comm_t *self, const uint8_t *buffer, size_t buffer_length);
 
     static nextion_comm_vtable_t _vtable = {
         _comm_init,
@@ -77,17 +77,17 @@ extern "C"
         return true;
     }
 
-    nex_comm_err_t _comm_init(const nextion_comm_t *self)
+    nex_comm_err_t _comm_init(nextion_comm_t *self)
     {
         return NEX_COMM_OK;
     }
 
-    nex_comm_err_t _comm_free(const nextion_comm_t *self)
+    nex_comm_err_t _comm_free(nextion_comm_t *self)
     {
         return NEX_COMM_OK;
     }
 
-    nex_comm_err_t _comm_read(const nextion_comm_t *self, uint8_t *byte)
+    nex_comm_err_t _comm_read(nextion_comm_t *self, uint8_t *byte)
     {
         int bytes_count = uart_read_bytes(((nextion_driver_t *)self)->uart_num,
                                           byte,
@@ -102,7 +102,7 @@ extern "C"
         return NEX_COMM_FAIL;
     }
 
-    nex_comm_err_t _comm_write(const nextion_comm_t *self, const uint8_t *buffer, size_t buffer_length)
+    nex_comm_err_t _comm_write(nextion_comm_t *self, const uint8_t *buffer, size_t buffer_length)
     {
         uart_port_t port = ((nextion_driver_t *)self)->uart_num;
 
