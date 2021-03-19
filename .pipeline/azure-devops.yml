@@ -32,11 +32,11 @@ steps:
   displayName: Build
   inputs:
     targetType: 'inline'
-    failOnStderr: true
+    failOnStderr: false
     script: docker run --rm -e LC_ALL='C.UTF-8' -v $(Build.Repository.LocalPath):/project -w /project espressif/idf idf.py build
 - task: PowerShell@2
   displayName: Build Test
   inputs:
     targetType: 'inline'
-    failOnStderr: true
+    failOnStderr: false
     script: docker run --rm -e LC_ALL='C.UTF-8' -v $(Build.Repository.LocalPath)/test:/project -w /project espressif/idf idf.py build
