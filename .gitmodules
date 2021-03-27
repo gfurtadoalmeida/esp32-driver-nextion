@@ -1,3 +1,0 @@
-[submodule "components/nextion/external/iot-lib-nextion"]
-	path = components/nextion/external/iot-lib-nextion
-	url = https://github.com/gfurtadoalmeida/iot-lib-nextion.git

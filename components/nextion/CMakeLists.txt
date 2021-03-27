@@ -1,17 +1,14 @@
-file(GLOB srcsNEXTION "src/*.c")
+file(GLOB srcsNEXTION "src/nextion/*.c")
+file(GLOB srcsRGB "src/rgb565/*.c")
 
 idf_component_register(
     SRCS
         ${srcsNEXTION}
+        ${srcsRGB}
     INCLUDE_DIRS
         "include"
-        "external/iot-lib-nextion/lib/include"
     PRIV_INCLUDE_DIRS
         "private_include"
     REQUIRES
         driver
 )
-
-add_subdirectory("external/iot-lib-nextion")
-
-target_link_libraries(${COMPONENT_LIB} PRIVATE iot-lib-nextion)

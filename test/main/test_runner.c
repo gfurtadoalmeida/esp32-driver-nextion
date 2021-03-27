@@ -1,12 +1,36 @@
 #include "unity.h"
+#include "nextion/nextion.h"
+
+#define TEST_UART_NUM UART_NUM_2
+#define TEST_UART_BAUD_RATE 9600
+#define TEST_UART_TX_PIN 17
+#define TEST_UART_RX_PIN 16
 
 static void print_banner(const char *text);
+
+nextion_handle_t handle;
 
 void app_main(void)
 {
     /* This is just the test runner.
      * The real tests are on "components/nextion/test".
      */
+
+    handle = nextion_driver_install(TEST_UART_NUM, TEST_UART_BAUD_RATE, TEST_UART_TX_PIN, TEST_UART_RX_PIN);
+
+    if (handle == NULL)
+    {
+        printf("Failed to install driver");
+
+        unity_run_menu();
+    }
+
+    if (nextion_init(handle) != NEX_OK)
+    {
+        printf("Failed to initialize driver");
+
+        unity_run_menu();
+    }
 
     UNITY_BEGIN();
 
