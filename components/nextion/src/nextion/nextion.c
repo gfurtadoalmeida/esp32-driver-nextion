@@ -201,47 +201,6 @@ extern "C"
         return result;
     }
 
-    bool nextion_event_process(nextion_handle_t handle)
-    {
-        NEX_CHECK_HANDLE(handle, false);
-        NEX_CHECK((handle->transparent_data_mode_active == false), "state error(in transparent data mode)", false);
-        NEX_CHECK((handle->is_installed), "driver error(not installed)", false);
-        NEX_CHECK((handle->is_initialized), "driver error(not initialized)", false);
-
-        if (!nextion_core_acquire_mutex(handle))
-        {
-            NEX_LOGE("failed acquiring lock");
-
-            return false;
-        }
-
-        uint8_t buffer[NEX_DVC_EVT_MAX_RESPONSE_LENGTH];
-        int bytes_read = nextion_core_read_from_uart_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
-
-        while (bytes_read > -1)
-        {
-            if (!NEX_DVC_CODE_IS_EVENT(buffer[0], bytes_read))
-            {
-                NEX_LOGW("response was not an event, some data might be corrupted");
-
-                break;
-            }
-
-            if (!nextion_core_event_dispatch(handle, buffer, bytes_read))
-            {
-                NEX_LOGW("failure dispatching event");
-
-                break;
-            }
-
-            bytes_read = nextion_core_read_from_uart_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
-        };
-
-        nextion_core_release_mutex(handle);
-
-        return true;
-    }
-
     nex_err_t nextion_transparent_data_mode_begin(nextion_handle_t handle,
                                                   size_t data_size,
                                                   const char *command,
@@ -338,6 +297,41 @@ extern "C"
         return NEX_OK;
     }
 
+    bool nextion_event_process(nextion_handle_t handle)
+    {
+        NEX_CHECK_HANDLE(handle, false);
+        NEX_CHECK((handle->transparent_data_mode_active == false), "state error(in transparent data mode)", false);
+        NEX_CHECK((handle->is_installed), "driver error(not installed)", false);
+        NEX_CHECK((handle->is_initialized), "driver error(not initialized)", false);
+        NEX_CHECK((nextion_core_acquire_mutex(handle)), "mutex error(not acquired)", false)
+
+        uint8_t buffer[NEX_DVC_EVT_MAX_RESPONSE_LENGTH];
+        int bytes_read = nextion_core_read_from_uart_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
+
+        while (bytes_read > -1)
+        {
+            if (!NEX_DVC_CODE_IS_EVENT(buffer[0], bytes_read))
+            {
+                NEX_LOGW("response code %d was not an event, some data might be corrupted", buffer[0]);
+
+                break;
+            }
+
+            if (!nextion_core_event_dispatch(handle, buffer, bytes_read))
+            {
+                NEX_LOGW("failure dispatching event from event handler");
+
+                break;
+            }
+
+            bytes_read = nextion_core_read_from_uart_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
+        };
+
+        nextion_core_release_mutex(handle);
+
+        return true;
+    }
+
     /* ======================
      *     Core Methods
     ======================== */
@@ -411,20 +405,44 @@ extern "C"
 
     nex_err_t nextion_core_read_from_uart_as_simple_result(nextion_handle_t handle)
     {
-        uint8_t buffer[NEX_DVC_CMD_ACK_LENGTH];
+        uint8_t buffer[NEX_DVC_EVT_MAX_RESPONSE_LENGTH];
 
-        int bytes_read = nextion_core_read_from_uart_as_byte(handle, buffer, NEX_DVC_CMD_ACK_LENGTH);
+        int bytes_read = 0;
 
-        if (bytes_read == -1)
+        do
         {
-            // Some commands only return data on failure.
-            // Event processing will throw this too when no event response is found.
-            // That's why this is a debug; too much noise.
+            bytes_read = nextion_core_read_from_uart_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
 
-            NEX_LOGD("response timed out");
+            if (bytes_read == -1)
+            {
+                // Some commands only return data on failure.
+                // Event processing will throw this too when no event response is found.
+                // That's why this is a debug; too much noise.
 
-            return NEX_TIMEOUT;
-        }
+                NEX_LOGD("response timed out");
+
+                return NEX_TIMEOUT;
+            }
+
+            // Depending on how much device events we're receiving,
+            // it may happen that an event response will be read.
+            // Dispatch it and read the next response until ours
+            // is found.
+
+            if (NEX_DVC_CODE_IS_EVENT(buffer[0], bytes_read))
+            {
+                NEX_LOGW("parsed the event %d on command handler", buffer[0]);
+
+                if (!nextion_core_event_dispatch(handle, buffer, bytes_read))
+                {
+                    NEX_LOGW("failure dispatching event %d from command handler", buffer[0]);
+                }
+
+                continue;
+            }
+
+            break;
+        } while (true);
 
         if (bytes_read != NEX_DVC_CMD_ACK_LENGTH)
         {
