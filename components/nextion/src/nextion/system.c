@@ -20,7 +20,7 @@ extern "C"
         NEX_CHECK((expected_length != NULL), "expected length error(NULL)", NEX_FAIL);
 
         size_t length = *expected_length + NEX_DVC_CMD_ACK_LENGTH;
-        uint8_t *response = (uint8_t *)malloc(length);
+        uint8_t *response = (uint8_t *)calloc(length, sizeof(uint8_t));
 
         if (nextion_command_send_get_bytes(handle, response, &length, command) != NEX_OK)
         {

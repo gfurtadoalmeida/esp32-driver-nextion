@@ -24,6 +24,8 @@ static void process_interface_queue(void *pvParameters);
 
 void app_main(void)
 {
+    esp_log_level_set("*", ESP_LOG_DEBUG);
+
     nextion_handle = nextion_driver_install(UART_NUM_2, 9600, GPIO_NUM_17, GPIO_NUM_16);
 
     if (nextion_handle == NULL)
@@ -38,8 +40,10 @@ void app_main(void)
         return;
     }
 
-    nextion_event_callback_t callback;
-    callback.on_touch = &process_touch_event;
+    nextion_event_callback_t callback = {
+        .on_touch = &process_touch_event,
+        .on_touch_coord = NULL,
+        .on_device = NULL};
 
     nextion_event_callback_set(nextion_handle, callback);
 
@@ -68,17 +72,9 @@ void app_main(void)
         return;
     }
 
-    do
-    {
-        if (!nextion_event_process(nextion_handle))
-        {
-            ESP_LOGE(TAG, "failed processing events");
-        }
+    ESP_LOGI(TAG, "waiting for button 3 'b0', from page 0, to be pressed");
 
-        ESP_LOGI(TAG, "waiting for button 3 'b0', from page 0, to be pressed");
-
-        vTaskDelay(pdMS_TO_TICKS(300));
-    } while (true);
+    vTaskDelay(portMAX_DELAY);
 
     // Will never reach here.
     // It is just to show how to delete the driver.

@@ -94,15 +94,3 @@ TEST_CASE("Cannot send command when in transparent data mode", "[core]")
 
     CHECK_NEX_FAIL(result);
 }
-
-TEST_CASE("Cannot process events when in transparent data mode", "[core]")
-{
-    nextion_transparent_data_mode_begin(handle, 1, "wept 0,1");
-
-    bool result = nextion_event_process(handle);
-
-    nextion_transparent_data_mode_write(handle, 0);
-    nextion_transparent_data_mode_end(handle);
-
-    CHECK_FALSE(result);
-}

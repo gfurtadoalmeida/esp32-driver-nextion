@@ -91,13 +91,6 @@ extern "C"
     bool nextion_event_callback_set(nextion_handle_t handle, nextion_event_callback_t event_callback);
 
     /**
-     * @brief Process all events in queue.
-     * @param handle Nextion context pointer.
-     * @return True if success, otherwise false.
-     */
-    bool nextion_event_process(nextion_handle_t handle);
-
-    /**
      * @brief Begins the "Transparent Data Mode".
      *
      * @details When in this mode, the device "hangs" until all

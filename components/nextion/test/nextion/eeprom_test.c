@@ -58,7 +58,10 @@ TEST_CASE("Stream works", "[eeprom]")
         }
     }
 
-    nextion_eeprom_stream_end(handle);
+    if(nextion_eeprom_stream_end(handle) == NEX_FAIL)
+    {
+        FAIL_TEST("Could not end stream");
+    }
 }
 
 TEST_CASE("Cannot start stream with invalid address", "[eeprom]")

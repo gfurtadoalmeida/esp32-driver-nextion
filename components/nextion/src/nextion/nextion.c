@@ -11,19 +11,21 @@ extern "C"
 {
 #endif
 
-#define NEX_CHECK_SEND_COMMAND_HANDLE_STATE(handle)                                                                \
-    NEX_CHECK_HANDLE(handle, NEX_FAIL);                                                                            \
-    NEX_CHECK((handle->transparent_data_mode_active == false), "state error(in transparent data mode)", NEX_FAIL); \
-    NEX_CHECK((handle->is_installed), "driver error(not installed)", NEX_FAIL);                                    \
-    NEX_CHECK((handle->is_initialized), "driver error(not initialized)", NEX_FAIL);
+#define NEX_CHECK_SEND_COMMAND_HANDLE_STATE(handle)                                 \
+    NEX_CHECK_HANDLE(handle, NEX_FAIL);                                             \
+    NEX_CHECK((handle->is_installed), "driver error(not installed)", NEX_FAIL);     \
+    NEX_CHECK((handle->is_initialized), "driver error(not initialized)", NEX_FAIL); \
+    NEX_CHECK((handle->in_transparent_data_mode == false), "state error(in transparent data mode)", NEX_FAIL);
 
+    static void nextion_core_uart_process_queue(void *pvParameters);
+    static bool nextion_core_event_process(nextion_handle_t handle);
     static bool nextion_core_event_dispatch(nextion_handle_t handle, const uint8_t *buffer, const size_t buffer_length);
-    static bool nextion_core_acquire_mutex(nextion_handle_t handle);
-    static void nextion_core_release_mutex(nextion_handle_t handle);
-    static nex_err_t nextion_core_read_from_uart_as_simple_result(nextion_handle_t handle);
-    static int32_t nextion_core_read_from_uart_as_byte(nextion_handle_t handle, uint8_t *buffer, size_t length);
-    static bool nextion_core_write_to_uart_as_command(nextion_handle_t handle, const char *format, va_list args);
-    static bool nextion_core_write_to_uart_as_byte(nextion_handle_t handle, const char *bytes, size_t length);
+    static bool nextion_core_command_mutex_acquire(nextion_handle_t handle, TickType_t timeout);
+    static void nextion_core_command_mutex_release(nextion_handle_t handle);
+    static nex_err_t nextion_core_uart_read_as_simple_result(nextion_handle_t handle);
+    static int32_t nextion_core_uart_read_as_byte(nextion_handle_t handle, uint8_t *buffer, size_t length);
+    static bool nextion_core_uart_write_as_command(nextion_handle_t handle, const char *format, va_list args);
+    static bool nextion_core_uart_write_as_byte(nextion_handle_t handle, const char *bytes, size_t length);
 
     /**
      * @struct nextion_t
@@ -31,14 +33,15 @@ extern "C"
      */
     struct nextion_t
     {
-        SemaphoreHandle_t uart_mutex;                                                 /*!< Mutex used for UART control. */
-        nextion_event_callback_t event_callback;                                      /*!< Callbacks for events. */
-        size_t transparent_data_mode_size;                                            /*!< How many bytes are expected to be written while in "Transparent Data Mode". */
-        uart_port_t uart_num;                                                         /*!< UART port number. */
-        char command_format_buffer[CONFIG_NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE]; /*!< Buffer used to format commands. */
-        bool is_installed;                                                            /*!< If the driver was installed. */
-        bool is_initialized;                                                          /*!< If the driver was initialized. */
-        bool transparent_data_mode_active;                                            /*!< If it is in Transparent Data mode. */
+        nextion_event_callback_t event_callback; /*!< Callbacks for events. */
+        SemaphoreHandle_t command_mutex;         /*!< Mutex used command control. */
+        QueueHandle_t uart_queue;                /*!< Queue used for UART event. */
+        TaskHandle_t uart_task;                  /*!< Task used for UART queue handling. */
+        size_t transparent_data_mode_size;       /*!< How many bytes are expected to be written while in "Transparent Data Mode". */
+        uart_port_t uart_num;                    /*!< UART port number. */
+        bool is_installed;                       /*!< If the driver was installed. */
+        bool is_initialized;                     /*!< If the driver was initialized. */
+        bool in_transparent_data_mode;           /*!< If it is in Transparent Data mode. */
     };
 
     nextion_handle_t nextion_driver_install(uart_port_t uart_num, uint32_t baud_rate, gpio_num_t tx_io_num, gpio_num_t rx_io_num)
@@ -60,13 +63,22 @@ extern "C"
         // will lead to error.
         ESP_ERROR_CHECK(uart_param_config(uart_num, &uart_config));
         ESP_ERROR_CHECK(uart_set_pin(uart_num, tx_io_num, rx_io_num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
-        ESP_ERROR_CHECK(uart_driver_install(uart_num, CONFIG_NEX_UART_RECV_BUFFER_SIZE, 0, 0, NULL, 0));
 
-        nextion_t *driver = (nextion_t *)malloc(sizeof(nextion_t));
+        nextion_t *driver = (nextion_t *)calloc(1, sizeof(nextion_t));
         driver->uart_num = uart_num;
         driver->is_installed = true;
-        driver->transparent_data_mode_active = false;
-        driver->uart_mutex = xSemaphoreCreateMutex();
+        driver->is_initialized = false;
+        driver->in_transparent_data_mode = false;
+        driver->command_mutex = xSemaphoreCreateMutex();
+
+        ESP_ERROR_CHECK(uart_driver_install(uart_num, CONFIG_NEX_UART_RECV_BUFFER_SIZE, 0, 10, &driver->uart_queue, 0));
+
+        if (xTaskCreate(nextion_core_uart_process_queue, "nextion", 2048, (void *)driver, tskIDLE_PRIORITY, &driver->uart_task) != pdPASS)
+        {
+            NEX_LOGE("failed creating UART event task");
+
+            abort();
+        }
 
         NEX_LOGI("driver installed");
 
@@ -77,14 +89,19 @@ extern "C"
     {
         NEX_CHECK((handle != NULL), "handle error(NULL)", false);
 
-        if (handle->is_installed)
+        if (!handle->is_installed)
         {
             return true;
         }
 
         NEX_LOGI("deleting driver");
 
+        vTaskDelete(handle->uart_task);
+
+        // Will also free the queue.
         ESP_ERROR_CHECK(uart_driver_delete(handle->uart_num));
+
+        vSemaphoreDelete(handle->command_mutex);
 
         free(handle);
 
@@ -109,15 +126,19 @@ extern "C"
         NEX_CHECK_HANDLE(handle, NEX_FAIL);
 
         // All logic relies on receiving responses in all cases.
+        // As "nextion_command_send" validates if the driver is
+        // initialized, we need to cheat here.
+
+        handle->is_initialized = true;
 
         if (nextion_command_send(handle, "bkcmd=3") != NEX_OK)
         {
+            handle->is_initialized = false;
+
             NEX_LOGE("failed initializing display");
 
             return NEX_FAIL;
         }
-
-        handle->is_initialized = true;
 
         return NEX_OK;
     }
@@ -126,14 +147,13 @@ extern "C"
     {
         NEX_CHECK_SEND_COMMAND_HANDLE_STATE(handle)
         NEX_CHECK((command != NULL), "command error(NULL)", NEX_FAIL);
-        NEX_CHECK((nextion_event_process(handle)), "event process error(failed dispatching)", NEX_FAIL);
-        NEX_CHECK((nextion_core_acquire_mutex(handle)), "mutex error(not acquired)", NEX_FAIL);
+        NEX_CHECK((nextion_core_command_mutex_acquire(handle, pdMS_TO_TICKS(CONFIG_NEX_UART_MUTEX_WAIT_TIME_MS))), "mutex error(not acquired)", NEX_FAIL);
 
         nex_err_t code = NEX_OK;
         va_list args;
         va_start(args, command);
 
-        if (!nextion_core_write_to_uart_as_command(handle, command, args))
+        if (!nextion_core_uart_write_as_command(handle, command, args))
         {
             NEX_LOGE("failed sending command");
 
@@ -141,7 +161,7 @@ extern "C"
         }
         else
         {
-            *length = nextion_core_read_from_uart_as_byte(handle, buffer, *length);
+            *length = nextion_core_uart_read_as_byte(handle, buffer, *length);
 
             if (*length == -1)
             {
@@ -151,7 +171,7 @@ extern "C"
 
         va_end(args);
 
-        nextion_core_release_mutex(handle);
+        nextion_core_command_mutex_release(handle);
 
         return code;
     }
@@ -160,24 +180,25 @@ extern "C"
     {
         NEX_CHECK_SEND_COMMAND_HANDLE_STATE(handle)
         NEX_CHECK((command != NULL), "command error(NULL)", NEX_FAIL);
-        NEX_CHECK((nextion_event_process(handle)), "event process error(failed dispatching)", NEX_FAIL);
-        NEX_CHECK((nextion_core_acquire_mutex(handle)), "mutex error(not acquired)", NEX_FAIL);
+        NEX_CHECK((nextion_core_command_mutex_acquire(handle, pdMS_TO_TICKS(CONFIG_NEX_UART_MUTEX_WAIT_TIME_MS))), "mutex error(not acquired)", NEX_FAIL);
 
         nex_err_t code = NEX_DVC_INSTRUCTION_FAIL;
 
-        if (!nextion_core_write_to_uart_as_command(handle, command, args))
+        if (!nextion_core_uart_write_as_command(handle, command, args))
         {
             NEX_LOGE("failed sending command");
         }
         else
         {
-            code = nextion_core_read_from_uart_as_simple_result(handle);
+            code = nextion_core_uart_read_as_simple_result(handle);
         }
 
-        nextion_core_release_mutex(handle);
+        nextion_core_command_mutex_release(handle);
 
         if (code == NEX_DVC_INSTRUCTION_FAIL)
         {
+            NEX_LOGW("device returned failure");
+
             return NEX_FAIL;
         }
 
@@ -208,7 +229,7 @@ extern "C"
     {
         NEX_CHECK_HANDLE(handle, NEX_FAIL);
         NEX_CHECK((command != NULL), "command error(NULL)", NEX_FAIL);
-        NEX_CHECK((handle->transparent_data_mode_active == false), "state error(in transparent data mode)", NEX_FAIL);
+        NEX_CHECK((handle->in_transparent_data_mode == false), "state error(in transparent data mode)", NEX_FAIL);
         NEX_CHECK((data_size > 0), "data_size error(<1)", NEX_FAIL);
         NEX_CHECK((data_size < NEX_DVC_TRANSPARENT_DATA_MAX_DATA_SIZE), "data_size error(>NEX_DVC_TRANSPARENT_DATA_MAX_DATA_SIZE)", NEX_FAIL);
 
@@ -224,7 +245,7 @@ extern "C"
             return result;
         }
 
-        handle->transparent_data_mode_active = true;
+        handle->in_transparent_data_mode = true;
         handle->transparent_data_mode_size = data_size;
 
         return NEX_OK;
@@ -233,12 +254,12 @@ extern "C"
     nex_err_t nextion_transparent_data_mode_write(nextion_handle_t handle, uint8_t value)
     {
         NEX_CHECK_HANDLE(handle, NEX_FAIL);
-        NEX_CHECK((handle->transparent_data_mode_active), "state error(not in transparent data mode)", NEX_FAIL);
+        NEX_CHECK((handle->in_transparent_data_mode), "state error(not in transparent data mode)", NEX_FAIL);
         NEX_CHECK((handle->transparent_data_mode_size > 0), "state error(all data was written)", NEX_FAIL);
 
         const uint8_t buffer[1] = {value};
 
-        if (!nextion_core_write_to_uart_as_byte(handle, (char *)buffer, 1))
+        if (!nextion_core_uart_write_as_byte(handle, (char *)buffer, 1))
         {
             NEX_LOGE("failed writing to the communication port");
 
@@ -253,12 +274,12 @@ extern "C"
     nex_err_t nextion_transparent_data_mode_end(nextion_handle_t handle)
     {
         NEX_CHECK_HANDLE(handle, NEX_FAIL);
-        NEX_CHECK((handle->transparent_data_mode_active), "state error(not in transparent data mode)", NEX_FAIL);
+        NEX_CHECK((handle->in_transparent_data_mode), "state error(not in transparent data mode)", NEX_FAIL);
         NEX_CHECK((handle->transparent_data_mode_size == 0), "state error(not all data was written)", NEX_FAIL);
 
         uint8_t code = 0;
         uint8_t buffer[NEX_DVC_CMD_ACK_LENGTH];
-        size_t bytes_read = nextion_core_read_from_uart_as_byte(handle, buffer, NEX_DVC_CMD_ACK_LENGTH);
+        size_t bytes_read = nextion_core_uart_read_as_byte(handle, buffer, NEX_DVC_CMD_ACK_LENGTH);
 
         if (bytes_read < 1)
         {
@@ -292,24 +313,89 @@ extern "C"
             return NEX_FAIL;
         }
 
-        handle->transparent_data_mode_active = false;
+        handle->in_transparent_data_mode = false;
 
         return NEX_OK;
     }
 
-    bool nextion_event_process(nextion_handle_t handle)
+    /* ======================
+     *     Core Methods
+    ======================== */
+
+    void nextion_core_uart_process_queue(void *pvParameters)
+    {
+        nextion_handle_t handle = (nextion_handle_t)pvParameters;
+        QueueHandle_t queue = handle->uart_queue;
+        uart_port_t uart = handle->uart_num;
+
+        NEX_LOGI("installed queue for uart %d", uart);
+
+        uart_event_t event;
+
+        for (;;)
+        {
+            if (xQueueReceive(queue, (void *)&event, portMAX_DELAY))
+            {
+                switch (event.type)
+                {
+                case UART_DATA:
+                    NEX_LOGD("UART data size: %d", event.size);
+
+                    // If we can acquire a mutex it means the event was sent by the device
+                    // automatically. It will only fail to acquire the mutex when a command
+                    // was called. For commands and Transparent Data mode, we do nothing,
+                    // let them handle the bytes.
+                    if (!handle->in_transparent_data_mode && nextion_core_command_mutex_acquire(handle, 0))
+                    {
+                        NEX_LOGD("processing events");
+
+                        if (!nextion_core_event_process(handle))
+                        {
+                            NEX_LOGW("failed processing events");
+                        }
+                        else
+                        {
+                            NEX_LOGD("events processed");
+                        }
+
+                        nextion_core_command_mutex_release(handle);
+                    }
+                    break;
+                case UART_FIFO_OVF:
+                    NEX_LOGW("UART hw fifo overflow");
+
+                    uart_flush_input(uart);
+
+                    xQueueReset(queue);
+                    break;
+                case UART_BUFFER_FULL:
+                    NEX_LOGW("UART buffer full");
+
+                    uart_flush_input(uart);
+
+                    xQueueReset(queue);
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+    }
+
+    bool nextion_core_event_process(nextion_handle_t handle)
     {
         NEX_CHECK_HANDLE(handle, false);
-        NEX_CHECK((handle->transparent_data_mode_active == false), "state error(in transparent data mode)", false);
+        NEX_CHECK((handle->in_transparent_data_mode == false), "state error(in transparent data mode)", false);
         NEX_CHECK((handle->is_installed), "driver error(not installed)", false);
         NEX_CHECK((handle->is_initialized), "driver error(not initialized)", false);
-        NEX_CHECK((nextion_core_acquire_mutex(handle)), "mutex error(not acquired)", false)
 
         uint8_t buffer[NEX_DVC_EVT_MAX_RESPONSE_LENGTH];
-        int bytes_read = nextion_core_read_from_uart_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
+        int bytes_read = nextion_core_uart_read_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
 
         while (bytes_read > -1)
         {
+            NEX_LOGD("parsed event %d with size %d", buffer[0], bytes_read);
+
             if (!NEX_DVC_CODE_IS_EVENT(buffer[0], bytes_read))
             {
                 NEX_LOGW("response code %d was not an event, some data might be corrupted", buffer[0]);
@@ -324,17 +410,11 @@ extern "C"
                 break;
             }
 
-            bytes_read = nextion_core_read_from_uart_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
+            bytes_read = nextion_core_uart_read_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
         };
-
-        nextion_core_release_mutex(handle);
 
         return true;
     }
-
-    /* ======================
-     *     Core Methods
-    ======================== */
 
     /**
      * @brief Dispatches an event to a callback.
@@ -349,6 +429,8 @@ extern "C"
 
         const uint8_t code = buffer[0];
 
+        NEX_LOGD("preparing event %d", code);
+
         switch (code)
         {
         case NEX_DVC_EVT_TOUCH_OCCURRED:
@@ -360,12 +442,14 @@ extern "C"
                     .component_id = buffer[2],
                     .state = buffer[3]};
 
+                NEX_LOGD("dispatching 'on touch' event");
+
                 handle->event_callback.on_touch(event);
             }
             break;
         case NEX_DVC_EVT_TOUCH_COORDINATE_AWAKE:
         case NEX_DVC_EVT_TOUCH_COORDINATE_ASLEEP:
-            if (buffer_length == 9 && handle->event_callback.on_touch_coord != NULL)
+            if (handle->event_callback.on_touch_coord != NULL && buffer_length == 9)
             {
                 // Coordinates: 2 bytes and unsigned = uint16_t.
                 // Sent in big endian format.
@@ -375,6 +459,8 @@ extern "C"
                     .y = (uint16_t)(((uint16_t)buffer[3] << 8) | (uint16_t)buffer[4]),
                     .state = buffer[5],
                     .exited_sleep = code == NEX_DVC_EVT_TOUCH_COORDINATE_ASLEEP};
+
+                NEX_LOGD("dispatching 'on touch coord' event");
 
                 handle->event_callback.on_touch_coord(event);
             }
@@ -386,6 +472,8 @@ extern "C"
                     .handle = handle,
                     .state = code};
 
+                NEX_LOGD("dispatching 'on device' event");
+
                 handle->event_callback.on_device(event);
             }
         }
@@ -393,17 +481,17 @@ extern "C"
         return true;
     }
 
-    bool nextion_core_acquire_mutex(nextion_handle_t handle)
+    bool nextion_core_command_mutex_acquire(nextion_handle_t handle, TickType_t timeout)
     {
-        return xSemaphoreTake(handle->uart_mutex, pdMS_TO_TICKS(CONFIG_NEX_UART_MUTEX_WAIT_TIME_MS)) == pdTRUE;
+        return xSemaphoreTake(handle->command_mutex, timeout) == pdTRUE;
     }
 
-    void nextion_core_release_mutex(nextion_handle_t handle)
+    void nextion_core_command_mutex_release(nextion_handle_t handle)
     {
-        xSemaphoreGive(handle->uart_mutex);
+        xSemaphoreGive(handle->command_mutex);
     }
 
-    nex_err_t nextion_core_read_from_uart_as_simple_result(nextion_handle_t handle)
+    nex_err_t nextion_core_uart_read_as_simple_result(nextion_handle_t handle)
     {
         uint8_t buffer[NEX_DVC_EVT_MAX_RESPONSE_LENGTH];
 
@@ -411,7 +499,7 @@ extern "C"
 
         do
         {
-            bytes_read = nextion_core_read_from_uart_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
+            bytes_read = nextion_core_uart_read_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
 
             if (bytes_read == -1)
             {
@@ -454,7 +542,7 @@ extern "C"
         return buffer[0];
     }
 
-    int32_t nextion_core_read_from_uart_as_byte(nextion_handle_t handle, uint8_t *buffer, size_t length)
+    int32_t nextion_core_uart_read_as_byte(nextion_handle_t handle, uint8_t *buffer, size_t length)
     {
         uint8_t *movable_buffer = buffer;
         int ends_found = 0; // Some commands use NEX_DVC_CMD_END_LENGTH chars as end response.
@@ -522,15 +610,16 @@ extern "C"
         return bytes_read;
     }
 
-    bool nextion_core_write_to_uart_as_command(nextion_handle_t handle, const char *format, va_list args)
+    bool nextion_core_uart_write_as_command(nextion_handle_t handle, const char *format, va_list args)
     {
-        static const char END_SEQUENCE[NEX_DVC_CMD_END_LENGTH] = {NEX_DVC_CMD_END_SEQUENCE};
+        const char END_SEQUENCE[NEX_DVC_CMD_END_LENGTH] = {NEX_DVC_CMD_END_SEQUENCE};
+        char format_buffer[CONFIG_NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE];
 
-        int size = vsnprintf(handle->command_format_buffer, CONFIG_NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE, format, args);
+        int size = vsnprintf(format_buffer, CONFIG_NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE, format, args);
 
         uart_port_t uart = handle->uart_num;
 
-        if (uart_write_bytes(uart, handle->command_format_buffer, size) < 0 || uart_write_bytes(uart, END_SEQUENCE, NEX_DVC_CMD_END_LENGTH) < 0)
+        if (uart_write_bytes(uart, format_buffer, size) < 0 || uart_write_bytes(uart, END_SEQUENCE, NEX_DVC_CMD_END_LENGTH) < 0)
         {
             NEX_LOGE("failed writing command");
 
@@ -547,7 +636,7 @@ extern "C"
         return true;
     }
 
-    bool nextion_core_write_to_uart_as_byte(nextion_handle_t handle, const char *bytes, size_t length)
+    bool nextion_core_uart_write_as_byte(nextion_handle_t handle, const char *bytes, size_t length)
     {
         uart_port_t uart = handle->uart_num;
 
