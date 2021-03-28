@@ -115,9 +115,16 @@ TEST_CASE("Set persisted display brightness", "[system]")
 TEST_CASE("Get sleep on no touch", "[system]")
 {
     uint16_t seconds;
+
+    nextion_system_set_sleep_no_touch(handle, 50);
+
     nex_err_t code = nextion_system_get_sleep_no_touch(handle, &seconds);
 
+    // Do not leave sleep on no touch activated during tests.
+    nextion_system_set_sleep_no_touch(handle, 0);
+
     CHECK_NEX_OK(code);
+    TEST_ASSERT_EQUAL_UINT8(50, seconds);
 }
 
 TEST_CASE("Cannot get sleep on no touch when seconds null", "[system]")
@@ -129,18 +136,54 @@ TEST_CASE("Cannot get sleep on no touch when seconds null", "[system]")
 
 TEST_CASE("Set sleep on no touch", "[system]")
 {
-    uint16_t current_sleep = 0;
     uint16_t sleep = 0;
 
-    nextion_system_get_sleep_no_touch(handle, &current_sleep);
-
-    nex_err_t code = nextion_system_set_sleep_no_touch(handle, 60);
+    nex_err_t code = nextion_system_set_sleep_no_touch(handle, 50);
 
     nextion_system_get_sleep_no_touch(handle, &sleep);
-    nextion_system_set_sleep_no_touch(handle, current_sleep);
+
+    // Do not leave sleep on no touch activated during tests.
+    nextion_system_set_sleep_no_touch(handle, 0);
 
     CHECK_NEX_OK(code);
-    TEST_ASSERT_EQUAL_UINT8(60, sleep);
+    TEST_ASSERT_EQUAL_UINT8(50, sleep);
+}
+
+TEST_CASE("Get sleep on no serial", "[system]")
+{
+    uint16_t seconds;
+
+    nextion_system_set_sleep_no_serial(handle, 50);
+
+    nex_err_t code = nextion_system_get_sleep_no_serial(handle, &seconds);
+
+    // Do not leave sleep on no serial activated during tests.
+    nextion_system_set_sleep_no_serial(handle, 0);
+
+    CHECK_NEX_OK(code);
+    TEST_ASSERT_EQUAL_UINT8(50, seconds);
+}
+
+TEST_CASE("Cannot get sleep on no serial when seconds null", "[system]")
+{
+    nex_err_t code = nextion_system_get_sleep_no_serial(handle, NULL);
+
+    CHECK_NEX_FAIL(code);
+}
+
+TEST_CASE("Set sleep on no serial", "[system]")
+{
+    uint16_t sleep = 0;
+
+    nex_err_t code = nextion_system_set_sleep_no_serial(handle, 50);
+
+    nextion_system_get_sleep_no_serial(handle, &sleep);
+
+    // Do not leave sleep on no serial activated during tests.
+    nextion_system_set_sleep_no_serial(handle, 0);
+
+    CHECK_NEX_OK(code);
+    TEST_ASSERT_EQUAL_UINT8(50, sleep);
 }
 
 TEST_CASE("Set wake up when touched", "[system]")
@@ -153,6 +196,13 @@ TEST_CASE("Set wake up when touched", "[system]")
 TEST_CASE("Set wake up when serial data is received", "[system]")
 {
     nex_err_t code = nextion_system_set_wake_on_serial(handle, true);
+
+    CHECK_NEX_OK(code);
+}
+
+TEST_CASE("Set send x y coordinates on touch", "[system]")
+{
+    nex_err_t code = nextion_system_set_send_xy(handle, false);
 
     CHECK_NEX_OK(code);
 }

@@ -69,7 +69,7 @@ extern "C"
      * @brief Get the display brightness.
      *
      * @param handle Nextion context pointer.
-     * @param persisted If will read the persisted or transient value.
+     * @param persisted If it will read the persisted or transient value.
      * @param percentage Brightness level, in percentage (0-100).
      *
      * @return NEX_OK or NEX_FAIL.
@@ -91,7 +91,7 @@ extern "C"
      * @brief Get how long the display will be on after the last touch.
      *
      * @param handle Nextion context pointer.
-     * @param seconds Seconds to sleep after a touch.
+     * @param seconds Seconds to wait. Range: 0 (disabled) to 65535 (18h 12m 15s).
      *
      * @return NEX_OK or NEX_FAIL.
      */
@@ -107,6 +107,27 @@ extern "C"
      * @return NEX_OK or NEX_FAIL.
      */
     nex_err_t nextion_system_set_sleep_no_touch(nextion_handle_t handle, uint16_t seconds);
+
+    /**
+     * @brief Get how long the display will be on after the last serial command.
+     *
+     * @param handle Nextion context pointer.
+     * @param seconds Seconds to wait. Range: 0 (disabled) to 65535 (18h 12m 15s).
+     *
+     * @return NEX_OK or NEX_FAIL.
+     */
+    nex_err_t nextion_system_get_sleep_no_serial(nextion_handle_t handle, uint16_t *seconds);
+
+    /**
+     * @brief Set how long the display will be on after the last serial command.
+     * @note Not persisted through resets.
+     *
+     * @param handle Nextion context pointer.
+     * @param seconds Seconds to wait. Range: 0 (disabled) to 65535 (18h 12m 15s).
+     *
+     * @return NEX_OK or NEX_FAIL.
+     */
+    nex_err_t nextion_system_set_sleep_no_serial(nextion_handle_t handle, uint16_t seconds);
 
     /**
      * @brief Set if the display will turn on when touched.
@@ -129,6 +150,17 @@ extern "C"
      * @return NEX_OK or NEX_FAIL.
      */
     nex_err_t nextion_system_set_wake_on_serial(nextion_handle_t handle, bool wake_on_serial);
+
+    /**
+     * @brief Set if the display will send x and y touch coordinates on every touch.
+     * @note Not persisted through resets.
+     *
+     * @param handle Nextion context pointer.
+     * @param wake_on_serial If will send the coordinates or not.
+     *
+     * @return NEX_OK or NEX_FAIL.
+     */
+    nex_err_t nextion_system_set_send_xy(nextion_handle_t handle, bool send_xy);
 
 #ifdef __cplusplus
 }

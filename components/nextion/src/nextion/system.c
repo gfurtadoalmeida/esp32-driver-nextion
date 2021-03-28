@@ -185,6 +185,26 @@ extern "C"
         return nextion_command_send(handle, "thsp=%d", seconds);
     }
 
+    nex_err_t nextion_system_get_sleep_no_serial(nextion_handle_t handle, uint16_t *seconds)
+    {
+        NEX_CHECK_HANDLE(handle, NEX_FAIL);
+        NEX_CHECK((seconds != NULL), "seconds error(NULL)", NEX_FAIL);
+
+        int32_t value = 0;
+        nex_err_t code = nextion_system_get_number(handle, "get ussp", &value);
+
+        *seconds = value;
+
+        return code;
+    }
+
+    nex_err_t nextion_system_set_sleep_no_serial(nextion_handle_t handle, uint16_t seconds)
+    {
+        NEX_CHECK_HANDLE(handle, NEX_FAIL);
+
+        return nextion_command_send(handle, "ussp=%d", seconds);
+    }
+
     nex_err_t nextion_system_set_wake_on_touch(nextion_handle_t handle, bool wake_on_touch)
     {
         NEX_CHECK_HANDLE(handle, NEX_FAIL);
@@ -197,6 +217,13 @@ extern "C"
         NEX_CHECK_HANDLE(handle, NEX_FAIL);
 
         return nextion_command_send(handle, "usup=%d", wake_on_serial);
+    }
+
+    nex_err_t nextion_system_set_send_xy(nextion_handle_t handle, bool send_xy)
+    {
+        NEX_CHECK_HANDLE(handle, NEX_FAIL);
+
+        return nextion_command_send(handle, "sendxy=%d", send_xy);
     }
 #ifdef __cplusplus
 }
