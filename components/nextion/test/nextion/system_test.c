@@ -150,6 +150,27 @@ TEST_CASE("Set wake up when touched", "[system]")
     CHECK_NEX_OK(code);
 }
 
+TEST_CASE("Set wake up when serial data is received", "[system]")
+{
+    nex_err_t code = nextion_system_set_wake_on_serial(handle, true);
+
+    CHECK_NEX_OK(code);
+}
+
+TEST_CASE("Device sleep", "[system]")
+{
+    nex_err_t code = nextion_system_sleep(handle);
+
+    CHECK_NEX_OK(code);
+}
+
+TEST_CASE("Device wake up", "[system]")
+{
+    nex_err_t code = nextion_system_wakeup(handle);
+
+    CHECK_NEX_OK(code);
+}
+
 TEST_CASE("Reset", "[system]")
 {
     nex_err_t code = nextion_system_reset(handle);

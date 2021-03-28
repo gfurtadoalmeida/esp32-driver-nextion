@@ -110,6 +110,20 @@ extern "C"
         return NEX_FAIL;
     }
 
+    nex_err_t nextion_system_sleep(nextion_handle_t handle)
+    {
+        NEX_CHECK_HANDLE(handle, NEX_FAIL);
+
+        return nextion_command_send(handle, "sleep=1");
+    }
+
+    nex_err_t nextion_system_wakeup(nextion_handle_t handle)
+    {
+        NEX_CHECK_HANDLE(handle, NEX_FAIL);
+
+        return nextion_command_send(handle, "sleep=0");
+    }
+
     nex_err_t nextion_system_get_brightness(nextion_handle_t handle, bool persisted, uint8_t *percentage)
     {
         NEX_CHECK_HANDLE(handle, NEX_FAIL);
@@ -178,6 +192,12 @@ extern "C"
         return nextion_command_send(handle, "thup=%d", wake_on_touch);
     }
 
+    nex_err_t nextion_system_set_wake_on_serial(nextion_handle_t handle, bool wake_on_serial)
+    {
+        NEX_CHECK_HANDLE(handle, NEX_FAIL);
+
+        return nextion_command_send(handle, "usup=%d", wake_on_serial);
+    }
 #ifdef __cplusplus
 }
 #endif

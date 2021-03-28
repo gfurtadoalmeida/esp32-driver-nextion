@@ -46,9 +46,24 @@ extern "C"
      * @brief Resets the display, losing all volatile configurations.
      * @note It's mandatory, after (NEX_DVC_RESET_WAIT_TIME_MS) ms, to call
      * "nextion_init" after calling this function.
+     * @param handle Nextion context pointer.
      * @return NEX_OK or NEX_FAIL.
      */
     nex_err_t nextion_system_reset(nextion_handle_t handle);
+
+    /**
+     * @brief Enters in sleep mode.
+     * @param handle Nextion context pointer.
+     * @return NEX_OK or NEX_FAIL.
+     */
+    nex_err_t nextion_system_sleep(nextion_handle_t handle);
+
+    /**
+     * @brief Exits sleep mode.
+     * @param handle Nextion context pointer.
+     * @return NEX_OK or NEX_FAIL.
+     */
+    nex_err_t nextion_system_wakeup(nextion_handle_t handle);
 
     /**
      * @brief Get the display brightness.
@@ -103,6 +118,17 @@ extern "C"
      * @return NEX_OK or NEX_FAIL.
      */
     nex_err_t nextion_system_set_wake_on_touch(nextion_handle_t handle, bool wake_on_touch);
+
+    /**
+     * @brief Set if the display will turn when receiving serial data.
+     * @note Not persisted through resets.
+     *
+     * @param handle Nextion context pointer.
+     * @param wake_on_serial If will turn on or not when serial data is received.
+     *
+     * @return NEX_OK or NEX_FAIL.
+     */
+    nex_err_t nextion_system_set_wake_on_serial(nextion_handle_t handle, bool wake_on_serial);
 
 #ifdef __cplusplus
 }

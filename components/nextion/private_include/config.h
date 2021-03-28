@@ -10,21 +10,21 @@ extern "C"
 /**
  * Mutex acquire wait time(ms).
  */
-#define CONFIG_NEX_UART_MUTEX_WAIT_TIME_MS 200
+#define CONFIG_NEX_UART_MUTEX_WAIT_TIME_MS 500
 #endif
 
 #ifndef CONFIG_NEX_UART_RECV_WAIT_TIME_MS
 /**
  * UART response wait time (ms).
  */
-#define CONFIG_NEX_UART_RECV_WAIT_TIME_MS 200
+#define CONFIG_NEX_UART_RECV_WAIT_TIME_MS 100
 #endif
 
 #ifndef CONFIG_NEX_UART_TRANS_WAIT_TIME_MS
 /**
  * UART transmit wait time (ms).
  */
-#define CONFIG_NEX_UART_TRANS_WAIT_TIME_MS 200
+#define CONFIG_NEX_UART_TRANS_WAIT_TIME_MS 100
 #endif
 
 #ifndef CONFIG_NEX_UART_RECV_BUFFER_SIZE
@@ -34,11 +34,11 @@ extern "C"
 #define CONFIG_NEX_UART_RECV_BUFFER_SIZE 256
 #endif
 
-#ifndef NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE
+#ifndef CONFIG_NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE
 /**
  * UART command format buffer size (bytes).
  */
-#define NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE 256
+#define CONFIG_NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE 256
 #endif
 
 #ifdef __cplusplus

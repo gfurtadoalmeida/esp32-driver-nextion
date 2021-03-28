@@ -10,13 +10,13 @@
 extern "C"
 {
 #endif
+
 #define NEX_CHECK_SEND_COMMAND_HANDLE_STATE(handle)                                                                \
     NEX_CHECK_HANDLE(handle, NEX_FAIL);                                                                            \
     NEX_CHECK((handle->transparent_data_mode_active == false), "state error(in transparent data mode)", NEX_FAIL); \
     NEX_CHECK((handle->is_installed), "driver error(not installed)", NEX_FAIL);                                    \
     NEX_CHECK((handle->is_initialized), "driver error(not initialized)", NEX_FAIL);
 
-    static bool nextion_core_event_process(nextion_handle_t handle, bool lock);
     static bool nextion_core_event_dispatch(nextion_handle_t handle, const uint8_t *buffer, const size_t buffer_length);
     static bool nextion_core_acquire_mutex(nextion_handle_t handle);
     static void nextion_core_release_mutex(nextion_handle_t handle);
@@ -31,14 +31,14 @@ extern "C"
      */
     struct nextion_t
     {
-        SemaphoreHandle_t uart_mutex;                                          /*!< Mutex used for UART control. */
-        nextion_event_callback_t event_callback;                               /*!< Callbacks for events. */
-        size_t transparent_data_mode_size;                                     /*!< How many bytes are expected to be written while in "Transparent Data Mode". */
-        uart_port_t uart_num;                                                  /*!< UART port number. */
-        char command_format_buffer[NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE]; /*!< Buffer used to format commands. */
-        bool is_installed;                                                     /*!< If the driver was installed. */
-        bool is_initialized;                                                   /*!< If the driver was initialized. */
-        bool transparent_data_mode_active;                                     /*!< If it is in Transparent Data mode. */
+        SemaphoreHandle_t uart_mutex;                                                 /*!< Mutex used for UART control. */
+        nextion_event_callback_t event_callback;                                      /*!< Callbacks for events. */
+        size_t transparent_data_mode_size;                                            /*!< How many bytes are expected to be written while in "Transparent Data Mode". */
+        uart_port_t uart_num;                                                         /*!< UART port number. */
+        char command_format_buffer[CONFIG_NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE]; /*!< Buffer used to format commands. */
+        bool is_installed;                                                            /*!< If the driver was installed. */
+        bool is_initialized;                                                          /*!< If the driver was initialized. */
+        bool transparent_data_mode_active;                                            /*!< If it is in Transparent Data mode. */
     };
 
     nextion_handle_t nextion_driver_install(uart_port_t uart_num, uint32_t baud_rate, gpio_num_t tx_io_num, gpio_num_t rx_io_num)
@@ -126,8 +126,8 @@ extern "C"
     {
         NEX_CHECK_SEND_COMMAND_HANDLE_STATE(handle)
         NEX_CHECK((command != NULL), "command error(NULL)", NEX_FAIL);
+        NEX_CHECK((nextion_event_process(handle)), "event process error(failed dispatching)", NEX_FAIL);
         NEX_CHECK((nextion_core_acquire_mutex(handle)), "mutex error(not acquired)", NEX_FAIL);
-        NEX_CHECK((nextion_core_event_process(handle, false)), "event process error(failed dispatching)", NEX_FAIL);
 
         nex_err_t code = NEX_OK;
         va_list args;
@@ -160,8 +160,8 @@ extern "C"
     {
         NEX_CHECK_SEND_COMMAND_HANDLE_STATE(handle)
         NEX_CHECK((command != NULL), "command error(NULL)", NEX_FAIL);
+        NEX_CHECK((nextion_event_process(handle)), "event process error(failed dispatching)", NEX_FAIL);
         NEX_CHECK((nextion_core_acquire_mutex(handle)), "mutex error(not acquired)", NEX_FAIL);
-        NEX_CHECK((nextion_core_event_process(handle, false)), "event process error(failed dispatching)", NEX_FAIL);
 
         nex_err_t code = NEX_DVC_INSTRUCTION_FAIL;
 
@@ -208,7 +208,38 @@ extern "C"
         NEX_CHECK((handle->is_installed), "driver error(not installed)", false);
         NEX_CHECK((handle->is_initialized), "driver error(not initialized)", false);
 
-        return nextion_core_event_process(handle, true);
+        if (!nextion_core_acquire_mutex(handle))
+        {
+            NEX_LOGE("failed acquiring lock");
+
+            return false;
+        }
+
+        uint8_t buffer[NEX_DVC_EVT_MAX_RESPONSE_LENGTH];
+        int bytes_read = nextion_core_read_from_uart_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
+
+        while (bytes_read > -1)
+        {
+            if (!NEX_DVC_CODE_IS_EVENT(buffer[0], bytes_read))
+            {
+                NEX_LOGW("response was not an event, some data might be corrupted");
+
+                break;
+            }
+
+            if (!nextion_core_event_dispatch(handle, buffer, bytes_read))
+            {
+                NEX_LOGW("failure dispatching event");
+
+                break;
+            }
+
+            bytes_read = nextion_core_read_from_uart_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
+        };
+
+        nextion_core_release_mutex(handle);
+
+        return true;
     }
 
     nex_err_t nextion_transparent_data_mode_begin(nextion_handle_t handle,
@@ -329,72 +360,40 @@ extern "C"
         case NEX_DVC_EVT_TOUCH_OCCURRED:
             if (buffer_length == 7 && handle->event_callback.on_touch != NULL)
             {
-                handle->event_callback.on_touch(handle, buffer[1], buffer[2], buffer[3]);
+                nextion_on_touch_event_t event = {
+                    .handle = handle,
+                    .page_id = buffer[1],
+                    .component_id = buffer[2],
+                    .state = buffer[3]};
+
+                handle->event_callback.on_touch(event);
             }
             break;
-
         case NEX_DVC_EVT_TOUCH_COORDINATE_AWAKE:
         case NEX_DVC_EVT_TOUCH_COORDINATE_ASLEEP:
             if (buffer_length == 9 && handle->event_callback.on_touch_coord != NULL)
             {
                 // Coordinates: 2 bytes and unsigned = uint16_t.
                 // Sent in big endian format.
+                nextion_on_touch_coord_event_t event = {
+                    .handle = handle,
+                    .x = (uint16_t)(((uint16_t)buffer[1] << 8) | (uint16_t)buffer[2]),
+                    .y = (uint16_t)(((uint16_t)buffer[3] << 8) | (uint16_t)buffer[4]),
+                    .state = buffer[5],
+                    .exited_sleep = code == NEX_DVC_EVT_TOUCH_COORDINATE_ASLEEP};
 
-                handle->event_callback.on_touch_coord(handle,
-                                                      (uint16_t)(((uint16_t)buffer[1] << 8) | (uint16_t)buffer[2]),
-                                                      (uint16_t)(((uint16_t)buffer[3] << 8) | (uint16_t)buffer[4]),
-                                                      buffer[5],
-                                                      code == NEX_DVC_EVT_TOUCH_COORDINATE_ASLEEP);
+                handle->event_callback.on_touch_coord(event);
             }
             break;
-
         default:
             if (handle->event_callback.on_device != NULL)
             {
-                handle->event_callback.on_device(handle, code);
+                nextion_on_device_event_t event = {
+                    .handle = handle,
+                    .state = code};
+
+                handle->event_callback.on_device(event);
             }
-        }
-
-        return true;
-    }
-
-    bool nextion_core_event_process(nextion_handle_t handle, bool lock)
-    {
-        if (lock)
-        {
-            if (!nextion_core_acquire_mutex(handle))
-            {
-                NEX_LOGE("failed acquiring lock");
-
-                return false;
-            }
-        }
-
-        uint8_t buffer[NEX_DVC_EVT_MAX_RESPONSE_LENGTH];
-        uint32_t bytes_read = nextion_core_read_from_uart_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
-
-        while (bytes_read > -1)
-        {
-            if (!NEX_DVC_CODE_IS_EVENT(buffer[0], bytes_read))
-            {
-                NEX_LOGW("response was not an event, some data might be corrupted");
-
-                break;
-            }
-
-            if (!nextion_core_event_dispatch(handle, buffer, bytes_read))
-            {
-                NEX_LOGW("failure dispatching event");
-
-                break;
-            }
-
-            bytes_read = nextion_core_read_from_uart_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
-        };
-
-        if (lock)
-        {
-            nextion_core_release_mutex(handle);
         }
 
         return true;
@@ -416,7 +415,7 @@ extern "C"
 
         int bytes_read = nextion_core_read_from_uart_as_byte(handle, buffer, NEX_DVC_CMD_ACK_LENGTH);
 
-        if (bytes_read < 1)
+        if (bytes_read == -1)
         {
             // Some commands only return data on failure.
             // Event processing will throw this too when no event response is found.
@@ -439,17 +438,67 @@ extern "C"
 
     int32_t nextion_core_read_from_uart_as_byte(nextion_handle_t handle, uint8_t *buffer, size_t length)
     {
-        int bytes_read = uart_read_bytes(handle->uart_num, buffer, length, pdMS_TO_TICKS(CONFIG_NEX_UART_RECV_WAIT_TIME_MS));
+        uint8_t *movable_buffer = buffer;
+        int ends_found = 0; // Some commands use NEX_DVC_CMD_END_LENGTH chars as end response.
+        int bytes_read = 0;
+        int result = 0;
 
-        if (bytes_read < 1)
+        for (size_t i = 0; i < length; i++)
         {
-            // Some commands only return data on failure.
-            // Event processing will throw this too when no event response is found.
-            // That's why this is a debug; too much noise.
+            result = uart_read_bytes(handle->uart_num, movable_buffer, 1, pdMS_TO_TICKS(CONFIG_NEX_UART_RECV_WAIT_TIME_MS));
 
-            NEX_LOGD("response timed out");
+            if (result > 0) // We got something.
+            {
+                if (buffer[i] == NEX_DVC_CMD_END_VALUE)
+                {
+                    ends_found++;
+                }
 
-            return -1;
+                movable_buffer++;
+                bytes_read++;
+
+                // Stop when finding a command ending.
+                // Not every read byte request will have a
+                // command ending.
+                if (ends_found == NEX_DVC_CMD_END_LENGTH)
+                {
+                    break;
+                }
+
+                continue;
+            }
+
+            if (result < 1) // Error or timeout.
+            {
+                if (result == 0) // It's a timeout.
+                {
+                    // If we have read something before the timeout,
+                    // we do not send an error. The "length" parameter
+                    // sometimes is a estimation; let the caller decide
+                    // if there is enough data or not.
+
+                    if (bytes_read > 0)
+                    {
+                        break;
+                    }
+
+                    // Some commands only return data on failure.
+                    // Event processing will throw this too when no event response is found.
+                    // That's why this is a debug; too much noise.
+
+                    NEX_LOGD("response timed out");
+                }
+                else if (result == -1) // It's an error.
+                {
+                    NEX_LOGE("failed reading UART");
+                }
+
+                // For error or timeout, always return -1;
+
+                bytes_read = -1;
+
+                break;
+            }
         }
 
         return bytes_read;
@@ -459,7 +508,7 @@ extern "C"
     {
         static const char END_SEQUENCE[NEX_DVC_CMD_END_LENGTH] = {NEX_DVC_CMD_END_SEQUENCE};
 
-        int size = vsnprintf(handle->command_format_buffer, NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE, format, args);
+        int size = vsnprintf(handle->command_format_buffer, CONFIG_NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE, format, args);
 
         uart_port_t uart = handle->uart_num;
 

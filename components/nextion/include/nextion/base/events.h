@@ -40,40 +40,57 @@ extern "C"
     } nextion_touch_state_t;
 
     /**
+     * @typedef nextion_on_touch_event_t
+     * @brief Touch event data.
+     */
+    typedef struct
+    {
+        nextion_handle_t handle;     /*!< Nextion context pointer. */
+        uint8_t page_id;             /*!< Page id were the touch happened. */
+        uint8_t component_id;        /*!< Component id that was touched. */
+        nextion_touch_state_t state; /*!< Touch state */
+    } nextion_on_touch_event_t;
+
+    /**
+     * @typedef nextion_on_touch_coord_event_t
+     * @brief Touch event data with coordinates.
+     */
+    typedef struct
+    {
+        nextion_handle_t handle;     /*!< Nextion context pointer. */
+        uint16_t x;                  /*!< Page id were the touch happened. */
+        uint16_t y;                  /*!< Component id that was touched. */
+        nextion_touch_state_t state; /*!< Touch state. */
+        bool exited_sleep;           /*!< If the touch happened while the device was asleep, and now it is awake. */
+    } nextion_on_touch_coord_event_t;
+
+    /**
+     * @typedef nextion_on_device_event_t
+     * @brief Device event data.
+     */
+    typedef struct
+    {
+        nextion_handle_t handle;      /*!< Nextion context pointer. */
+        nextion_device_state_t state; /*!< Device state. */
+    } nextion_on_device_event_t;
+
+    /**
      * @typedef event_callback_on_touch
      * @brief Callback for display touch event.
-     * @param handle Nextion context pointer.
-     * @param page_id Page id were the touch happened.
-     * @param component_id Component id that was touched.
-     * @param state Touch state
      */
-    typedef void (*event_callback_on_touch)(nextion_handle_t,
-                                            uint8_t,
-                                            uint8_t,
-                                            nextion_touch_state_t);
+    typedef void (*event_callback_on_touch)(nextion_on_touch_event_t);
 
     /**
      * @typedef event_callback_on_touch_coord
      * @brief Callback for display touch event with coordinates.
-     * @param handle Nextion context pointer.
-     * @param x Page id were the touch happened.
-     * @param y Component id that was touched.
-     * @param state Touch state
-     * @param exited_sleep If the touch happened while the device was asleep, and now it is awake.
      */
-    typedef void (*event_callback_on_touch_coord)(nextion_handle_t,
-                                                  uint16_t,
-                                                  uint16_t,
-                                                  nextion_touch_state_t,
-                                                  bool);
+    typedef void (*event_callback_on_touch_coord)(nextion_on_touch_coord_event_t);
 
     /**
      * @typedef event_callback_on_device
      * @brief Callback for display device event.
-     * @param handle Nextion context pointer.
-     * @param state Device state
      */
-    typedef void (*event_callback_on_device)(nextion_handle_t, nextion_device_state_t);
+    typedef void (*event_callback_on_device)(nextion_on_device_event_t);
 
     /**
      * @typedef nextion_event_callback_t
@@ -81,7 +98,7 @@ extern "C"
      */
     typedef struct
     {
-        event_callback_on_touch on_touch;             /*!< When a component is touch. */
+        event_callback_on_touch on_touch;             /*!< When a component is touched. */
         event_callback_on_touch_coord on_touch_coord; /*!< When something is touched and "sendxy=1". */
         event_callback_on_device on_device;           /*!< When a device event happens. */
     } nextion_event_callback_t;
