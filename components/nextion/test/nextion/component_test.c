@@ -76,10 +76,10 @@ TEST_CASE("Get component text", "[component]")
     STRCMP_EQUAL("test text", text);
 }
 
-TEST_CASE("Get component number", "[component]")
+TEST_CASE("Get component value", "[component]")
 {
     int number;
-    nex_err_t code = nextion_component_get_number(handle, "n0", &number);
+    nex_err_t code = nextion_component_get_value(handle, "n0", &number);
 
     CHECK_NEX_OK(code);
     LONGS_EQUAL(50, number);
@@ -96,21 +96,79 @@ TEST_CASE("Get component boolean", "[component]")
 
 TEST_CASE("Set component text", "[component]")
 {
+    char text[7];
+    size_t length = 7;
     nex_err_t code = nextion_component_set_text(handle, "b0", "Button!");
 
+    nextion_component_get_text(handle, "b0", text, &length);
+
     CHECK_NEX_OK(code);
+    SIZET_EQUAL(7, length);
+    STRCMP_EQUAL("Button!", text);
 }
 
-TEST_CASE("Set component number", "[component]")
+TEST_CASE("Set component value", "[component]")
 {
-    nex_err_t code = nextion_component_set_number(handle, "x0", 100);
+    int number = 0;
+    nex_err_t code = nextion_component_set_value(handle, "x0", 100);
+
+    nextion_component_get_value(handle, "x0", &number);
 
     CHECK_NEX_OK(code);
+    LONGS_EQUAL(100, number);
 }
 
 TEST_CASE("Set component boolean", "[component]")
 {
-    nex_err_t code = nextion_component_set_boolean(handle, "r0", false);
+    bool value = false;
+    nex_err_t code = nextion_component_set_boolean(handle, "r0", true);
+
+    nextion_component_get_boolean(handle, "r0", &value);
 
     CHECK_NEX_OK(code);
+    CHECK_TRUE(value);
+}
+
+TEST_CASE("Get component property text", "[component]")
+{
+    char text[10];
+    size_t length = 10;
+    nex_err_t code = nextion_component_get_property_text(handle, "t0", "txt", text, &length);
+
+    CHECK_NEX_OK(code);
+    SIZET_EQUAL(9, length);
+    STRCMP_EQUAL("test text", text);
+}
+
+TEST_CASE("Get component property number", "[component]")
+{
+    int number;
+    nex_err_t code = nextion_component_get_property_number(handle, "n0", "val", &number);
+
+    CHECK_NEX_OK(code);
+    LONGS_EQUAL(50, number);
+}
+
+TEST_CASE("Set component property text", "[component]")
+{
+    char text[7];
+    size_t length = 7;
+    nex_err_t code = nextion_component_set_property_text(handle, "b0", "txt", "Button!");
+
+    nextion_component_get_text(handle, "b0", text, &length);
+
+    CHECK_NEX_OK(code);
+    SIZET_EQUAL(7, length);
+    STRCMP_EQUAL("Button!", text);
+}
+
+TEST_CASE("Set component property number", "[component]")
+{
+    int number = 0;
+    nex_err_t code = nextion_component_set_property_number(handle, "x0", "val", 100);
+
+    nextion_component_get_value(handle, "x0", &number);
+
+    CHECK_NEX_OK(code);
+    LONGS_EQUAL(100, number);
 }

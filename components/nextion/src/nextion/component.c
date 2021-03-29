@@ -51,71 +51,100 @@ extern "C"
                                          char *buffer,
                                          size_t *expected_length)
     {
-        NEX_CHECK_HANDLE(handle, NEX_FAIL);
-        NEX_CHECK((component_name != NULL), "component_name error(NULL)", NEX_FAIL);
-        NEX_CHECK((buffer != NULL), "text error(NULL)", NEX_FAIL);
-
-        size_t command_length = 8 + NEX_DVC_COMPONENT_MAX_NAME_LENGTH;
-        char command[8 + NEX_DVC_COMPONENT_MAX_NAME_LENGTH];
-
-        snprintf(command, command_length, "get %s.txt", component_name);
-
-        return nextion_system_get_text(handle, command, buffer, expected_length);
+        return nextion_component_get_property_text(handle, component_name, "txt", buffer, expected_length);
     }
 
-    nex_err_t nextion_component_get_number(nextion_handle_t handle, const char *component_name, int32_t *number)
+    nex_err_t nextion_component_get_value(nextion_handle_t handle, const char *component_name, int32_t *number)
     {
-        NEX_CHECK_HANDLE(handle, NEX_FAIL);
-        NEX_CHECK((component_name != NULL), "component_name error(NULL)", NEX_FAIL);
-        NEX_CHECK((number != NULL), "number error(NULL)", NEX_FAIL);
-
-        size_t command_length = 8 + NEX_DVC_COMPONENT_MAX_NAME_LENGTH;
-        char command[8 + NEX_DVC_COMPONENT_MAX_NAME_LENGTH];
-
-        snprintf(command, command_length, "get %s.val", component_name);
-
-        return nextion_system_get_number(handle, command, number);
+        return nextion_component_get_property_number(handle, component_name, "val", number);
     }
 
     nex_err_t nextion_component_get_boolean(nextion_handle_t handle, const char *component_name, bool *value)
     {
-        NEX_CHECK_HANDLE(handle, NEX_FAIL);
-        NEX_CHECK((component_name != NULL), "component_name error(NULL)", NEX_FAIL);
-        NEX_CHECK((value != NULL), "value error(NULL)", NEX_FAIL);
-
-        int32_t temp;
-        nex_err_t code = nextion_component_get_number(handle, component_name, &temp);
+        int32_t temp = 0;
+        nex_err_t code = nextion_component_get_property_number(handle, component_name, "val", &temp);
 
         *value = (bool)temp;
 
         return code;
     }
 
-    nex_err_t nextion_component_set_text(nextion_handle_t handle,
-                                         const char *component_name,
-                                         char *text)
+    nex_err_t nextion_component_set_text(nextion_handle_t handle, const char *component_name, char *text)
     {
-        NEX_CHECK_HANDLE(handle, NEX_FAIL);
-        NEX_CHECK((component_name != NULL), "component_name error(NULL)", NEX_FAIL);
-        NEX_CHECK((text != NULL), "text error(NULL)", NEX_FAIL);
-
-        return nextion_command_send(handle, "%s.txt=\"%s\"", component_name, text);
+        return nextion_component_set_property_text(handle, component_name, "txt", text);
     }
 
-    nex_err_t nextion_component_set_number(nextion_handle_t handle, const char *component_name, int32_t number)
+    nex_err_t nextion_component_set_value(nextion_handle_t handle, const char *component_name, int32_t number)
     {
-        NEX_CHECK_HANDLE(handle, NEX_FAIL);
-        NEX_CHECK((component_name != NULL), "component_name error(NULL)", NEX_FAIL);
-
-        return nextion_command_send(handle, "%s.val=%d", component_name, number);
+        return nextion_component_set_property_number(handle, component_name, "val", number);
     }
 
     nex_err_t nextion_component_set_boolean(nextion_handle_t handle, const char *component_name, bool value)
     {
+        return nextion_component_set_property_number(handle, component_name, "val", (int32_t)value);
+    }
+
+    nex_err_t nextion_component_get_property_text(nextion_handle_t handle,
+                                                  const char *component_name,
+                                                  const char *property_name,
+                                                  char *buffer,
+                                                  size_t *expected_length)
+    {
         NEX_CHECK_HANDLE(handle, NEX_FAIL);
         NEX_CHECK((component_name != NULL), "component_name error(NULL)", NEX_FAIL);
+        NEX_CHECK((property_name != NULL), "property_name error(NULL)", NEX_FAIL);
+        NEX_CHECK((buffer != NULL), "buffer error(NULL)", NEX_FAIL);
+        NEX_CHECK((expected_length != NULL), "expected_length error(NULL)", NEX_FAIL);
 
-        return nextion_component_set_number(handle, component_name, (int32_t)value);
+        size_t command_length = 10 + NEX_DVC_COMPONENT_MAX_NAME_LENGTH;
+        char command[10 + NEX_DVC_COMPONENT_MAX_NAME_LENGTH];
+
+        snprintf(command, command_length, "get %s.%s", component_name, property_name);
+
+        return nextion_system_get_text(handle, command, buffer, expected_length);
+    }
+
+    nex_err_t nextion_component_get_property_number(nextion_handle_t handle,
+                                                    const char *component_name,
+                                                    const char *property_name,
+                                                    int32_t *number)
+    {
+        NEX_CHECK_HANDLE(handle, NEX_FAIL);
+        NEX_CHECK((component_name != NULL), "component_name error(NULL)", NEX_FAIL);
+        NEX_CHECK((property_name != NULL), "property_name error(NULL)", NEX_FAIL);
+        NEX_CHECK((number != NULL), "number error(NULL)", NEX_FAIL);
+
+        size_t command_length = 10 + NEX_DVC_COMPONENT_MAX_NAME_LENGTH;
+        char command[10 + NEX_DVC_COMPONENT_MAX_NAME_LENGTH];
+
+        snprintf(command, command_length, "get %s.%s", component_name, property_name);
+
+        return nextion_system_get_number(handle, command, number);
+    }
+
+    nex_err_t nextion_component_set_property_text(nextion_handle_t handle,
+                                                  const char *component_name,
+                                                  const char *property_name,
+                                                  char *text)
+    {
+        NEX_CHECK_HANDLE(handle, NEX_FAIL);
+        NEX_CHECK((component_name != NULL), "component_name error(NULL)", NEX_FAIL);
+        NEX_CHECK((property_name != NULL), "property_name error(NULL)", NEX_FAIL);
+        NEX_CHECK((text != NULL), "text error(NULL)", NEX_FAIL);
+
+        return nextion_command_send(handle, "%s.%s=\"%s\"", component_name, property_name, text);
+    }
+
+    nex_err_t nextion_component_set_property_number(nextion_handle_t handle,
+                                                    const char *component_name,
+                                                    const char *property_name,
+                                                    int32_t number)
+    {
+        NEX_CHECK_HANDLE(handle, NEX_FAIL);
+        NEX_CHECK((component_name != NULL), "component_name error(NULL)", NEX_FAIL);
+        NEX_CHECK((property_name != NULL), "property_name error(NULL)", NEX_FAIL);
+
+        return nextion_command_send(handle, "%s.%s=%d", component_name, property_name, number);
     }
 
 #ifdef __cplusplus

@@ -116,7 +116,7 @@ void process_interface_queue(void *pvParameters)
                 }
 
                 // Get the number.
-                if (nextion_component_get_number(nextion_handle, "n0", &number) == NEX_OK)
+                if (nextion_component_get_value(nextion_handle, "n0", &number) == NEX_OK)
                 {
                     ESP_LOGI(TAG, "number: %d", number);
                 }
