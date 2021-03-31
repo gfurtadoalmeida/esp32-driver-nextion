@@ -92,16 +92,6 @@ extern "C"
      */
     typedef void (*event_callback_on_device)(nextion_on_device_event_t);
 
-    /**
-     * @typedef nextion_event_callback_t
-     * @brief Nextion display events callback functions.
-     */
-    typedef struct
-    {
-        event_callback_on_touch on_touch;             /*!< When a component is touched. */
-        event_callback_on_touch_coord on_touch_coord; /*!< When something is touched and "sendxy=1". */
-        event_callback_on_device on_device;           /*!< When a device event happens. */
-    } nextion_event_callback_t;
 #ifdef __cplusplus
 }
 #endif

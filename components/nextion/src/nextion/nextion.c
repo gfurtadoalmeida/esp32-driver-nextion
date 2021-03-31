@@ -33,15 +33,17 @@ extern "C"
      */
     struct nextion_t
     {
-        nextion_event_callback_t event_callback; /*!< Callbacks for events. */
-        SemaphoreHandle_t command_mutex;         /*!< Mutex used command control. */
-        QueueHandle_t uart_queue;                /*!< Queue used for UART event. */
-        TaskHandle_t uart_task;                  /*!< Task used for UART queue handling. */
-        size_t transparent_data_mode_size;       /*!< How many bytes are expected to be written while in "Transparent Data Mode". */
-        uart_port_t uart_num;                    /*!< UART port number. */
-        bool is_installed;                       /*!< If the driver was installed. */
-        bool is_initialized;                     /*!< If the driver was initialized. */
-        bool in_transparent_data_mode;           /*!< If it is in Transparent Data mode. */
+        event_callback_on_touch event_callback_on_touch;             /*!< Callbacks for 'on touch' events. */
+        event_callback_on_touch_coord event_callback_on_touch_coord; /*!< Callbacks for 'on touch with coordinates' events. */
+        event_callback_on_device event_callback_on_device;           /*!< Callbacks for 'on device' events. */
+        SemaphoreHandle_t command_mutex;                             /*!< Mutex used command control. */
+        QueueHandle_t uart_queue;                                    /*!< Queue used for UART event. */
+        TaskHandle_t uart_task;                                      /*!< Task used for UART queue handling. */
+        size_t transparent_data_mode_size;                           /*!< How many bytes are expected to be written while in "Transparent Data Mode". */
+        uart_port_t uart_num;                                        /*!< UART port number. */
+        bool is_installed;                                           /*!< If the driver was installed. */
+        bool is_initialized;                                         /*!< If the driver was initialized. */
+        bool in_transparent_data_mode;                               /*!< If it is in Transparent Data mode. */
     };
 
     nextion_handle_t nextion_driver_install(uart_port_t uart_num, uint32_t baud_rate, gpio_num_t tx_io_num, gpio_num_t rx_io_num)
@@ -112,11 +114,29 @@ extern "C"
         return true;
     }
 
-    bool nextion_event_callback_set(nextion_handle_t handle, nextion_event_callback_t event_callback)
+    bool nextion_event_callback_set_on_touch(nextion_handle_t handle, event_callback_on_touch callback)
     {
         NEX_CHECK_HANDLE(handle, false);
 
-        handle->event_callback = event_callback;
+        handle->event_callback_on_touch = callback;
+
+        return true;
+    }
+
+    bool nextion_event_callback_set_on_touch_coord(nextion_handle_t handle, event_callback_on_touch_coord callback)
+    {
+        NEX_CHECK_HANDLE(handle, false);
+
+        handle->event_callback_on_touch_coord = callback;
+
+        return true;
+    }
+
+    bool nextion_event_callback_set_on_device(nextion_handle_t handle, event_callback_on_device callback)
+    {
+        NEX_CHECK_HANDLE(handle, false);
+
+        handle->event_callback_on_device = callback;
 
         return true;
     }
@@ -434,7 +454,7 @@ extern "C"
         switch (code)
         {
         case NEX_DVC_EVT_TOUCH_OCCURRED:
-            if (buffer_length == 7 && handle->event_callback.on_touch != NULL)
+            if (buffer_length == 7 && handle->event_callback_on_touch != NULL)
             {
                 nextion_on_touch_event_t event = {
                     .handle = handle,
@@ -444,12 +464,12 @@ extern "C"
 
                 NEX_LOGD("dispatching 'on touch' event");
 
-                handle->event_callback.on_touch(event);
+                handle->event_callback_on_touch(event);
             }
             break;
         case NEX_DVC_EVT_TOUCH_COORDINATE_AWAKE:
         case NEX_DVC_EVT_TOUCH_COORDINATE_ASLEEP:
-            if (handle->event_callback.on_touch_coord != NULL && buffer_length == 9)
+            if (handle->event_callback_on_touch_coord != NULL && buffer_length == 9)
             {
                 // Coordinates: 2 bytes and unsigned = uint16_t.
                 // Sent in big endian format.
@@ -462,11 +482,11 @@ extern "C"
 
                 NEX_LOGD("dispatching 'on touch coord' event");
 
-                handle->event_callback.on_touch_coord(event);
+                handle->event_callback_on_touch_coord(event);
             }
             break;
         default:
-            if (handle->event_callback.on_device != NULL)
+            if (handle->event_callback_on_device != NULL)
             {
                 nextion_on_device_event_t event = {
                     .handle = handle,
@@ -474,7 +494,7 @@ extern "C"
 
                 NEX_LOGD("dispatching 'on device' event");
 
-                handle->event_callback.on_device(event);
+                handle->event_callback_on_device(event);
             }
         }
 

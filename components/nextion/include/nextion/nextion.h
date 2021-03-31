@@ -83,12 +83,31 @@ extern "C"
     nex_err_t nextion_command_send_get_bytes(nextion_handle_t handle, uint8_t *buffer, size_t *length, const char *command, ...);
 
     /**
-     * @brief Set events callbacks.
+     * @brief Sets a callback for when a component is touched; 'on touch' events.
+     * @note Only the last registration will be called; you cannot register more then one callback.
      * @param handle Nextion context pointer.
-     * @param event_callback Callbacks used to handle device events.
+     * @param callback Callback function.
      * @return True if success, otherwise false.
      */
-    bool nextion_event_callback_set(nextion_handle_t handle, nextion_event_callback_t event_callback);
+    bool nextion_event_callback_set_on_touch(nextion_handle_t handle, event_callback_on_touch callback);
+
+    /**
+     * @brief Sets a callback for when something is touched and "sendxy=1"; 'on touch with coordinates' events.
+     * @note Only the last registration will be called; you cannot register more then one callback.
+     * @param handle Nextion context pointer.
+     * @param callback Callback function.
+     * @return True if success, otherwise false.
+     */
+    bool nextion_event_callback_set_on_touch_coord(nextion_handle_t handle, event_callback_on_touch_coord callback);
+
+    /**
+     * @brief Sets a callback for when a device event happens; 'on device' events.
+     * @note Only the last registration will be called; you cannot register more then one callback.
+     * @param handle Nextion context pointer.
+     * @param callback Callback function.
+     * @return True if success, otherwise false.
+     */
+    bool nextion_event_callback_set_on_device(nextion_handle_t handle, event_callback_on_device callback);
 
     /**
      * @brief Begins the "Transparent Data Mode".
