@@ -40,12 +40,11 @@ void app_main(void)
         return;
     }
 
-    nextion_event_callback_t callback = {
-        .on_touch = &process_touch_event,
-        .on_touch_coord = NULL,
-        .on_device = NULL};
-
-    nextion_event_callback_set(nextion_handle, callback);
+    if (!nextion_event_callback_set_on_touch(nextion_handle, &process_touch_event))
+    {
+        ESP_LOGE(TAG, "failed registering 'on device' event callback");
+        return;
+    }
 
     if (nextion_page_set(nextion_handle, "0") != NEX_OK)
     {
