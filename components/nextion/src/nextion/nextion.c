@@ -33,17 +33,18 @@ extern "C"
      */
     struct nextion_t
     {
-        event_callback_on_touch event_callback_on_touch;             /*!< Callbacks for 'on touch' events. */
-        event_callback_on_touch_coord event_callback_on_touch_coord; /*!< Callbacks for 'on touch with coordinates' events. */
-        event_callback_on_device event_callback_on_device;           /*!< Callbacks for 'on device' events. */
-        SemaphoreHandle_t command_mutex;                             /*!< Mutex used command control. */
-        QueueHandle_t uart_queue;                                    /*!< Queue used for UART event. */
-        TaskHandle_t uart_task;                                      /*!< Task used for UART queue handling. */
-        size_t transparent_data_mode_size;                           /*!< How many bytes are expected to be written while in "Transparent Data Mode". */
-        uart_port_t uart_num;                                        /*!< UART port number. */
-        bool is_installed;                                           /*!< If the driver was installed. */
-        bool is_initialized;                                         /*!< If the driver was initialized. */
-        bool in_transparent_data_mode;                               /*!< If it is in Transparent Data mode. */
+        char command_format_buffer[CONFIG_NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE]; /*!< Buffer used for formating commands. */
+        event_callback_on_touch event_callback_on_touch;                              /*!< Callbacks for 'on touch' events. */
+        event_callback_on_touch_coord event_callback_on_touch_coord;                  /*!< Callbacks for 'on touch with coordinates' events. */
+        event_callback_on_device event_callback_on_device;                            /*!< Callbacks for 'on device' events. */
+        SemaphoreHandle_t command_mutex;                                              /*!< Mutex used command control. */
+        QueueHandle_t uart_queue;                                                     /*!< Queue used for UART event. */
+        TaskHandle_t uart_task;                                                       /*!< Task used for UART queue handling. */
+        size_t transparent_data_mode_size;                                            /*!< How many bytes are expected to be written while in "Transparent Data Mode". */
+        uart_port_t uart_num;                                                         /*!< UART port number. */
+        bool is_installed;                                                            /*!< If the driver was installed. */
+        bool is_initialized;                                                          /*!< If the driver was initialized. */
+        bool in_transparent_data_mode;                                                /*!< If it is in Transparent Data mode. */
     };
 
     nextion_handle_t nextion_driver_install(uart_port_t uart_num, uint32_t baud_rate, gpio_num_t tx_io_num, gpio_num_t rx_io_num)
@@ -633,13 +634,12 @@ extern "C"
     bool nextion_core_uart_write_as_command(nextion_handle_t handle, const char *format, va_list args)
     {
         const char END_SEQUENCE[NEX_DVC_CMD_END_LENGTH] = {NEX_DVC_CMD_END_SEQUENCE};
-        char format_buffer[CONFIG_NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE];
 
-        int size = vsnprintf(format_buffer, CONFIG_NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE, format, args);
+        int size = vsnprintf(handle->command_format_buffer, CONFIG_NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE, format, args);
 
         uart_port_t uart = handle->uart_num;
 
-        if (uart_write_bytes(uart, format_buffer, size) < 0 || uart_write_bytes(uart, END_SEQUENCE, NEX_DVC_CMD_END_LENGTH) < 0)
+        if (uart_write_bytes(uart, handle->command_format_buffer, size) < 0 || uart_write_bytes(uart, END_SEQUENCE, NEX_DVC_CMD_END_LENGTH) < 0)
         {
             NEX_LOGE("failed writing command");
 
