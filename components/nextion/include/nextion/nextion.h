@@ -42,6 +42,7 @@ extern "C"
 
     /**
      * @brief Does the initializations necessary before any action can be done.
+     * @note Will turn the display on.
      * @param handle Nextion context pointer.
      * @return NEX_OK if success, otherwise NEX_FAIL.
      */

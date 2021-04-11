@@ -3,6 +3,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "nextion/nextion.h"
+#include "nextion/system.h"
 #include "common_infra.h"
 #include "config.h"
 
@@ -17,15 +18,15 @@ extern "C"
     NEX_CHECK((handle->is_initialized), "driver error(not initialized)", NEX_FAIL); \
     NEX_CHECK((handle->in_transparent_data_mode == false), "state error(in transparent data mode)", NEX_FAIL);
 
-    static void nextion_core_uart_process_queue(void *pvParameters);
-    static bool nextion_core_event_process(nextion_handle_t handle);
+    static bool nextion_core_command_sync_acquire(nextion_handle_t handle, TickType_t timeout);
+    static void nextion_core_command_sync_release(nextion_handle_t handle);
     static bool nextion_core_event_dispatch(nextion_handle_t handle, const uint8_t *buffer, const size_t buffer_length);
-    static bool nextion_core_command_mutex_acquire(nextion_handle_t handle, TickType_t timeout);
-    static void nextion_core_command_mutex_release(nextion_handle_t handle);
-    static nex_err_t nextion_core_uart_read_as_simple_result(nextion_handle_t handle);
+    static bool nextion_core_event_process(nextion_handle_t handle);
     static int32_t nextion_core_uart_read_as_byte(nextion_handle_t handle, uint8_t *buffer, size_t length);
-    static bool nextion_core_uart_write_as_command(nextion_handle_t handle, const char *format, va_list args);
+    static nex_err_t nextion_core_uart_read_as_simple_result(nextion_handle_t handle);
+    static void nextion_core_uart_task(void *pvParameters);
     static bool nextion_core_uart_write_as_byte(nextion_handle_t handle, const char *bytes, size_t length);
+    static bool nextion_core_uart_write_as_command(nextion_handle_t handle, const char *format, va_list args);
 
     /**
      * @struct nextion_t
@@ -37,14 +38,14 @@ extern "C"
         event_callback_on_touch event_callback_on_touch;                              /*!< Callbacks for 'on touch' events. */
         event_callback_on_touch_coord event_callback_on_touch_coord;                  /*!< Callbacks for 'on touch with coordinates' events. */
         event_callback_on_device event_callback_on_device;                            /*!< Callbacks for 'on device' events. */
-        SemaphoreHandle_t command_mutex;                                              /*!< Mutex used command control. */
+        SemaphoreHandle_t command_sync;                                               /*!< Mutex used command control. */
         QueueHandle_t uart_queue;                                                     /*!< Queue used for UART event. */
         TaskHandle_t uart_task;                                                       /*!< Task used for UART queue handling. */
         size_t transparent_data_mode_size;                                            /*!< How many bytes are expected to be written while in "Transparent Data Mode". */
         uart_port_t uart_num;                                                         /*!< UART port number. */
-        bool is_installed;                                                            /*!< If the driver was installed. */
-        bool is_initialized;                                                          /*!< If the driver was initialized. */
-        bool in_transparent_data_mode;                                                /*!< If it is in Transparent Data mode. */
+        volatile bool is_installed;                                                   /*!< If the driver was installed. */
+        volatile bool is_initialized;                                                 /*!< If the driver was initialized. */
+        volatile bool in_transparent_data_mode;                                       /*!< If it is in Transparent Data mode. */
     };
 
     nextion_handle_t nextion_driver_install(uart_port_t uart_num, uint32_t baud_rate, gpio_num_t tx_io_num, gpio_num_t rx_io_num)
@@ -64,6 +65,7 @@ extern "C"
         // This order was gotten from: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/uart.html
         // Trying to follow the examples on the github site (https://github.com/espressif/esp-idf/tree/master/examples/peripherals/uart)
         // will lead to error.
+
         ESP_ERROR_CHECK(uart_param_config(uart_num, &uart_config));
         ESP_ERROR_CHECK(uart_set_pin(uart_num, tx_io_num, rx_io_num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
 
@@ -72,11 +74,11 @@ extern "C"
         driver->is_installed = true;
         driver->is_initialized = false;
         driver->in_transparent_data_mode = false;
-        driver->command_mutex = xSemaphoreCreateMutex();
+        driver->command_sync = xSemaphoreCreateBinary();
 
         ESP_ERROR_CHECK(uart_driver_install(uart_num, CONFIG_NEX_UART_RECV_BUFFER_SIZE, 0, 10, &driver->uart_queue, 0));
 
-        if (xTaskCreate(nextion_core_uart_process_queue, "nextion", 2048, (void *)driver, tskIDLE_PRIORITY, &driver->uart_task) != pdPASS)
+        if (xTaskCreate(nextion_core_uart_task, "nextion", 2048, (void *)driver, tskIDLE_PRIORITY, &driver->uart_task) != pdPASS)
         {
             NEX_LOGE("failed creating UART event task");
 
@@ -97,6 +99,8 @@ extern "C"
             return true;
         }
 
+        nextion_core_command_sync_release(handle);
+
         NEX_LOGI("deleting driver");
 
         vTaskDelete(handle->uart_task);
@@ -104,7 +108,7 @@ extern "C"
         // Will also free the queue.
         ESP_ERROR_CHECK(uart_driver_delete(handle->uart_num));
 
-        vSemaphoreDelete(handle->command_mutex);
+        vSemaphoreDelete(handle->command_sync);
 
         free(handle);
 
@@ -146,17 +150,31 @@ extern "C"
     {
         NEX_CHECK_HANDLE(handle, NEX_FAIL);
 
-        // All logic relies on receiving responses in all cases.
         // As "nextion_command_send" validates if the driver is
         // initialized, we need to cheat here.
 
         handle->is_initialized = true;
+
+        vTaskResume(handle->uart_task);
+
+        // Set up the semaphore.
+
+        nextion_core_command_sync_release(handle);
+
+        // The display must be on for the commands
+        // to be received.
+
+        nextion_system_wakeup(handle);
+
+        // All logic relies on receiving responses in all cases.
 
         if (nextion_command_send(handle, "bkcmd=3") != NEX_OK)
         {
             handle->is_initialized = false;
 
             NEX_LOGE("failed initializing display");
+
+            vTaskSuspend(handle->uart_task);
 
             return NEX_FAIL;
         }
@@ -168,7 +186,7 @@ extern "C"
     {
         NEX_CHECK_SEND_COMMAND_HANDLE_STATE(handle)
         NEX_CHECK((command != NULL), "command error(NULL)", NEX_FAIL);
-        NEX_CHECK((nextion_core_command_mutex_acquire(handle, pdMS_TO_TICKS(CONFIG_NEX_UART_MUTEX_WAIT_TIME_MS))), "mutex error(not acquired)", NEX_FAIL);
+        NEX_CHECK((nextion_core_command_sync_acquire(handle, pdMS_TO_TICKS(CONFIG_NEX_UART_MUTEX_WAIT_TIME_MS))), "sync error(not acquired)", NEX_FAIL);
 
         nex_err_t code = NEX_OK;
         va_list args;
@@ -190,9 +208,9 @@ extern "C"
             }
         }
 
-        va_end(args);
+        nextion_core_command_sync_release(handle);
 
-        nextion_core_command_mutex_release(handle);
+        va_end(args);
 
         return code;
     }
@@ -201,7 +219,7 @@ extern "C"
     {
         NEX_CHECK_SEND_COMMAND_HANDLE_STATE(handle)
         NEX_CHECK((command != NULL), "command error(NULL)", NEX_FAIL);
-        NEX_CHECK((nextion_core_command_mutex_acquire(handle, pdMS_TO_TICKS(CONFIG_NEX_UART_MUTEX_WAIT_TIME_MS))), "mutex error(not acquired)", NEX_FAIL);
+        NEX_CHECK((nextion_core_command_sync_acquire(handle, pdMS_TO_TICKS(CONFIG_NEX_UART_MUTEX_WAIT_TIME_MS))), "sync error(not acquired)", NEX_FAIL);
 
         nex_err_t code = NEX_DVC_INSTRUCTION_FAIL;
 
@@ -214,7 +232,7 @@ extern "C"
             code = nextion_core_uart_read_as_simple_result(handle);
         }
 
-        nextion_core_command_mutex_release(handle);
+        nextion_core_command_sync_release(handle);
 
         if (code == NEX_DVC_INSTRUCTION_FAIL)
         {
@@ -341,10 +359,12 @@ extern "C"
 
     /* ======================
      *     Core Methods
-    ======================== */
+     *======================= */
 
-    void nextion_core_uart_process_queue(void *pvParameters)
+    void nextion_core_uart_task(void *pvParameters)
     {
+        vTaskSuspend(NULL);
+
         nextion_handle_t handle = (nextion_handle_t)pvParameters;
         QueueHandle_t queue = handle->uart_queue;
         uart_port_t uart = handle->uart_num;
@@ -362,11 +382,12 @@ extern "C"
                 case UART_DATA:
                     NEX_LOGD("UART data size: %d", event.size);
 
-                    // If we can acquire a mutex it means the event was sent by the device
-                    // automatically. It will only fail to acquire the mutex when a command
+                    // If we can acquire a semaphore it means the event was sent by the device
+                    // automatically. It will only fail to acquire the semaphore when a command
                     // was called. For commands and Transparent Data mode, we do nothing,
                     // let them handle the bytes.
-                    if (!handle->in_transparent_data_mode && nextion_core_command_mutex_acquire(handle, 0))
+
+                    if (!handle->in_transparent_data_mode && nextion_core_command_sync_acquire(handle, 0))
                     {
                         NEX_LOGD("processing events");
 
@@ -379,7 +400,7 @@ extern "C"
                             NEX_LOGD("events processed");
                         }
 
-                        nextion_core_command_mutex_release(handle);
+                        nextion_core_command_sync_release(handle);
                     }
                     break;
                 case UART_FIFO_OVF:
@@ -502,14 +523,14 @@ extern "C"
         return true;
     }
 
-    bool nextion_core_command_mutex_acquire(nextion_handle_t handle, TickType_t timeout)
+    bool nextion_core_command_sync_acquire(nextion_handle_t handle, TickType_t timeout)
     {
-        return xSemaphoreTake(handle->command_mutex, timeout) == pdTRUE;
+        return xSemaphoreTake(handle->command_sync, timeout) == pdTRUE;
     }
 
-    void nextion_core_command_mutex_release(nextion_handle_t handle)
+    void nextion_core_command_sync_release(nextion_handle_t handle)
     {
-        xSemaphoreGive(handle->command_mutex);
+        xSemaphoreGive(handle->command_sync);
     }
 
     nex_err_t nextion_core_uart_read_as_simple_result(nextion_handle_t handle)
