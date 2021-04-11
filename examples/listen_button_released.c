@@ -26,7 +26,7 @@ void app_main(void)
 {
     esp_log_level_set("*", ESP_LOG_DEBUG);
 
-    nextion_handle = nextion_driver_install(UART_NUM_2, 9600, GPIO_NUM_17, GPIO_NUM_16);
+    nextion_handle = nextion_driver_install(UART_NUM_2, 115200, GPIO_NUM_17, GPIO_NUM_16);
 
     if (nextion_handle == NULL)
     {

@@ -65,7 +65,12 @@ extern "C"
         NEX_CHECK_HANDLE(handle, NEX_FAIL);
         NEX_CHECK((value_count < (NEX_DVC_TRANSPARENT_DATA_MAX_DATA_SIZE - 20)), "value_count error(>=NEX_DVC_TRANSPARENT_DATA_MAX_DATA_SIZE-20)", NEX_FAIL);
 
-        return nextion_transparent_data_mode_begin(handle, value_count, "addt %d,%d,%zd", waveform_id, channel_id, value_count);
+        return nextion_transparent_data_mode_begin(handle,
+                                                   value_count,
+                                                   "addt %d,%d,%d",
+                                                   waveform_id,
+                                                   channel_id,
+                                                   (unsigned int)value_count);
     }
 
     nex_err_t nextion_waveform_stream_write(nextion_handle_t handle, uint8_t value)

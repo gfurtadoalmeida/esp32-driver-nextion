@@ -102,6 +102,9 @@ extern "C"
 
         nex_err_t code = nextion_command_send(handle, "rest");
 
+        // The "rest" command returns no response;
+        // timeout is success.
+
         if (code == NEX_OK || code == NEX_TIMEOUT)
         {
             return NEX_OK;

@@ -36,7 +36,7 @@ menu "Nextion Display"
     config NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE
         int "UART command format buffer size (bytes)"
         range 128 512
-        default 256
+        default 128
         help
             The UART buffer used to format command before sending.
             It is used for ' vprintf' command.

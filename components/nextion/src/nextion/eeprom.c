@@ -82,7 +82,12 @@ extern "C"
         // It is no use updating "buffer_length" because it will always read
         // exactly what it is asked.
 
-        return nextion_command_send_get_bytes(handle, buffer, &length, "rept %d,%zd", address, length);
+        return nextion_command_send_get_bytes(handle,
+                                              buffer,
+                                              &length,
+                                              "rept %d,%d",
+                                              address,
+                                              (unsigned int)length);
     }
 
     nex_err_t nextion_eeprom_stream_begin(nextion_handle_t handle, uint16_t address, size_t value_count)
@@ -92,7 +97,11 @@ extern "C"
         NEX_CHECK_EEPROM_END_ADDRESS(address + value_count);
         NEX_CHECK((value_count < (NEX_DVC_TRANSPARENT_DATA_MAX_DATA_SIZE - 20)), "value_count error(>=NEX_DVC_TRANSPARENT_DATA_MAX_DATA_SIZE-20)", NEX_FAIL);
 
-        return nextion_transparent_data_mode_begin(handle, value_count, "wept %d,%zd", address, value_count);
+        return nextion_transparent_data_mode_begin(handle,
+                                                   value_count,
+                                                   "wept %d,%d",
+                                                   address,
+                                                   (unsigned int)value_count);
     }
 
     nex_err_t nextion_eeprom_stream_write(nextion_handle_t handle, uint8_t value)

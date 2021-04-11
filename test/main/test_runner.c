@@ -2,7 +2,7 @@
 #include "nextion/nextion.h"
 
 #define TEST_UART_NUM UART_NUM_2
-#define TEST_UART_BAUD_RATE 9600
+#define TEST_UART_BAUD_RATE 115200
 #define TEST_UART_TX_PIN 17
 #define TEST_UART_RX_PIN 16
 
