@@ -1,25 +1,29 @@
-#ifndef __NEXTION_ESP32_COMMON_INFRA_TEST_H__
-#define __NEXTION_ESP32_COMMON_INFRA_TEST_H__
+#ifndef __NEXTION_COMMON_INFRA_TEST_H__
+#define __NEXTION_COMMON_INFRA_TEST_H__
 
-#include "driver/uart.h"
-#include "driver/gpio.h"
-#include "freertos/queue.h"
 #include "unity.h"
+#include "nextion/nextion.h"
 #include "config.h"
-#include "nextion/nextion-esp32.h"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+extern nextion_handle_t handle;
 
-#define TEST_UART_NUM UART_NUM_2
-#define TEST_UART_BAUD_RATE 9600
-#define TEST_UART_TX_PIN GPIO_NUM_17
-#define TEST_UART_RX_PIN GPIO_NUM_16
+// Checks
 
-#ifdef __cplusplus
-}
-#endif
+#define CHECK_NEX_OK(code) TEST_ASSERT_EQUAL_UINT8(NEX_OK, code)
+#define CHECK_NEX_FAIL(code) TEST_ASSERT_EQUAL_UINT8(NEX_FAIL, code)
+#define CHECK_NULL(pointer) TEST_ASSERT(pointer == NULL)
+#define CHECK_NOT_NULL(pointer) TEST_ASSERT(pointer != NULL)
+#define CHECK_TRUE(condition) TEST_ASSERT_TRUE(condition)
+#define CHECK_FALSE(condition) TEST_ASSERT_FALSE(condition)
 
-#endif //__NEXTION_ESP32_COMMON_INFRA_TEST_H__
+// Equals
+
+#define SIZET_EQUAL(a, b) TEST_ASSERT_EQUAL_UINT32(a, b)
+#define RGB565_EQUAL(a, b) TEST_ASSERT_EQUAL_UINT16(a, b)
+#define NEX_CODES_EQUAL(a, b) TEST_ASSERT_EQUAL_UINT8(a, b)
+#define NEX_TOUCH_STATES_EQUAL(a, b) TEST_ASSERT_EQUAL_UINT8(a, b)
+#define LONGS_EQUAL(expected, actual) TEST_ASSERT_EQUAL_INT(expected, actual)
+#define STRCMP_EQUAL(expected, actual) TEST_ASSERT_EQUAL_STRING(expected, actual)
+#define FAIL_TEST(message) TEST_FAIL_MESSAGE(message)
+
+#endif //__NEXTION_COMMON_INFRA_TEST_H__

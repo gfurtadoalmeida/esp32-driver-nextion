@@ -1,5 +1,5 @@
-#ifndef __NEXTION_ESP32_COMMON_INFRA_H__
-#define __NEXTION_ESP32_COMMON_INFRA_H__
+#ifndef __NEXTION_COMMON_INFRA_H__
+#define __NEXTION_COMMON_INFRA_H__
 
 #include "esp_log.h"
 
@@ -66,8 +66,17 @@ extern "C"
         return (return_value);                                   \
     }
 
+/**
+ * @brief Checks if a Nextion handle is valid.
+ * @param handle Nextion handle.
+ * @param return_value Value to be returned if the condition fails.
+ * @return If the condition fails the method will return what was passed on
+ * "return_value" parameter, otherwise the method will continue.
+ */
+#define NEX_CHECK_HANDLE(handle, return_value) NEX_CHECK((handle != NULL), "handle error(NULL)", return_value)
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif //__NEXTION_ESP32_COMMON_INFRA_H__
+#endif //__NEXTION_COMMON_INFRA_H__

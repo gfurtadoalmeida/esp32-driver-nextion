@@ -1,27 +1,46 @@
 menu "Nextion Display"
 
-    config CONFIG_NEX_UART_RECV_WAIT_TIME_MS
+    config NEX_UART_MUTEX_WAIT_TIME_MS
+        int "Mutex acquire wait time (ms)"
+        range 10 1000
+        default 200
+        help
+            Time, in milliseconds, to wait for a mutex to be acquired.
+            Mutex is used to lock the UART and allow only one command or
+            event processing to be sent.
+
+    config NEX_UART_RECV_WAIT_TIME_MS
         int "Response wait time (ms)"
         range 10 1000
-        default 20
+        default 200
         help
             Time, in milliseconds, to wait for a response from the display.
 
-    config CONFIG_NEX_UART_TRANS_WAIT_TIME_MS
+    config NEX_UART_TRANS_WAIT_TIME_MS
         int "Transmit wait time (ms)"
         range 10 1000
-        default 20
+        default 200
         help
             Time, in milliseconds, to wait for a transmission from the ESP32.
 
     config NEX_UART_RECV_BUFFER_SIZE
         int "UART receiver buffer size (bytes)"
-        range 128 2048
+        range 128 1024
         default 256
         help
             The UART buffer used for receiving messages.
 
             Use a big size if you intend to receive a lot of event messages
             in a short time span and/or the event message processing is slow.
+
+    config NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE
+        int "UART command format buffer size (bytes)"
+        range 128 512
+        default 128
+        help
+            The UART buffer used to format command before sending.
+            It is used for ' vprintf' command.
+
+            Use a big size if you intend to send big text messages.
 
 endmenu # Nextion Configuration
