@@ -39,4 +39,4 @@ steps:
   inputs:
     targetType: 'inline'
     failOnStderr: false
-    script: docker run --rm -e LC_ALL='C.UTF-8' -v $(Build.Repository.LocalPath)/test:/project -w /project espressif/idf idf.py build_test
+    script: docker run --rm -e LC_ALL='C.UTF-8' -v $(Build.Repository.LocalPath)/test:/project -w /project espressif/idf idf.py build
