@@ -43,4 +43,13 @@ menu "Nextion Display"
 
             Use a big size if you intend to send big text messages.
 
+    config NEX_UART_TASK_PRIORITY
+        int "UART task priority"
+        range 1 10
+        default 1
+        help
+            The UART task priority.
+            Never set it to zero or your system might never
+            process the events.
+
 endmenu # Nextion Configuration

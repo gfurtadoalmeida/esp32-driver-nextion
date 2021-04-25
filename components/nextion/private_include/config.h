@@ -41,6 +41,13 @@ extern "C"
 #define CONFIG_NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE 256
 #endif
 
+#ifndef CONFIG_NEX_UART_TASK_PRIORITY
+/**
+ * UART task priority.
+ */
+#define CONFIG_NEX_UART_TASK_PRIORITY 1
+#endif
+
 #ifdef __cplusplus
 }
 #endif

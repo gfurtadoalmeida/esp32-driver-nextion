@@ -1,5 +1,4 @@
 #include <malloc.h>
-#include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "nextion/nextion.h"
@@ -76,9 +75,19 @@ extern "C"
         driver->in_transparent_data_mode = false;
         driver->command_sync = xSemaphoreCreateBinary();
 
-        ESP_ERROR_CHECK(uart_driver_install(uart_num, CONFIG_NEX_UART_RECV_BUFFER_SIZE, 0, 10, &driver->uart_queue, 0));
+        ESP_ERROR_CHECK(uart_driver_install(uart_num,
+                                            CONFIG_NEX_UART_RECV_BUFFER_SIZE, // Receive buffer size.
+                                            0,                                // Transmit buffer size.
+                                            10,                               // Queue size.
+                                            &driver->uart_queue,              // Queue pointer.
+                                            0));                              // Allocation flags.
 
-        if (xTaskCreate(nextion_core_uart_task, "nextion", 2048, (void *)driver, tskIDLE_PRIORITY, &driver->uart_task) != pdPASS)
+        if (xTaskCreate(nextion_core_uart_task,
+                        "nextion",
+                        2048,
+                        (void *)driver,
+                        CONFIG_NEX_UART_TASK_PRIORITY,
+                        &driver->uart_task) != pdPASS)
         {
             NEX_LOGE("failed creating UART event task");
 
@@ -152,32 +161,32 @@ extern "C"
 
         // As "nextion_command_send" validates if the driver is
         // initialized, we need to cheat here.
-
         handle->is_initialized = true;
 
-        vTaskResume(handle->uart_task);
-
         // Set up the semaphore.
-
         nextion_core_command_sync_release(handle);
 
-        // The display must be on for the commands
-        // to be received.
+        // Release the UART task.
+        vTaskResume(handle->uart_task);
 
+        // As "bkcmd" is not set, we cannot garantee what will come.
+        // Just try to wke up. Any failure will come when setting
+        // "bkcmd".
         nextion_system_wakeup(handle);
 
-        // All logic relies on receiving responses in all cases.
-
+        // All logic relies on receiving responses at all times.
         if (nextion_command_send(handle, "bkcmd=3") != NEX_OK)
         {
             handle->is_initialized = false;
 
-            NEX_LOGE("failed initializing display");
-
             vTaskSuspend(handle->uart_task);
+
+            NEX_LOGE("failed initializing display");
 
             return NEX_FAIL;
         }
+
+        NEX_LOGI("driver initialized");
 
         return NEX_OK;
     }
@@ -369,7 +378,7 @@ extern "C"
         QueueHandle_t queue = handle->uart_queue;
         uart_port_t uart = handle->uart_num;
 
-        NEX_LOGI("installed queue for uart %d", uart);
+        NEX_LOGI("installed queue for UART %d", uart);
 
         uart_event_t event;
 
