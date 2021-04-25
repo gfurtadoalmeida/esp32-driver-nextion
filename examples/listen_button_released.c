@@ -2,9 +2,7 @@
 // variables are not injected in build time.
 #include "../build/config/sdkconfig.h"
 
-#include <stdio.h>
 #include "freertos/FreeRTOS.h"
-#include "freertos/queue.h"
 #include "freertos/task.h"
 #include "esp_log.h"
 #include "driver/uart.h"
@@ -15,19 +13,22 @@
 
 const static char *TAG = "example";
 
-static nextion_handle_t nextion_handle;
-static TaskHandle_t task_interface_handle;
-static QueueHandle_t queue_handle;
+static TaskHandle_t task_handle_user_interface;
 
-static void process_touch_event(nextion_on_touch_event_t event_data);
-static void process_interface_queue(void *pvParameters);
+static void callback_touch_event(nextion_on_touch_event_t event);
+static void process_callback_queue(void *pvParameters);
+
+// This example was prepared using the following Nextion HMI:
+// ../components/nextion/test/nextion/hmi/test_display.HMI
 
 void app_main(void)
 {
-    esp_log_level_set("*", ESP_LOG_DEBUG);
+    esp_log_level_set("*", ESP_LOG_VERBOSE);
 
-    nextion_handle = nextion_driver_install(UART_NUM_2, 115200, GPIO_NUM_17, GPIO_NUM_16);
-
+    nextion_handle_t nextion_handle = nextion_driver_install(UART_NUM_2,
+                                                             115200,
+                                                             GPIO_NUM_17,
+                                                             GPIO_NUM_16);
     if (nextion_handle == NULL)
     {
         ESP_LOGE(TAG, "failed installing driver");
@@ -40,7 +41,7 @@ void app_main(void)
         return;
     }
 
-    if (!nextion_event_callback_set_on_touch(nextion_handle, &process_touch_event))
+    if (!nextion_event_callback_set_on_touch(nextion_handle, callback_touch_event))
     {
         ESP_LOGE(TAG, "failed registering 'on device' event callback");
         return;
@@ -52,20 +53,12 @@ void app_main(void)
         return;
     }
 
-    queue_handle = xQueueCreate(5, sizeof(nextion_on_touch_event_t));
-
-    if (queue_handle == NULL)
-    {
-        ESP_LOGE(TAG, "failed creating queue");
-        return;
-    }
-
-    if (xTaskCreate(process_interface_queue,
-                    "interface",
+    if (xTaskCreate(process_callback_queue,
+                    "user_interface",
                     2048,
-                    NULL,
-                    20,
-                    &task_interface_handle) != pdPASS)
+                    (void *)&nextion_handle,
+                    5,
+                    &task_handle_user_interface) != pdPASS)
     {
         ESP_LOGE(TAG, "failed creating task");
         return;
@@ -77,53 +70,60 @@ void app_main(void)
 
     // Will never reach here.
     // It is just to show how to delete the driver.
+
+    vTaskDelete(task_handle_user_interface);
+
     if (!nextion_driver_delete(nextion_handle))
     {
         ESP_LOGE(TAG, "failed deleting driver");
     }
 }
 
-void process_touch_event(nextion_on_touch_event_t event_data)
+void callback_touch_event(nextion_on_touch_event_t event)
 {
-    xQueueSend(queue_handle, &event_data, pdMS_TO_TICKS(100));
+    if (event.page_id == 0 && event.component_id == 3 && event.state == NEXTION_TOUCH_RELEASED)
+    {
+        ESP_LOGI(TAG, "button 3 'b0' pressed");
+
+        xTaskNotify(task_handle_user_interface, event.component_id, eSetValueWithOverwrite);
+    }
+    else
+    {
+        ESP_LOGI(TAG, "received component %d from page %d with state %d", event.page_id, event.component_id, event.state);
+    }
 }
 
-void process_interface_queue(void *pvParameters)
+void process_callback_queue(void *pvParameters)
 {
-    nextion_on_touch_event_t event_data;
+    nextion_handle_t nextion_handle = *(nextion_handle_t *)pvParameters;
+    char text[50];
+    size_t text_length = 50;
+    int32_t number;
 
     for (;;)
     {
-        if (xQueueReceive(queue_handle, &event_data, portMAX_DELAY) == pdTRUE)
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+        ESP_LOGI(TAG, "getting data");
+
+        // Get the text.
+        if (nextion_component_get_text(nextion_handle, "t0", text, &text_length) == NEX_OK)
         {
-            ESP_LOGI(TAG, "received an event");
+            ESP_LOGI(TAG, "text: %s", text);
+        }
+        else
+        {
+            ESP_LOGE(TAG, "failed getting text");
+        }
 
-            if (event_data.page_id == 0 && event_data.component_id == 3 && event_data.state == NEXTION_TOUCH_RELEASED)
-            {
-                char text[50];
-                size_t text_length = 50;
-                int32_t number;
-
-                // Get the text.
-                if (nextion_component_get_text(nextion_handle, "t0", text, &text_length) == NEX_OK)
-                {
-                    ESP_LOGI(TAG, "text: %s", text);
-                }
-                else
-                {
-                    ESP_LOGE(TAG, "failed getting text");
-                }
-
-                // Get the number.
-                if (nextion_component_get_value(nextion_handle, "n0", &number) == NEX_OK)
-                {
-                    ESP_LOGI(TAG, "number: %d", number);
-                }
-                else
-                {
-                    ESP_LOGE(TAG, "failed getting number");
-                }
-            }
+        // Get the number.
+        if (nextion_component_get_value(nextion_handle, "n0", &number) == NEX_OK)
+        {
+            ESP_LOGI(TAG, "number: %d", number);
+        }
+        else
+        {
+            ESP_LOGE(TAG, "failed getting number");
         }
     }
 }
