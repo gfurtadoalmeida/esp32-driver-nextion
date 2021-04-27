@@ -18,8 +18,8 @@ static TaskHandle_t task_handle_user_interface;
 static void callback_touch_event(nextion_on_touch_event_t event);
 static void process_callback_queue(void *pvParameters);
 
-// This example was prepared using the following Nextion HMI:
-// ../components/nextion/test/nextion/hmi/test_display.HMI
+// This example uses the "/hmi/listen_button_released.hmi".
+// The baud rate must be 115200.
 
 void app_main(void)
 {
@@ -64,7 +64,7 @@ void app_main(void)
         return;
     }
 
-    ESP_LOGI(TAG, "waiting for button 3 'b0', from page 0, to be pressed");
+    ESP_LOGI(TAG, "waiting for button 'OK' to be pressed");
 
     vTaskDelay(portMAX_DELAY);
 
@@ -81,9 +81,9 @@ void app_main(void)
 
 void callback_touch_event(nextion_on_touch_event_t event)
 {
-    if (event.page_id == 0 && event.component_id == 3 && event.state == NEXTION_TOUCH_RELEASED)
+    if (event.page_id == 0 && event.component_id == 5 && event.state == NEXTION_TOUCH_RELEASED)
     {
-        ESP_LOGI(TAG, "button 3 'b0' pressed");
+        ESP_LOGI(TAG, "button 'OK' pressed");
 
         xTaskNotify(task_handle_user_interface, event.component_id, eSetValueWithOverwrite);
     }
@@ -96,18 +96,20 @@ void callback_touch_event(nextion_on_touch_event_t event)
 void process_callback_queue(void *pvParameters)
 {
     nextion_handle_t nextion_handle = *(nextion_handle_t *)pvParameters;
-    char text[50];
-    size_t text_length = 50;
+    const uint8_t MAX_TEXT_LENGTH = 50;
+    char text[MAX_TEXT_LENGTH];
     int32_t number;
 
     for (;;)
     {
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
+        size_t text_length = MAX_TEXT_LENGTH;
+
         ESP_LOGI(TAG, "getting data");
 
         // Get the text.
-        if (nextion_component_get_text(nextion_handle, "t0", text, &text_length) == NEX_OK)
+        if (nextion_component_get_text(nextion_handle, "value_text", text, &text_length) == NEX_OK)
         {
             ESP_LOGI(TAG, "text: %s", text);
         }
@@ -117,7 +119,7 @@ void process_callback_queue(void *pvParameters)
         }
 
         // Get the number.
-        if (nextion_component_get_value(nextion_handle, "n0", &number) == NEX_OK)
+        if (nextion_component_get_value(nextion_handle, "value_number", &number) == NEX_OK)
         {
             ESP_LOGI(TAG, "number: %d", number);
         }
