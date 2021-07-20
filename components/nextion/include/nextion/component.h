@@ -45,7 +45,7 @@ extern "C"
     nex_err_t nextion_component_set_visibility_all(nextion_handle_t handle, bool visible_or_not);
 
     /**
-     * @brief Set if a component can respond to touch events or not.
+     * @brief Set if a component will respond to touch events or not.
      *
      * @param handle Nextion context pointer.
      * @param component_name_or_id A null-terminated string with the component's name or id.
@@ -58,7 +58,7 @@ extern "C"
                                               bool touchable_or_not);
 
     /**
-     * @brief Set if all components can respond to touch events or not.
+     * @brief Set if all components will respond to touch events or not.
      *
      * @note Only for the current page.
      *

@@ -16,3 +16,7 @@ ESP32 driver for [Nextion](https://nextion.tech/) HMI displays.
 ## Documentation
 
 Everything is on the [wiki](https://github.com/gfurtadoalmeida/esp32-driver-nextion/wiki).
+
+## To Do
+
+- [ ] Implement automatic baud rate detection on `nextion_init`.

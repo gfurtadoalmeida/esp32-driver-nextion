@@ -28,5 +28,6 @@
   "idf.openOcdConfigs": [
     "interface/cjmcu-ftdi-2232HL.cfg",
     "board/esp-wroom-32.cfg"
-  ]
+  ],
+  "idf.flashType": "UART"
 }

@@ -45,35 +45,55 @@ extern "C"
         BACKG_FILL_NONE = 3        /*!< No background. */
     } background_fill_mode_t;
 
+    /**
+    * @typedef point_t
+    * @brief A point/position on the screen.
+    */
     typedef struct
     {
-        uint16_t x;
-        uint16_t y;
+        uint16_t x; /*!< X coordinate. */
+        uint16_t y; /*!< Y coordinate. */
     } point_t;
 
+    /**
+    * @typedef area_t
+    * @brief An area on the screen.
+    */
     typedef struct
     {
-        point_t upper_left;
-        point_t bottom_right;
+        point_t upper_left;   /*!< Upper left position. */
+        point_t bottom_right; /*!< Bottom right position. */
     } area_t;
 
+    /**
+    * @typedef font_t
+    * @brief A font.
+    */
     typedef struct
     {
-        uint8_t id;
-        rgb565_t color;
+        uint8_t id;     /*!< Id. */
+        rgb565_t color; /*!< Color. */
     } font_t;
 
+    /**
+    * @typedef background_t
+    * @brief Background configuration.
+    */
     typedef struct
     {
-        background_fill_mode_t fill_mode;
-        uint8_t picture_id;
-        rgb565_t color;
+        background_fill_mode_t fill_mode; /*!< Fill mode. */
+        uint8_t picture_id;               /*!< Picture id. Used when fill_mode is BACKG_FILL_CROP_IMAGE or BACKG_FILL_CROP_IMAGE. */
+        rgb565_t color;                   /*!< Color. Used when fill_mode is BACKG_FILL_COLOR. */
     } background_t;
 
+    /**
+    * @typedef text_alignment_t
+    * @brief Text alignment.
+    */
     typedef struct
     {
-        horizontal_align_t horizontal;
-        vertical_align_t vertical;
+        horizontal_align_t horizontal; /*!< Horizontal alignment. */
+        vertical_align_t vertical;     /*!< Vertical alignment. */
     } text_alignment_t;
 
     /**

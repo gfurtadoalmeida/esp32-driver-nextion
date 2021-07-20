@@ -3,7 +3,7 @@ menu "Nextion Display"
     config NEX_UART_MUTEX_WAIT_TIME_MS
         int "Mutex acquire wait time (ms)"
         range 10 1000
-        default 200
+        default 500
         help
             Time, in milliseconds, to wait for a mutex to be acquired.
             Mutex is used to lock the UART and allow only one command or
@@ -39,7 +39,7 @@ menu "Nextion Display"
         default 128
         help
             The UART buffer used to format command before sending.
-            It is used for ' vprintf' command.
+            It is used for 'vprintf' command.
 
             Use a big size if you intend to send big text messages.
 

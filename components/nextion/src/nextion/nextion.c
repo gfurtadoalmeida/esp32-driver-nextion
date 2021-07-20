@@ -166,12 +166,12 @@ extern "C"
         // Set up the semaphore.
         nextion_core_command_sync_release(handle);
 
-        // Release the UART task.
+        // Resume the UART task.
         vTaskResume(handle->uart_task);
 
         // As "bkcmd" is not set, we cannot garantee what will come.
-        // Just try to wke up. Any failure will come when setting
-        // "bkcmd".
+        // Just try to wake up, as the device cannot receive commands
+        // when sleeping. Any failure will come when setting "bkcmd".
         nextion_system_wakeup(handle);
 
         // All logic relies on receiving responses at all times.
