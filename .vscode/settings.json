@@ -1,33 +1,48 @@
 {
-  "C_Cpp.clang_format_style": "Visual Studio",
-  "editor.formatOnSave": false,
   "[cpp]": {
-    "editor.quickSuggestions": true
+    "editor.quickSuggestions": {
+      "comments": "on",
+      "strings": "on",
+      "other": "on"
+    }
   },
   "[c]": {
-    "editor.quickSuggestions": true
+    "editor.quickSuggestions": {
+      "comments": "on",
+      "strings": "on",
+      "other": "on"
+    }
   },
-  "C_Cpp.intelliSenseEngineFallback": "Enabled",
   "cmake.configureOnOpen": false,
+  "cmake.generator": "Ninja",
+  "editor.formatOnSave": false,
   "files.exclude": {
     "**/.git": true,
     "**/.svn": true,
     "**/.hg": true,
     "**/CVS": true,
     "**/.DS_Store": true,
+    ".scannerwork": true,
     "build/": true,
+    "build_wrapper_output": true,
     "debug.log": true,
+    "dependencies.lock": true,
+    "partition_table": true,
     "sdkconfig": true,
     "sdkconfig.old": true,
     "test/build/": true,
     "test/sdkconfig.old": true,
-    "test/sdkconfig": true
+    "test/sdkconfig": true,
+    "test/dependencies.lock": true
   },
-  "idf.port": "/dev/ttyUSB1",
-  "idf.portWin": "COM3",
+  "idf.adapterTargetName": "esp32",
+  "idf.flashBaudRate": "115200",
+  "idf.flashType": "UART",
   "idf.openOcdConfigs": [
     "interface/cjmcu-ftdi-2232HL.cfg",
     "board/esp-wroom-32.cfg"
   ],
-  "idf.flashType": "UART"
+  "idf.port": "/dev/ttyUSB1",
+  "idf.portWin": "COM3",
+  "sonarlint.pathToCompileCommands": "${workspaceFolder}/build/compile_commands.json"
 }

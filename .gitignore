@@ -1,10 +1,3 @@
-# Main folder is needed to:
-#   1. Illustrate the layout of an ESP-IDF project.
-#   2. Debug the driver.
-# The code there is not important and must not
-# be versioned.
-main/
-main/main.c
 
 # ESP-IDF project files
 build/
@@ -14,6 +7,7 @@ debug.log
 test/build/
 test/sdkconfig
 test/sdkconfig.old
+dependencies.lock
 
 # Prerequisites
 *.d

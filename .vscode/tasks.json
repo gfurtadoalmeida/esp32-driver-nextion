@@ -2,166 +2,6 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Build - Build project",
-            "type": "shell",
-            "command": "${config:idf.pythonBinPath} ${config:idf.espIdfPath}/tools/idf.py build",
-            "windows": {
-                "command": "${config:idf.pythonBinPathWin} ${config:idf.espIdfPathWin}\\tools\\idf.py build"
-            },
-            "options": {
-                "env": {
-                    "PATH": "${config:idf.customExtraPaths}"
-                }
-            },
-            "problemMatcher": [
-                {
-                    "owner": "cpp",
-                    "fileLocation": [
-                        "relative",
-                        "${workspaceFolder}"
-                    ],
-                    "pattern": {
-                        "regexp": "^\\.\\.(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                        "file": 1,
-                        "line": 2,
-                        "column": 3,
-                        "severity": 4,
-                        "message": 5
-                    }
-                },
-                {
-                    "owner": "cpp",
-                    "fileLocation": "absolute",
-                    "pattern": {
-                        "regexp": "^[^\\.](.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                        "file": 1,
-                        "line": 2,
-                        "column": 3,
-                        "severity": 4,
-                        "message": 5
-                    }
-                }
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        },
-        {
-            "label": "Set ESP-IDF Target",
-            "type": "shell",
-            "command": "${command:espIdf.setTarget}",
-            "problemMatcher": {
-                "owner": "cpp",
-                "fileLocation": "absolute",
-                "pattern": {
-                    "regexp": "^(.*):(//d+):(//d+)://s+(warning|error)://s+(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "column": 3,
-                    "severity": 4,
-                    "message": 5
-                }
-            }
-        },
-        {
-            "label": "Clean - Clean the project",
-            "type": "shell",
-            "command": "${config:idf.pythonBinPath} ${config:idf.espIdfPath}/tools/idf.py fullclean",
-            "windows": {
-                "command": "${config:idf.pythonBinPathWin} ${config:idf.espIdfPathWin}\\tools\\idf.py fullclean"
-            },
-            "options": {
-                "env": {
-                    "PATH": "${config:idf.customExtraPaths}"
-                }
-            },
-            "problemMatcher": [
-                {
-                    "owner": "cpp",
-                    "fileLocation": [
-                        "relative",
-                        "${workspaceFolder}"
-                    ],
-                    "pattern": {
-                        "regexp": "^\\.\\.(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                        "file": 1,
-                        "line": 2,
-                        "column": 3,
-                        "severity": 4,
-                        "message": 5
-                    }
-                },
-                {
-                    "owner": "cpp",
-                    "fileLocation": "absolute",
-                    "pattern": {
-                        "regexp": "^[^\\.](.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                        "file": 1,
-                        "line": 2,
-                        "column": 3,
-                        "severity": 4,
-                        "message": 5
-                    }
-                }
-            ]
-        },
-        {
-            "label": "Flash - Flash the device",
-            "type": "shell",
-            "command": "${config:idf.pythonBinPath} ${config:idf.espIdfPath}/tools/idf.py flash -p ${config:idf.port} -b ${config:idf.baudRate}",
-            "windows": {
-                "command": "${config:idf.pythonBinPathWin} ${config:idf.espIdfPathWin}\\tools\\idf.py flash -p ${config:idf.portWin} -b ${config:idf.baudRate}"
-            },
-            "options": {
-                "env": {
-                    "PATH": "${config:idf.customExtraPaths}"
-                }
-            },
-            "problemMatcher": [
-                {
-                    "owner": "cpp",
-                    "fileLocation": [
-                        "relative",
-                        "${workspaceFolder}"
-                    ],
-                    "pattern": {
-                        "regexp": "^\\.\\.(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                        "file": 1,
-                        "line": 2,
-                        "column": 3,
-                        "severity": 4,
-                        "message": 5
-                    }
-                },
-                {
-                    "owner": "cpp",
-                    "fileLocation": "absolute",
-                    "pattern": {
-                        "regexp": "^[^\\.](.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                        "file": 1,
-                        "line": 2,
-                        "column": 3,
-                        "severity": 4,
-                        "message": 5
-                    }
-                }
-            ]
-        },
-        {
-            "label": "Monitor: Start the monitor",
-            "type": "shell",
-            "command": "${config:idf.pythonBinPath} ${config:idf.espIdfPath}/tools/idf.py monitor -p ${config:idf.port}",
-            "windows": {
-                "command": "${config:idf.pythonBinPathWin} ${config:idf.espIdfPathWin}\\tools\\idf.py monitor -p ${config:idf.portWin}"
-            },
-            "options": {
-                "env": {
-                    "PATH": "${config:idf.customExtraPaths}"
-                }
-            }
-        },
-        {
             "label": "OpenOCD: Start openOCD",
             "type": "shell",
             "presentation": {
@@ -248,7 +88,7 @@
             }
         },
         {
-            "label": "Build test",
+            "label": "Build - Build test",
             "type": "shell",
             "command": "${config:idf.pythonBinPath} ${config:idf.espIdfPath}/tools/idf.py build",
             "windows": {
@@ -295,7 +135,7 @@
             }
         },
         {
-            "label": "Clean test",
+            "label": "Clean - Clean the test",
             "type": "shell",
             "command": "${config:idf.pythonBinPath} ${config:idf.espIdfPath}/tools/idf.py fullclean",
             "windows": {
@@ -307,42 +147,14 @@
                     "PATH": "${config:idf.customExtraPaths}"
                 }
             },
-            "problemMatcher": [
-                {
-                    "owner": "cpp",
-                    "fileLocation": [
-                        "relative",
-                        "${workspaceFolder}"
-                    ],
-                    "pattern": {
-                        "regexp": "^\\.\\.(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                        "file": 1,
-                        "line": 2,
-                        "column": 3,
-                        "severity": 4,
-                        "message": 5
-                    }
-                },
-                {
-                    "owner": "cpp",
-                    "fileLocation": "absolute",
-                    "pattern": {
-                        "regexp": "^[^\\.](.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                        "file": 1,
-                        "line": 2,
-                        "column": 3,
-                        "severity": 4,
-                        "message": 5
-                    }
-                }
-            ]
+            "problemMatcher": []
         },
         {
-            "label": "Flash test",
+            "label": "Flash - Flash the test",
             "type": "shell",
-            "command": "${config:idf.pythonBinPath} ${config:idf.espIdfPath}/tools/idf.py flash -p ${config:idf.port} -b ${config:idf.baudRate}",
+            "command": "${config:idf.pythonBinPath} ${config:idf.espIdfPath}/tools/idf.py flash -p ${config:idf.port} -b ${config:idf.flashBaudRate}",
             "windows": {
-                "command": "${config:idf.pythonBinPathWin} ${config:idf.espIdfPathWin}\\tools\\idf.py flash -p ${config:idf.portWin} -b ${config:idf.baudRate}"
+                "command": "${config:idf.pythonBinPathWin} ${config:idf.espIdfPathWin}\\tools\\idf.py flash -p ${config:idf.portWin} -b ${config:idf.flashBaudRate}"
             },
             "options": {
                 "cwd": "${workspaceFolder}/test",
@@ -350,38 +162,10 @@
                     "PATH": "${config:idf.customExtraPaths}"
                 }
             },
-            "problemMatcher": [
-                {
-                    "owner": "cpp",
-                    "fileLocation": [
-                        "relative",
-                        "${workspaceFolder}"
-                    ],
-                    "pattern": {
-                        "regexp": "^\\.\\.(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                        "file": 1,
-                        "line": 2,
-                        "column": 3,
-                        "severity": 4,
-                        "message": 5
-                    }
-                },
-                {
-                    "owner": "cpp",
-                    "fileLocation": "absolute",
-                    "pattern": {
-                        "regexp": "^[^\\.](.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                        "file": 1,
-                        "line": 2,
-                        "column": 3,
-                        "severity": 4,
-                        "message": 5
-                    }
-                }
-            ]
+            "problemMatcher": []
         },
         {
-            "label": "Monitor test",
+            "label": "Monitor: Start the test monitor",
             "type": "shell",
             "command": "${config:idf.pythonBinPath} ${config:idf.espIdfPath}/tools/idf.py monitor -p ${config:idf.port}",
             "windows": {
@@ -392,10 +176,11 @@
                 "env": {
                     "PATH": "${config:idf.customExtraPaths}"
                 }
-            }
+            },
+            "problemMatcher": []
         },
         {
-            "label": "Build, flash and start a monitor for the tests",
+            "label": "Build, Flash and start a monitor for the tests",
             "type": "shell",
             "command": "${config:idf.pythonBinPath} ${config:idf.espIdfPath}/tools/idf.py monitor -p ${config:idf.port}",
             "windows": {
@@ -409,9 +194,10 @@
             },
             "dependsOrder": "sequence",
             "dependsOn": [
-                "Build test",
-                "Flash test"
-            ]
+                "Build - Build test",
+                "Flash - Flash the test"
+            ],
+            "problemMatcher": []
         }
     ]
 }

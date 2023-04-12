@@ -1,7 +1,7 @@
 {
   "configurations": [
     {
-      "name": "Linux",
+      "name": "Win32",
       "cStandard": "c11",
       "cppStandard": "c++17",
       "includePath": [
@@ -19,5 +19,11 @@
       }
     }
   ],
+  "clang_format_style": "Visual Studio",
+  "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+  "configurationProvider": "ms-vscode.cmake-tools",
+  "intelliSenseEngine": "default",
+  "intelliSenseEngineFallback": "enabled",
+  "intelliSenseMode": "windows-msvc-x86",
   "version": 4
 }

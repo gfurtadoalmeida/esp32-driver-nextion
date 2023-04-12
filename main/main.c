@@ -1,4 +1,4 @@
-#include "nextion/nextion.h"
+#include "esp32_driver_nextion/nextion.h"
 
 /* This file serve two purposes:
  *   1. Illustrate the layout of an ESP-IDF project.
@@ -8,3 +8,4 @@
 void app_main(void)
 {
 }
+
