@@ -2,6 +2,7 @@
 #define __ESP32_DRIVER_NEXTION_BASE_CODES_H__
 
 #include <stdint.h>
+#include "esp_err.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -12,22 +13,22 @@ extern "C"
      * @typedef nex_err_t
      * @brief Response code.
      */
-    typedef int32_t nex_err_t;
+    typedef esp_err_t nex_err_t;
 
 /**
  * @brief Success.
  */
-#define NEX_OK 0x00U
+#define NEX_OK ESP_OK
 
 /**
  * @brief Failure.
  */
-#define NEX_FAIL 0x01U
+#define NEX_FAIL ESP_FAIL
 
 /**
  * @brief Timeout.
  */
-#define NEX_TIMEOUT 0x02U
+#define NEX_TIMEOUT 0x02
 
 /* ========================================
  *         CODE VERIFICATION HELPERS
