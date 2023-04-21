@@ -97,7 +97,7 @@ extern "C"
     } text_alignment_t;
 
     /**
-     * @brief Fills the screen with a color, erasing everything.
+     * @brief Fill the screen with a color, erasing everything.
      * @param[in] handle Nextion context pointer.
      * @param[in] color Color used to fill.
      * @return NEX_OK or NEX_FAIL.
@@ -105,7 +105,7 @@ extern "C"
     nex_err_t nextion_draw_fill_screen(nextion_t *handle, rgb565_t color);
 
     /**
-     * @brief Draws a filled rectangle.
+     * @brief Draw a filled rectangle.
      * @param[in] handle Nextion context pointer.
      * @param[in] x1 Upper left corner X coordinate.
      * @param[in] y1 Upper left corner Y coordinate.
@@ -119,7 +119,7 @@ extern "C"
                                      rgb565_t color);
 
     /**
-     * @brief Draws a filled circle.
+     * @brief Draw a filled circle.
      * @param[in] handle Nextion context pointer.
      * @param[in] cx Center position X coordinate.
      * @param[in] cy Center position Y coordinate.
@@ -133,7 +133,7 @@ extern "C"
                                        rgb565_t color);
 
     /**
-     * @brief Draws a line, from point to point.
+     * @brief Draw a line, from point to point.
      * @param[in] handle Nextion context pointer.
      * @param[in] x1 Start position X coordinate.
      * @param[in] y1 Start position Y coordinate.
@@ -147,7 +147,7 @@ extern "C"
                                 rgb565_t color);
 
     /**
-     * @brief Draws a hollow rectangle.
+     * @brief Draw a hollow rectangle.
      * @param[in] handle Nextion context pointer.
      * @param[in] x1 Upper left corner X coordinate.
      * @param[in] y1 Upper left corner Y coordinate.
@@ -161,7 +161,7 @@ extern "C"
                                      rgb565_t color);
 
     /**
-     * @brief Draws a hollow circle.
+     * @brief Draw a hollow circle.
      * @param[in] handle Nextion context pointer.
      * @param[in] cx Center position X coordinate.
      * @param[in] cy Center position Y coordinate.
@@ -175,7 +175,7 @@ extern "C"
                                   rgb565_t color);
 
     /**
-     * @brief Draws a picture.
+     * @brief Draw a picture.
      * @param[in] handle Nextion context pointer.
      * @param[in] picture_id Picture id.
      * @param[in] x Upper left corner X coordinate.
@@ -187,7 +187,7 @@ extern "C"
                                    point_t origin);
 
     /**
-     * @brief Draws a cropped picture.
+     * @brief Draw a cropped picture.
      * @param[in] handle Nextion context pointer.
      * @param[in] picture_id Picture id.
      * @param[in] src_x Upper left corner, X coordinate, of the area to be cropped.
@@ -204,7 +204,7 @@ extern "C"
                                         point_t destination);
 
     /**
-     * @brief Draws a text.
+     * @brief Draw a text.
      * @param[in] handle Nextion context pointer.
      * @param[in] x Upper left corner X coordinate.
      * @param[in] y Upper left corner Y coordinate.

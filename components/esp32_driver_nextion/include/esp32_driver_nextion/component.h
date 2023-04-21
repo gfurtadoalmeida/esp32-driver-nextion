@@ -13,7 +13,7 @@ extern "C"
 #endif
 
     /**
-     * @brief Refreshes a component, bringing it to front.
+     * @brief Refresh a component, bringing it to front.
      * @param[in] handle Nextion context pointer.
      * @param[in] component_name_or_id A null-terminated string with the component's name or id.
      * @return NEX_OK or NEX_FAIL | NEX_DVC_ERR_INVALID_COMPONENT.

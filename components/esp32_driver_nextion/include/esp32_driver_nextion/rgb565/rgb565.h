@@ -35,7 +35,7 @@ extern "C"
 #define RGB565_COLOR_WHITE ((rgb565_t)0b1111111111111111)
 
     /**
-     * @brief Converts a 24 bits RGB color into RGB565.
+     * @brief Convert a 24 bits RGB color into RGB565.
      * @param[in] red Red value, from 0 to 255.
      * @param[in] green Green value, from 0 to 255.
      * @param[in] blue Blue value, from 0 to 255.

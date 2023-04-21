@@ -14,8 +14,8 @@ extern "C"
 
     // Checks
 
-#define CHECK_NEX_OK(code) TEST_ASSERT_EQUAL_UINT8(NEX_OK, code)
-#define CHECK_NEX_FAIL(code) TEST_ASSERT_EQUAL_UINT8(NEX_FAIL, code)
+#define CHECK_NEX_OK(code) TEST_ASSERT_EQUAL_INT32(NEX_OK, code)
+#define CHECK_NEX_FAIL(code) TEST_ASSERT_EQUAL_INT32(NEX_FAIL, code)
 #define CHECK_NULL(pointer) TEST_ASSERT(pointer == NULL)
 #define CHECK_NOT_NULL(pointer) TEST_ASSERT(pointer != NULL)
 #define CHECK_TRUE(condition) TEST_ASSERT_TRUE(condition)
@@ -25,7 +25,7 @@ extern "C"
 
 #define SIZET_EQUAL(a, b) TEST_ASSERT_EQUAL_UINT32(a, b)
 #define RGB565_EQUAL(a, b) TEST_ASSERT_EQUAL_UINT16(a, b)
-#define NEX_CODES_EQUAL(a, b) TEST_ASSERT_EQUAL_UINT8(a, b)
+#define NEX_CODES_EQUAL(a, b) TEST_ASSERT_EQUAL_INT32(a, b)
 #define NEX_TOUCH_STATES_EQUAL(a, b) TEST_ASSERT_EQUAL_UINT8(a, b)
 #define LONGS_EQUAL(expected, actual) TEST_ASSERT_EQUAL_INT(expected, actual)
 #define STRCMP_EQUAL(expected, actual) TEST_ASSERT_EQUAL_STRING(expected, actual)

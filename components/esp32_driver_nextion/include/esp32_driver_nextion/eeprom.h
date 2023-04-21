@@ -12,7 +12,7 @@ extern "C"
 #endif
 
     /**
-     * @brief Writes a text on the device EEPROM.
+     * @brief Write a text on the device EEPROM.
      * @param[in] handle Nextion context pointer.
      * @param[in] address Starting address to write the text. Range: 0-NEX_DVC_EEPROM_MAX_ADDRESS
      * @param[in] text Text to be written.
@@ -25,7 +25,7 @@ extern "C"
                                         size_t text_length);
 
     /**
-     * @brief Writes a number on the device EEPROM.
+     * @brief Write a number on the device EEPROM.
      * @param[in] handle Nextion context pointer.
      * @param[in] address Starting address to write the text. Range: 0-NEX_DVC_EEPROM_MAX_ADDRESS
      * @param[in] value Number to be written.
@@ -36,7 +36,7 @@ extern "C"
                                           int32_t value);
 
     /**
-     * @brief Reads a text from the device EEPROM.
+     * @brief Read a text from the device EEPROM.
      * @note It's the caller responsibility to allocate a buffer big enough to
      * hold the text returned.
      * @param[in] handle Nextion context pointer.
@@ -51,7 +51,7 @@ extern "C"
                                        size_t text_length);
 
     /**
-     * @brief Reads a number from the device EEPROM.
+     * @brief Read a number from the device EEPROM.
      * @param[in] handle Nextion context pointer.
      * @param[in] address Starting address to read from. Range: 0-NEX_DVC_EEPROM_MAX_ADDRESS
      * @param[out] value Location where the value will be stored.
@@ -62,7 +62,7 @@ extern "C"
                                          int32_t *value);
 
     /**
-     * @brief Reads raw bytes from the device EEPROM.
+     * @brief Read raw bytes from the device EEPROM.
      * @param[in] handle Nextion context pointer.
      * @param[in] address Starting address to read from. Range: 0-NEX_DVC_EEPROM_MAX_ADDRESS
      * @param[out] buffer Buffer with enough capacity for the bytes retrieved.
@@ -75,7 +75,7 @@ extern "C"
                                         size_t buffer_length);
 
     /**
-     * @brief Begins the EEPROM data streaming.
+     * @brief Begin the EEPROM data streaming.
      * @note When in this mode, the device will "hang" until all
      * data is sent; no event or other commands will be processed.
      * @param[in] handle Nextion context pointer.
@@ -86,7 +86,7 @@ extern "C"
     nex_err_t nextion_eeprom_stream_begin(nextion_t *handle, uint16_t address, size_t value_count);
 
     /**
-     * @brief Writes a value onto the EEPROM stream.
+     * @brief Write a value onto the EEPROM stream.
      * @param[in] handle Nextion context pointer.
      * @param[in] value Value to be written.
      * @return NEX_OK if success, otherwise NEX_FAIL.
@@ -94,7 +94,7 @@ extern "C"
     nex_err_t nextion_eeprom_stream_write(nextion_t *handle, uint8_t value);
 
     /**
-     * @brief Ends the EEPROM streaming.
+     * @brief End the EEPROM streaming.
      * @param[in] handle Nextion context pointer.
      * @return NEX_OK if success, otherwise NEX_FAIL.
      */

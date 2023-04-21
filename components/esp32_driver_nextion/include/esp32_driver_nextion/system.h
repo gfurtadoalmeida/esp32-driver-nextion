@@ -12,7 +12,7 @@ extern "C"
 #endif
 
     /**
-     * @brief Sends a command that retrieves a null-terminated string.
+     * @brief Send a command that retrieves a null-terminated string.
      * @note It's the caller responsibility to allocate a buffer big enough to
      * hold the text returned.
      * @param[in] handle Nextion context pointer.
@@ -27,7 +27,7 @@ extern "C"
                                       size_t *expected_length);
 
     /**
-     * @brief Sends a command that retrieves a signed number.
+     * @brief Send a command that retrieves a signed number.
      * @param[in] handle Nextion context pointer.
      * @param[in] command A null-terminated string with the command to be sent.
      * @param[out] number Location where the retrieved number will be stored.
@@ -38,7 +38,7 @@ extern "C"
                                         int32_t *number);
 
     /**
-     * @brief Resets the display, losing all volatile configurations.
+     * @brief Reset the display, losing all volatile configurations.
      * @note It's mandatory, after (NEX_DVC_RESET_WAIT_TIME_MS) ms, to call
      * "nextion_init" after calling this function.
      * @param[in] handle Nextion context pointer.
@@ -47,14 +47,14 @@ extern "C"
     nex_err_t nextion_system_reset(nextion_t *handle);
 
     /**
-     * @brief Enters in sleep mode.
+     * @brief Enter in sleep mode.
      * @param[in] handle Nextion context pointer.
      * @return NEX_OK or NEX_FAIL.
      */
     nex_err_t nextion_system_sleep(nextion_t *handle);
 
     /**
-     * @brief Exits sleep mode.
+     * @brief Exit sleep mode.
      * @param[in] handle Nextion context pointer.
      * @return NEX_OK or NEX_FAIL.
      */

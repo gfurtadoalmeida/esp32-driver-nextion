@@ -19,7 +19,7 @@ extern "C"
     nex_err_t nextion_page_get(nextion_t *handle, uint8_t *page_id);
 
     /**
-     * @brief Changes to another page.
+     * @brief Change to another page.
      * @param[in] handle Nextion context pointer.
      * @param[in] page_name_or_id Page's name or id.
      * @return NEX_OK or NEX_DVC_ERR_INVALID_PAGE.
@@ -27,7 +27,7 @@ extern "C"
     nex_err_t nextion_page_set(nextion_t *handle, const char *page_name_or_id);
 
     /**
-     * @brief Refreshes the current page.
+     * @brief Refresh the current page.
      * @param[in] handle Nextion context pointer.
      * @return NEX_OK or NEX_FAIL.
      */

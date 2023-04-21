@@ -12,14 +12,14 @@ extern "C"
 #endif
 
     /**
-     * @brief Resumes default waveform refreshing (refresh on data point add).
+     * @brief Start default waveform refreshing (refresh on data point add).
      * @param[in] handle Nextion context pointer.
      * @return NEX_OK or NEX_FAIL.
      */
     nex_err_t nextion_waveform_start_refesh(nextion_t *handle);
 
     /**
-     * @brief Stops default waveform refreshing (will not refresh when data point added).
+     * @brief Stop default waveform refreshing (will not refresh when data point added).
      * @param[in] handle Nextion context pointer.
      * @return NEX_OK or NEX_FAIL.
      */
@@ -39,7 +39,7 @@ extern "C"
                                          uint8_t value);
 
     /**
-     * @brief Clears a single waveform channel.
+     * @brief Clear a single waveform channel.
      * @param[in] handle Nextion context pointer.
      * @param[in] waveform_id Waveform id.
      * @param[in] channel_id Channel id to add data on.
@@ -50,7 +50,7 @@ extern "C"
                                              uint8_t channel_id);
 
     /**
-     * @brief Clears all waveform channels.
+     * @brief Clear all waveform channels.
      * @param[in] handle Nextion context pointer.
      * @param[in] waveform_id Waveform id.
      * @return NEX_OK or NEX_DVC_ERR_INVALID_WAVEFORM.
@@ -58,7 +58,7 @@ extern "C"
     nex_err_t nextion_waveform_clear(nextion_t *handle, uint8_t waveform_id);
 
     /**
-     * @brief Begins the waveform data streaming.
+     * @brief Begin the waveform data streaming.
      * @note When in this mode, the device will "hang" until all
      * data is sent; no event or other commands will be processed.
      * @param[in] handle Nextion context pointer.
@@ -73,7 +73,7 @@ extern "C"
                                             size_t value_count);
 
     /**
-     * @brief Writes a value onto the waveform stream.
+     * @brief Write a value onto the waveform stream.
      * @param[in] handle Nextion context pointer.
      * @param[in] value Value to be written.
      * @return NEX_OK if success, otherwise NEX_FAIL.
@@ -81,7 +81,7 @@ extern "C"
     nex_err_t nextion_waveform_stream_write(nextion_t *handle, uint8_t value);
 
     /**
-     * @brief Ends the waveform streaming.
+     * @brief End the waveform streaming.
      * @param[in] handle Nextion context pointer.
      * @return NEX_OK if success, otherwise NEX_FAIL.
      */

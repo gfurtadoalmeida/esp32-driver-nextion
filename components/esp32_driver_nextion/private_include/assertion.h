@@ -9,12 +9,10 @@ extern "C"
 #endif
 
 /**
- * @brief Returns a given value if the condition passed is false.
- *
+ * @brief Return a given value if the condition passed is false.
  * @param condition Condition to evaluate.
  * @param message Message to be logged if the condition is false.
  * @param return_value Value to be returned if the condition is false.
- *
  * @return If the condition is false the method will return what was
  * passed on @ref return_value parameter, otherwise the method will
  * continue.
@@ -27,7 +25,7 @@ extern "C"
     }
 
 /**
- * @brief Checks if a Nextion handle is valid.
+ * @brief Check if a Nextion handle is valid.
  * @param handle Nextion handle.
  * @param return_value Value to be returned if the condition fails.
  * @return If the condition fails the method will return what was passed on
