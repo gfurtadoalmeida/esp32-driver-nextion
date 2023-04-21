@@ -19,11 +19,11 @@ extern "C"
         // Values here must have the same values as those
         // defined in the instruction set manual. Will ease parsing.
 
-        NEXTION_DEVICE_STARTED = NEX_DVC_EVT_HARDWARE_START_RESET,   /*!< Just started or was reset. */
-        NEXTION_DEVICE_READY = NEX_DVC_EVT_HARDWARE_READY,           /*!< Ready to receive commands. */
-        NEXTION_DEVICE_AUTO_SLEEP = NEX_DVC_EVT_HARDWARE_AUTO_SLEEP, /*!< Went to sleep automatically. */
-        NEXTION_DEVICE_AUTO_WAKE = NEX_DVC_EVT_HARDWARE_AUTO_WAKE,   /*!< Woke up automatically. */
-        NEXTION_DEVICE_UPGRADING = NEX_DVC_EVT_HARDWARE_UPGRADE      /*!< Is upgrading. Happens when it is powered up with a SD card inserted. */
+        NEXTION_DEVICE_STARTED = NEX_DVC_EVT_HARDWARE_START_RESET,   /** @brief Just started or was reset. */
+        NEXTION_DEVICE_READY = NEX_DVC_EVT_HARDWARE_READY,           /** @brief Ready to receive commands. */
+        NEXTION_DEVICE_AUTO_SLEEP = NEX_DVC_EVT_HARDWARE_AUTO_SLEEP, /** @brief Went to sleep automatically. */
+        NEXTION_DEVICE_AUTO_WAKE = NEX_DVC_EVT_HARDWARE_AUTO_WAKE,   /** @brief Woke up automatically. */
+        NEXTION_DEVICE_UPGRADING = NEX_DVC_EVT_HARDWARE_UPGRADE      /** @brief Is upgrading. Happens when it is powered up with a SD card inserted. */
     } nextion_device_state_t;
 
     /**
@@ -35,8 +35,8 @@ extern "C"
         // Values here must have the same values as those
         // defined in the instruction set manual. Will ease parsing.
 
-        NEXTION_TOUCH_PRESSED = 1U, /*!< Component was pressed (and not released). */
-        NEXTION_TOUCH_RELEASED = 0U /*!< Component was released. */
+        NEXTION_TOUCH_PRESSED = 1U, /** @brief Component was pressed (and not released). */
+        NEXTION_TOUCH_RELEASED = 0U /** @brief Component was released. */
     } nextion_touch_state_t;
 
     /**
@@ -45,10 +45,10 @@ extern "C"
      */
     typedef struct
     {
-        nextion_t *handle;           /*!< Nextion context pointer. */
-        uint8_t page_id;             /*!< Page id were the touch happened. */
-        uint8_t component_id;        /*!< Component id that was touched. */
-        nextion_touch_state_t state; /*!< Touch state */
+        nextion_t *handle;           /** @brief Nextion context pointer. */
+        uint8_t page_id;             /** @brief Page id were the touch happened. */
+        uint8_t component_id;        /** @brief Component id that was touched. */
+        nextion_touch_state_t state; /** @brief Touch state */
     } nextion_on_touch_event_t;
 
     /**
@@ -57,11 +57,11 @@ extern "C"
      */
     typedef struct
     {
-        nextion_t *handle;           /*!< Nextion context pointer. */
-        uint16_t x;                  /*!< Page id were the touch happened. */
-        uint16_t y;                  /*!< Component id that was touched. */
-        nextion_touch_state_t state; /*!< Touch state. */
-        bool exited_sleep;           /*!< If the touch happened while the device was asleep, and now it is awake. */
+        nextion_t *handle;           /** @brief Nextion context pointer. */
+        uint16_t x;                  /** @brief Page id were the touch happened. */
+        uint16_t y;                  /** @brief Component id that was touched. */
+        nextion_touch_state_t state; /** @brief Touch state. */
+        bool exited_sleep;           /** @brief If the touch happened while the device was asleep, and now it is awake. */
     } nextion_on_touch_coord_event_t;
 
     /**
@@ -70,8 +70,8 @@ extern "C"
      */
     typedef struct
     {
-        nextion_t *handle;            /*!< Nextion context pointer. */
-        nextion_device_state_t state; /*!< Device state. */
+        nextion_t *handle;            /** @brief Nextion context pointer. */
+        nextion_device_state_t state; /** @brief Device state. */
     } nextion_on_device_event_t;
 
     /**

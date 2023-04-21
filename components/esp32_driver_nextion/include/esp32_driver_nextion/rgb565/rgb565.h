@@ -36,11 +36,9 @@ extern "C"
 
     /**
      * @brief Converts a 24 bits RGB color into RGB565.
-     *
-     * @param red Red value, from 0 to 255.
-     * @param green Green value, from 0 to 255.
-     * @param blue Blue value, from 0 to 255.
-     *
+     * @param[in] red Red value, from 0 to 255.
+     * @param[in] green Green value, from 0 to 255.
+     * @param[in] blue Blue value, from 0 to 255.
      * @return RGB565 color.
      */
     rgb565_t rgb565_convert_from_888(uint8_t red, uint8_t green, uint8_t blue);
