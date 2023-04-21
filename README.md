@@ -1,6 +1,6 @@
-# ESP32 Project Template
+# ESP32 Nextion Display Driver
 
-![GitHub Build Status](https://github.com/gfurtadoalmeida/esp32-driver-nextion/actions/workflows/build.yml/badge.svg) [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=esp32_driver_nextion&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=esp32_driver_nextion) [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=esp32_driver_nextion&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=esp32_driver_nextion)   
+![GitHub Build Status](https://github.com/gfurtadoalmeida/esp32-driver-nextion/actions/workflows/build.yml/badge.svg) [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=esp32_driver_nextion&metric=bugs)](https://sonarcloud.io/summary/new_code?id=esp32_driver_nextion) [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=esp32_driver_nextion&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=esp32_driver_nextion) [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=esp32_driver_nextion&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=esp32_driver_nextion) [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=esp32_driver_nextion&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=esp32_driver_nextion)  
 ESP32 driver for [Nextion](https://nextion.tech/) HMI displays. 
 
 ## Characteristics
