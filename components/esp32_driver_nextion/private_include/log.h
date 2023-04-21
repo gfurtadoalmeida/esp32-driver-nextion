@@ -8,7 +8,7 @@ extern "C"
 {
 #endif
 
-    static const char *TAG = "nextion";
+    static const char *TAG = "NEXTION";
 
 #define CMP_LOGD(format, ...) ESP_LOGD(TAG, format, ##__VA_ARGS__)
 #define CMP_LOGV(format, ...) ESP_LOGV(TAG, format, ##__VA_ARGS__)
