@@ -12,8 +12,6 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  - name: run_rename_project_script
-    value: true
   - name: esp_docker_tag
     value : v4.4.4
   - group: sonarcloud
@@ -29,19 +27,6 @@ jobs:
     - checkout: self
       persistCredentials: true
       fetchDepth: 0
-
-    # This is needed only if you are working on the
-    # esp32-project-template project; remove this task
-    # if you are using this project as a template.
-    - task: PowerShell@2
-      displayName: Run Rename-Project.ps1
-      condition: and(succeeded(), eq(variables.run_rename_project_script, true))
-      inputs:
-        targetType: 'filePath'
-        failOnStderr: true
-        showWarnings: true
-        filePath: Rename-Project.ps1
-        arguments: $(Build.Repository.LocalPath) esp32-project-template
 
     - task: Docker@2
       displayName: Login Docker
