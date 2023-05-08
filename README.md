@@ -6,7 +6,7 @@ ESP32 driver for [Nextion](https://nextion.tech/) HMI displays.
 ## Characteristics
 
 * ESP-IDF: [v4.4.4](https://docs.espressif.com/projects/esp-idf/en/v4.4.4/esp32/index.html)
-* Written in **C** using just the [ESP-IDF](https://github.com/espressif/esp-idf) framework.
+* Written in **C** using just the [ESP-IDF Framework](https://github.com/espressif/esp-idf).
 * Testable: 95+ tests.
 * Unopinionated: you get the functions and that's it.
 * Callback for events: no `do_events()` loops.
