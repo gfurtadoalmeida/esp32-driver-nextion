@@ -28,6 +28,20 @@ export PATH="$HOME/.sonar/build-wrapper-linux-x86":$PATH
 
 build-wrapper-linux-x86-64 --out-dir $SONAR_WRAPPER_OUTPUT_DIR idf.py build
 
-sonar-scanner --define sonar.host.url="$SONAR_SERVER_URL" \
+if [ $? -eq 0 ]
+then
+  sonar-scanner --define sonar.host.url="$SONAR_SERVER_URL" \
     --define sonar.organization=$SONAR_ORGANIZATION_NAME \
     --define sonar.login=$SONAR_ORGANIZATION_TOKEN
+
+  if [ $? -eq 0 ]
+  then
+    exit 0
+  else
+    echo "Failure scanning source code"
+    exit $?
+  fi
+else
+  echo "Failure building on Docker"
+  exit $?
+fi
