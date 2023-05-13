@@ -39,9 +39,9 @@ then
     exit 0
   else
     echo "Failure scanning source code"
-    exit $?
+    exit 1
   fi
 else
   echo "Failure building on Docker"
-  exit $?
+  exit 1
 fi
