@@ -38,6 +38,7 @@
   "idf.adapterTargetName": "esp32",
   "idf.flashBaudRate": "115200",
   "idf.flashType": "UART",
+  "idf.monitorBaudRate": "115200",
   "idf.openOcdConfigs": [
     "interface/cjmcu-ftdi-2232HL.cfg",
     "board/esp-wroom-32.cfg"
