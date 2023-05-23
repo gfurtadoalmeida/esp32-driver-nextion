@@ -17,6 +17,17 @@ ESP32 driver for [Nextion](https://nextion.tech/) HMI displays.
 
 Everything is on the [wiki](https://github.com/gfurtadoalmeida/esp32-driver-nextion/wiki).
 
+## Code Size
+
+Build options:
+
+* Compile optimized for size (`CONFIG_COMPILER_OPTIMIZATION_SIZE=y`).
+* Error logging (`CONFIG_LOG_DEFAULT_LEVEL_ERROR=y`).
+
+| DRAM (bss,data) | Flash (code,rodata) |
+|:-:|:-:|
+| 0 B | 4.63 KB |
+
 ## To Do
 
 - [ ] Fix code smells.
@@ -34,6 +45,8 @@ Everything is on the [wiki](https://github.com/gfurtadoalmeida/esp32-driver-next
 #include "esp32_driver_nextion/nextion.h"
 #include "esp32_driver_nextion/page.h"
 #include "esp32_driver_nextion/component.h"
+
+static const char TAG[] = "nextion";
 
 static TaskHandle_t task_handle_user_interface;
 
@@ -81,13 +94,13 @@ void app_main(void)
 
 void callback_touch_event(nextion_on_touch_event_t event)
 {
-    if (event.page_id == 0 
-        && event.component_id == 5 
+    if (event.page_id == 0
+        && event.component_id == 5
         && event.state == NEXTION_TOUCH_RELEASED)
     {
         ESP_LOGI(TAG, "button pressed");
 
-        xTaskNotify(task_handle_user_interface, 
+        xTaskNotify(task_handle_user_interface,
                     event.component_id,
                     eSetValueWithOverwrite);
     }
@@ -107,16 +120,16 @@ void process_callback_queue(void *pvParameters)
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
         // Get the text value from a component.
-        nextion_component_get_text(nextion_handle, 
+        nextion_component_get_text(nextion_handle,
                                    "value_text",
                                    text_buffer,
-                                   &text_length)
+                                   &text_length);
 
         // Get the integer value from a component.
-        nextion_component_get_value(nextion_handle, 
+        nextion_component_get_value(nextion_handle,
                                     "value_number",
-                                    &number)
-        
+                                    &number);
+
         ESP_LOGI(TAG, "text: %s", text_buffer);
         ESP_LOGI(TAG, "number: %d", number);
     }
