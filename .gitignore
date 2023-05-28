@@ -1,13 +1,9 @@
-
 # ESP-IDF project files
-build/
-sdkconfig
-sdkconfig.old
+**/build
+**/sdkconfig
+**/sdkconfig.old
+**/dependencies.lock
 debug.log
-test/build/
-test/sdkconfig
-test/sdkconfig.old
-dependencies.lock
 
 # Prerequisites
 *.d
