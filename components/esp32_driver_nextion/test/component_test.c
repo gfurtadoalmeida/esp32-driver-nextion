@@ -78,7 +78,7 @@ TEST_CASE("Get component text", "[component]")
 
 TEST_CASE("Get component value", "[component]")
 {
-    int number;
+    int32_t number;
     nex_err_t code = nextion_component_get_value(handle, "n0", &number);
 
     CHECK_NEX_OK(code);
@@ -98,7 +98,7 @@ TEST_CASE("Set component text", "[component]")
 {
     char text[7];
     size_t length = 7;
-    nex_err_t code = nextion_component_set_text(handle, "b0", "Button!");
+    nex_err_t code = nextion_component_set_text(handle, "b0", (char *)"Button!");
 
     nextion_component_get_text(handle, "b0", text, &length);
 
@@ -109,7 +109,7 @@ TEST_CASE("Set component text", "[component]")
 
 TEST_CASE("Set component value", "[component]")
 {
-    int number = 0;
+    int32_t number = 0;
     nex_err_t code = nextion_component_set_value(handle, "x0", 100);
 
     nextion_component_get_value(handle, "x0", &number);
@@ -142,7 +142,7 @@ TEST_CASE("Get component property text", "[component]")
 
 TEST_CASE("Get component property number", "[component]")
 {
-    int number;
+    int32_t number;
     nex_err_t code = nextion_component_get_property_number(handle, "n0", "val", &number);
 
     CHECK_NEX_OK(code);
@@ -153,7 +153,7 @@ TEST_CASE("Set component property text", "[component]")
 {
     char text[7];
     size_t length = 7;
-    nex_err_t code = nextion_component_set_property_text(handle, "b0", "txt", "Button!");
+    nex_err_t code = nextion_component_set_property_text(handle, "b0", "txt", (char *)"Button!");
 
     nextion_component_get_text(handle, "b0", text, &length);
 
@@ -164,7 +164,7 @@ TEST_CASE("Set component property text", "[component]")
 
 TEST_CASE("Set component property number", "[component]")
 {
-    int number = 0;
+    int32_t number = 0;
     nex_err_t code = nextion_component_set_property_number(handle, "x0", "val", 100);
 
     nextion_component_get_value(handle, "x0", &number);

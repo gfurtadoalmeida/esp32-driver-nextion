@@ -15,7 +15,7 @@
 static bool nextion_core_command_sync_acquire(nextion_t *handle, TickType_t timeout);
 static void nextion_core_command_sync_release(nextion_t *handle);
 static bool nextion_core_event_dispatch(nextion_t *handle, const uint8_t *buffer, const size_t buffer_length);
-static void nextion_core_event_process(nextion_t *handle);
+static bool nextion_core_event_process(nextion_t *handle);
 static void nextion_core_uart_task(void *pvParameters);
 static int32_t nextion_core_uart_read_as_byte(const nextion_t *handle, uint8_t *buffer, size_t length);
 static nex_err_t nextion_core_uart_read_as_simple_result(nextion_t *handle);
@@ -46,10 +46,10 @@ nextion_t *nextion_driver_install(uart_port_t uart_num, uint32_t baud_rate, gpio
 {
     CMP_CHECK((baud_rate >= NEX_SERIAL_BAUD_RATE_MIN || baud_rate <= NEX_SERIAL_BAUD_RATE_MAX), "baud_rate error", NULL)
 
-    CMP_LOGI("installing driver on uart %d with baud rate %d", uart_num, baud_rate);
+    CMP_LOGI("installing driver on uart %d with baud rate %lu", uart_num, baud_rate);
 
     const uart_config_t uart_config = {
-        .baud_rate = baud_rate,
+        .baud_rate = (int)baud_rate,
         .data_bits = UART_DATA_8_BITS,
         .parity = UART_PARITY_DISABLE,
         .stop_bits = UART_STOP_BITS_1,
@@ -204,7 +204,7 @@ nex_err_t nextion_command_send_get_bytes(nextion_t *handle, uint8_t *buffer, siz
     }
     else
     {
-        *length = nextion_core_uart_read_as_byte(handle, buffer, *length);
+        *length = (int)nextion_core_uart_read_as_byte(handle, buffer, *length);
 
         if (*length == -1)
         {
@@ -322,7 +322,7 @@ nex_err_t nextion_transparent_data_mode_end(nextion_t *handle)
 
     uint8_t code = 0;
     uint8_t buffer[NEX_DVC_CMD_ACK_LENGTH];
-    size_t bytes_read = nextion_core_uart_read_as_byte(handle, buffer, NEX_DVC_CMD_ACK_LENGTH);
+    size_t bytes_read = (size_t)nextion_core_uart_read_as_byte(handle, buffer, NEX_DVC_CMD_ACK_LENGTH);
 
     if (bytes_read < 1)
     {
@@ -423,7 +423,7 @@ static void nextion_core_uart_task(void *pvParameters)
     }
 }
 
-static void nextion_core_event_process(nextion_t *handle)
+static bool nextion_core_event_process(nextion_t *handle)
 {
     CMP_CHECK_HANDLE(handle, false)
     CMP_CHECK((handle->in_transparent_data_mode == false), "state error(in transparent data mode)", false)
@@ -431,7 +431,7 @@ static void nextion_core_event_process(nextion_t *handle)
     CMP_CHECK((handle->is_initialized), "driver error(not initialized)", false)
 
     uint8_t buffer[NEX_DVC_EVT_MAX_RESPONSE_LENGTH];
-    int bytes_read = nextion_core_uart_read_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
+    int bytes_read = (int)nextion_core_uart_read_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
 
     while (bytes_read > -1)
     {
@@ -441,18 +441,20 @@ static void nextion_core_event_process(nextion_t *handle)
         {
             CMP_LOGW("response code %d was not an event, some data might be corrupted", buffer[0]);
 
-            return;
+            return false;
         }
 
         if (!nextion_core_event_dispatch(handle, buffer, bytes_read))
         {
             CMP_LOGW("failure dispatching event from event handler");
 
-            return;
+            return false;
         }
 
-        bytes_read = nextion_core_uart_read_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
+        bytes_read = (int)nextion_core_uart_read_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
     }
+
+    return true;
 }
 
 /**
@@ -538,7 +540,7 @@ static nex_err_t nextion_core_uart_read_as_simple_result(nextion_t *handle)
 
     do
     {
-        bytes_read = nextion_core_uart_read_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
+        bytes_read = (int)nextion_core_uart_read_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
 
         if (bytes_read == -1)
         {

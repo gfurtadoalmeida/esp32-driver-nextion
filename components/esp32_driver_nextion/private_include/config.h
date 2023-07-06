@@ -1,6 +1,8 @@
 #ifndef __ESP32_DRIVER_NEXTION_CONFIG_H__
 #define __ESP32_DRIVER_NEXTION_CONFIG_H__
 
+#include "sdkconfig.h"
+
 #ifdef __cplusplus
 extern "C"
 {

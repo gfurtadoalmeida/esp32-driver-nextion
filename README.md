@@ -5,7 +5,7 @@ ESP32 driver for [Nextion](https://nextion.tech/) HMI displays.
 
 ## Characteristics
 
-* ESP-IDF: [v4.4.4](https://docs.espressif.com/projects/esp-idf/en/v4.4.4/esp32/index.html)
+* ESP-IDF: [v5.0.2](https://docs.espressif.com/projects/esp-idf/en/v5.0.2/esp32/index.html)
 * Written in **C** using just the [ESP-IDF Framework](https://github.com/espressif/esp-idf).
 * Testable: 95+ tests.
 * Unopinionated: you get the functions and that's it.
@@ -92,11 +92,9 @@ void app_main(void)
     nextion_driver_delete(nextion_handle);
 }
 
-void callback_touch_event(nextion_on_touch_event_t event)
+static void callback_touch_event(nextion_on_touch_event_t event)
 {
-    if (event.page_id == 0
-        && event.component_id == 5
-        && event.state == NEXTION_TOUCH_RELEASED)
+    if (event.page_id == 0 && event.component_id == 5 && event.state == NEXTION_TOUCH_RELEASED)
     {
         ESP_LOGI(TAG, "button pressed");
 
@@ -106,7 +104,7 @@ void callback_touch_event(nextion_on_touch_event_t event)
     }
 }
 
-void process_callback_queue(void *pvParameters)
+[[noreturn]] static void process_callback_queue(void *pvParameters)
 {
     const uint8_t MAX_TEXT_LENGTH = 50;
 
@@ -131,7 +129,7 @@ void process_callback_queue(void *pvParameters)
                                     &number);
 
         ESP_LOGI(TAG, "text: %s", text_buffer);
-        ESP_LOGI(TAG, "number: %d", number);
+        ESP_LOGI(TAG, "number: %lu", number);
     }
 }
 ```

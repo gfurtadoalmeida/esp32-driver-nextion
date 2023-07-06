@@ -5,4 +5,3 @@ idf_component_register(
         freertos
         esp32_driver_nextion
 )
-
