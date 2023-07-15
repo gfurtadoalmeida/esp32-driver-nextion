@@ -35,7 +35,7 @@ jobs:
 
     - name: Build with Sonar
       shell: pwsh
-      run: docker run --rm -e LC_ALL='C.UTF-8' --env SONAR_ORGANIZATION_NAME=${{secrets.SONARCLOUD_ORGANIZATION}} --env SONAR_ORGANIZATION_TOKEN=${{secrets.SONARCLOUD_TOKEN}} -v ${{github.workspace}}:/project -w /project espressif/idf:${{env.esp_docker_tag}} bash .pipeline/scripts/build-with-sonar.sh
+      run: docker run --rm -e LC_ALL='C.UTF-8' --env SONAR_ORGANIZATION_NAME=${{secrets.SONARCLOUD_ORGANIZATION}} --env SONAR_ORGANIZATION_TOKEN=${{secrets.SONARCLOUD_TOKEN}} -v ${{github.workspace}}:/project -w /project espressif/idf:${{env.esp_docker_tag}} bash .github/scripts/build-with-sonar.sh
 
     - name: Publish Binaries
       uses: actions/upload-artifact@v3.1.2
