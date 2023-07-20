@@ -32,7 +32,7 @@ if [ $? -eq 0 ]
 then
   sonar-scanner --define sonar.host.url="$SONAR_SERVER_URL" \
     --define sonar.organization=$SONAR_ORGANIZATION_NAME \
-    --define sonar.login=$SONAR_ORGANIZATION_TOKEN
+    --define sonar.token=$SONAR_ORGANIZATION_TOKEN
 
   if [ $? -eq 0 ]
   then
