@@ -37,9 +37,9 @@ struct nextion_t
     TaskHandle_t uart_task;                                                       /*!< Task used for UART queue handling. */
     size_t transparent_data_mode_size;                                            /*!< How many bytes are expected to be written while in "Transparent Data Mode". */
     uart_port_t uart_num;                                                         /*!< UART port number. */
-    volatile bool is_installed;                                                   /*!< If the driver was installed. */
-    volatile bool is_initialized;                                                 /*!< If the driver was initialized. */
-    volatile bool in_transparent_data_mode;                                       /*!< If it is in Transparent Data mode. */
+    bool is_installed;                                                            /*!< If the driver was installed. */
+    bool is_initialized;                                                          /*!< If the driver was initialized. */
+    bool in_transparent_data_mode;                                                /*!< If it is in Transparent Data mode. */
 };
 
 nextion_t *nextion_driver_install(uart_port_t uart_num, uint32_t baud_rate, gpio_num_t tx_io_num, gpio_num_t rx_io_num)
