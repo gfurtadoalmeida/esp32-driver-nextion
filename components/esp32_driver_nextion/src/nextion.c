@@ -614,36 +614,32 @@ static int32_t nextion_core_uart_read_as_byte(const nextion_t *handle, uint8_t *
 
             continue;
         }
-        else // Error or timeout.
+
+        if (result == 0) // It's a timeout.
         {
-            if (result == 0) // It's a timeout.
+            // If we have read something before the timeout,
+            // we do not send an error. The "length" parameter
+            // sometimes is an estimation; let the caller decide
+            // if there is enough data or not.
+
+            if (bytes_read > 0)
             {
-                // If we have read something before the timeout,
-                // we do not send an error. The "length" parameter
-                // sometimes is a estimation; let the caller decide
-                // if there is enough data or not.
-
-                if (bytes_read > 0)
-                {
-                    break;
-                }
-
-                // Some commands only return data on failure.
-                // Event processing will throw this too when no event response is found.
-                // That's why this is a debug; too much noise.
-
-                CMP_LOGD("response timed out");
-            }
-            else if (result == -1) // It's an error.
-            {
-                CMP_LOGE("failed reading UART");
+                return bytes_read;
             }
 
-            // For error or timeout, always return -1;
+            // Some commands only return data on failure.
+            // Event processing will throw this too when no event response is found.
+            // That's why this is a debug; too much noise.
 
-            bytes_read = -1;
+            CMP_LOGD("response timed out");
 
-            break;
+            return -1;
+        }
+
+        if (result == -1) // UART error.
+        {
+            CMP_LOGE("failed reading UART");
+            return -1;
         }
     }
 
