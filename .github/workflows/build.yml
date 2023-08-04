@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 env:
-  esp_docker_tag: v5.0.2
+  esp_docker_tag: v5.1
 
 jobs:
   build:
