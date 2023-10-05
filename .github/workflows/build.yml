@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 env:
-  esp_docker_tag: v5.1
+  esp_docker_image: gfurtadoalmeida/esp32-docker-sonar:v5.1
 
 jobs:
   build:
@@ -31,20 +31,12 @@ jobs:
 
     - name: Pull ESP-IDF Image
       shell: pwsh
-      run: docker pull espressif/idf:${{env.esp_docker_tag}}
+      run: docker pull ${{env.esp_docker_image}}
 
     - name: Build with Sonar
       shell: pwsh
-      run: docker run --rm -e LC_ALL='C.UTF-8' --env SONAR_ORGANIZATION_NAME=${{secrets.SONARCLOUD_ORGANIZATION}} --env SONAR_ORGANIZATION_TOKEN=${{secrets.SONARCLOUD_TOKEN}} -v ${{github.workspace}}:/project -w /project espressif/idf:${{env.esp_docker_tag}} bash .github/scripts/build-with-sonar.sh
-
-    - name: Publish Binaries
-      uses: actions/upload-artifact@v3.1.2
-      with:
-        name: binary
-        path: ${{github.workspace}}/build/*.bin
-        if-no-files-found: error
-        retention-days: 1
+      run: docker run --rm --env SONARCLOUD_ORGANIZATION=${{secrets.SONARCLOUD_ORGANIZATION}} --env SONARCLOUD_TOKEN=${{secrets.SONARCLOUD_TOKEN}} --env LC_ALL='C.UTF-8' -v ${{github.workspace}}:/project -w /project ${{env.esp_docker_image}} idf.py build
 
     - name: Build Test
       shell: pwsh
-      run: docker run --rm -e LC_ALL='C.UTF-8' -v ${{github.workspace}}:/project -w /project espressif/idf:${{env.esp_docker_tag}} idf.py -C ./test build
+      run: docker run --rm --env LC_ALL='C.UTF-8' -v ${{github.workspace}}:/project -w /project ${{env.esp_docker_image}} idf.py -C ./test build
