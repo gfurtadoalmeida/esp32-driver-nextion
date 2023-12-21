@@ -1,0 +1,70 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      esp_docker_image: gfurtadoalmeida/esp32-docker-sonar:v5.1
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Docker Login
+      uses: docker/login-action@v2.1.0
+      with:
+        username: ${{secrets.DOCKER_USERNAME}}
+        password: ${{secrets.DOCKER_TOKEN}}
+
+    - name: Pull ESP-IDF Image
+      shell: pwsh
+      run: docker pull ${{env.esp_docker_image}}
+
+    - name: Build
+      shell: pwsh
+      run: docker run --rm --env LC_ALL='C.UTF-8' -v ${{github.workspace}}:/project -w /project ${{env.esp_docker_image}} idf.py build
+
+    - name: Build Test
+      shell: pwsh
+      run: docker run --rm --env LC_ALL='C.UTF-8' -v ${{github.workspace}}:/project -w /project ${{env.esp_docker_image}} idf.py -C ./test build
+
+  release:
+    runs-on: windows-2022
+    needs: [build]
+    permissions:
+      contents: write
+
+    env:
+      ZIP_NAME: esp32-driver-nextion.${{github.ref_name}}.zip
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Create Zip
+      shell: pwsh
+      run: |
+        $compress = @{
+          Path = "components/esp32_driver_nextion/*"
+          CompressionLevel = "Optimal"
+          DestinationPath = $Env:ZIP_NAME
+        }
+        Compress-Archive @compress
+
+    - name: Publish
+      uses: ncipollo/release-action@v1
+      with:
+        allowUpdates: true
+        artifacts: "${{env.ZIP_NAME}}"
+        makeLatest: true
+        name: ESP32 Driver Nextion ${{github.ref_name}}
+        removeArtifacts: false
+        replacesArtifacts: true
