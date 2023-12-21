@@ -1,0 +1,35 @@
+name: 💡 Feature request
+description: Propose a feature or improvement
+title: '[Feature request]: '
+labels: ['feature']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We welcome feature requests! This template will help us gather the information we need to start the review process.
+  - type: textarea
+    id: background
+    attributes:
+      label: Background and motivation
+      description: Please describe the purpose and value of the new feature.
+      placeholder: Purpose
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the solution expected
+      description: |
+        Please provide a clear and concise description of what you want to happen.
+      placeholder: Description
+    validations:
+      required: true
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional info
+      description: |
+        Add any other information about the feature request here.
+      placeholder: Additional info
+    validations:
+      required: false

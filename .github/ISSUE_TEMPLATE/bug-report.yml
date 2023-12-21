@@ -1,0 +1,104 @@
+name: ❗ Bug Report
+description: Create a report to help us improve.
+title: "[Bug]: "
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We welcome bug reports! This template will help us gather the information we need to start the triage process.
+  - type: textarea
+    id: background
+    attributes:
+      label: Description
+      description: Please share a clear and concise description of the problem.
+      placeholder: Description
+    validations:
+      required: true
+  - type: textarea
+    id: repro-steps
+    attributes:
+      label: Reproduction Steps
+      description: |
+        Please include minimal steps to reproduce the problem if possible. E.g.: the smallest possible code snippet; or a small project, with steps to run it.
+
+        We will close this issue if:
+        - We are not able to reproduce the behavior you're reporting.
+        - The issue is a duplicate of an existing issue.
+        - The behavior you're reporting is by design.
+      placeholder: Minimal Reproduction
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: |
+        Provide a description of the expected behavior.
+      placeholder: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual behavior
+      description: |
+        Provide a description of the actual behavior. If applicable please include any error messages, exception stacktraces or memory dumps.
+      placeholder: Actual behavior
+    validations:
+      required: true
+  - type: dropdown
+    id: display-serie
+    attributes:
+      label: Display serie.
+      description: Which Nextion display serie does your application uses?
+      multiple: false
+      options:
+        - Basic
+        - Discovery
+        - Enhanced
+        - Intelligent
+    validations:
+      required: true
+  - type: input
+    id: display-model
+    attributes:
+      label: Display model.
+      description: Which Nextion display model does your application uses?
+      placeholder: ex. NX4832T035
+    validations:
+      required: true
+  - type: input
+    id: idf-version
+    attributes:
+      label: IDF version.
+      description: On which IDF version does this issue occur on?
+      placeholder: ex. v3.2-dev-1148-g96cd3b75c
+    validations:
+      required: true
+  - type: input
+    id: chip-revision
+    attributes:
+      label: Espressif SoC revision.
+      description: On which Espressif SoC revision does your application run on?
+      placeholder: ex. ESP32-C3 (QFN32) (revision v0.3)
+    validations:
+      required: true
+  - type: textarea
+    id: debug-logs
+    attributes:
+      label: Debug Logs.
+      description: Debug log goes here, should contain the backtrace, as well as the reset source if it is a crash.
+      placeholder: Your log goes here.
+      render: plain text
+    validations:
+      required: false
+  - type: textarea
+    id: other-info
+    attributes:
+      label: Other information
+      description: |
+        If you have an idea where the problem might lie, let us know that here. Please include any pointers to code, relevant changes, or related issues you know of.
+      placeholder: Other information
+    validations:
+      required: false
