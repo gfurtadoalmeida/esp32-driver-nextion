@@ -1,14 +1,22 @@
-name: build
+name: development
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
     paths:
       - 'components/**'
       - 'main/**'
       - 'test/**'
   pull_request:
-    branches: [ "master" ]
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+    paths:
+      - 'components/**'
+      - 'main/**'
+      - 'test/**'
   workflow_dispatch:
 
 env:
