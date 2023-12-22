@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      esp_docker_image: gfurtadoalmeida/esp32-docker-sonar:v5.1
+      ESP_DOCKER_IMAGE: gfurtadoalmeida/esp32-docker-sonar:v5.1
 
     steps:
     - uses: actions/checkout@v3
@@ -25,18 +25,18 @@ jobs:
 
     - name: Pull ESP-IDF Image
       shell: pwsh
-      run: docker pull ${{env.esp_docker_image}}
+      run: docker pull ${{env.ESP_DOCKER_IMAGE}}
 
     - name: Build
       shell: pwsh
-      run: docker run --rm --env LC_ALL='C.UTF-8' -v ${{github.workspace}}:/project -w /project ${{env.esp_docker_image}} idf.py build
+      run: docker run --rm --env LC_ALL='C.UTF-8' -v ${{github.workspace}}:/project -w /project ${{env.ESP_DOCKER_IMAGE}} idf.py build
 
     - name: Build Test
       shell: pwsh
-      run: docker run --rm --env LC_ALL='C.UTF-8' -v ${{github.workspace}}:/project -w /project ${{env.esp_docker_image}} idf.py -C ./test build
+      run: docker run --rm --env LC_ALL='C.UTF-8' -v ${{github.workspace}}:/project -w /project ${{env.ESP_DOCKER_IMAGE}} idf.py -C ./test build
 
   release:
-    runs-on: windows-2022
+    runs-on: ubuntu-latest
     needs: [build]
     permissions:
       contents: write
@@ -50,14 +50,10 @@ jobs:
         fetch-depth: 0
 
     - name: Create Zip
-      shell: pwsh
+      shell: bash
       run: |
-        $compress = @{
-          Path = "components/esp32_driver_nextion/*"
-          CompressionLevel = "Optimal"
-          DestinationPath = $Env:ZIP_NAME
-        }
-        Compress-Archive @compress
+        cd components
+        zip -r ../${{env.ZIP_NAME}} esp32_driver_nextion
 
     - name: Publish
       uses: ncipollo/release-action@v1

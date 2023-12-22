@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
 
 env:
-  esp_docker_image: gfurtadoalmeida/esp32-docker-sonar:v5.1
+  ESP_DOCKER_IMAGE: gfurtadoalmeida/esp32-docker-sonar:v5.1
 
 jobs:
   build:
@@ -39,12 +39,12 @@ jobs:
 
     - name: Pull ESP-IDF Image
       shell: pwsh
-      run: docker pull ${{env.esp_docker_image}}
+      run: docker pull ${{env.ESP_DOCKER_IMAGE}}
 
     - name: Build with Sonar
       shell: pwsh
-      run: docker run --rm --env SONARCLOUD_ORGANIZATION=${{secrets.SONARCLOUD_ORGANIZATION}} --env SONARCLOUD_TOKEN=${{secrets.SONARCLOUD_TOKEN}} --env LC_ALL='C.UTF-8' -v ${{github.workspace}}:/project -w /project ${{env.esp_docker_image}} idf.py build
+      run: docker run --rm --env SONARCLOUD_ORGANIZATION=${{secrets.SONARCLOUD_ORGANIZATION}} --env SONARCLOUD_TOKEN=${{secrets.SONARCLOUD_TOKEN}} --env LC_ALL='C.UTF-8' -v ${{github.workspace}}:/project -w /project ${{env.ESP_DOCKER_IMAGE}} idf.py build
 
     - name: Build Test
       shell: pwsh
-      run: docker run --rm --env LC_ALL='C.UTF-8' -v ${{github.workspace}}:/project -w /project ${{env.esp_docker_image}} idf.py -C ./test build
+      run: docker run --rm --env LC_ALL='C.UTF-8' -v ${{github.workspace}}:/project -w /project ${{env.ESP_DOCKER_IMAGE}} idf.py -C ./test build
