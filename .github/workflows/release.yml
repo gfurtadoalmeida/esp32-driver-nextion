@@ -52,6 +52,7 @@ jobs:
     - name: Create Zip
       shell: bash
       run: |
+        cp LICENSE components/esp32_driver_nextion
         cd components
         zip -r ../${{env.ZIP_NAME}} esp32_driver_nextion
 
