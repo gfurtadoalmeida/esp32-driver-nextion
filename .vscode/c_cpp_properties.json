@@ -17,13 +17,10 @@
       },
       "cStandard": "c11",
       "cppStandard": "c++17",
-      "clang_format_style": "Visual Studio",
-      "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+      "compileCommands": "${workspaceFolder}\\build\\compile_commands.json",
+      "compilerPath": "${config:idf.toolsPathWin}\\tools\\xtensa-esp32-elf\\esp-12.2.0_20230208\\xtensa-esp32-elf\\bin\\xtensa-esp32-elf-gcc.exe",
       "configurationProvider": "ms-vscode.cmake-tools",
-      "intelliSenseEngine": "default",
-      "intelliSenseEngineFallback": "enabled",
-      "intelliSenseMode": "windows-gcc-x86",
-      "compilerPath": "${config:idf.toolsPathWin}\\tools\\xtensa-esp32-elf\\esp-12.2.0_20230208\\xtensa-esp32-elf\\bin\\xtensa-esp32-elf-gcc.exe"
+      "intelliSenseMode": "windows-gcc-x86"
     }
   ],
   "version": 4
