@@ -15,7 +15,7 @@ ESP32 driver for [Nextion](https://nextion.tech/) HMI displays.
 
 ## Documentation
 
-Everything is on the [wiki](https://github.com/gfurtadoalmeida/esp32-driver-nextion/wiki).
+Everything is at the [docs](/docs) folder.
 
 ## Code Size
 
