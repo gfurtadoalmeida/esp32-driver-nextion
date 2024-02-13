@@ -52,7 +52,7 @@ In the [.debug](../.debug) folder you'll find interface configuration files for 
 
 ## Testing
 
-Upload [test_display.hmi](../components/nextion/test/nextion/hmi/) on your Nextion display before testing. Be aware that the display project was built using Nextion Editor 1.61.2; you might need to [upgrade your display](https://nextion.tech/faq-items/using-legacy-nextion-devices/) before uploading this project.  
+Upload [test_display.hmi](../components/esp32_driver_nextion/test/hmi/) on your Nextion display before testing. Be aware that the display project was built using Nextion Editor 1.61.2; you might need to [upgrade your display](https://nextion.tech/faq-items/using-legacy-nextion-devices/) before uploading this project.  
 
 The task watchdog for CPU0 is disabled on the test project. It is needed so we can interact with the test tool.  
 
