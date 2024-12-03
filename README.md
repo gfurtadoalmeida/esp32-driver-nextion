@@ -1,11 +1,12 @@
 # ESP32 - Nextion Display Driver
 
-![GitHub Build Status](https://github.com/gfurtadoalmeida/esp32-driver-nextion/actions/workflows/release.yml/badge.svg) [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=esp32_driver_nextion&metric=bugs)](https://sonarcloud.io/summary/new_code?id=esp32_driver_nextion) [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=esp32_driver_nextion&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=esp32_driver_nextion) [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=esp32_driver_nextion&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=esp32_driver_nextion) [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=esp32_driver_nextion&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=esp32_driver_nextion) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=esp32_driver_nextion&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=esp32_driver_nextion)  
+[![GitHub Release Status][git-bagdge-release]][git-release] [![Bugs][sonar-badge-bugs]][sonar-home] [![Code Smells][sonar-badge-smells]][sonar-home] [![Security Rating][sonar-badge-security]][sonar-home] [![Quality Gate Status][sonar-badge-quality]][sonar-home]  
+
 ESP32 driver for [Nextion](https://nextion.tech/) HMI displays.
 
 ## Characteristics
 
-* ESP-IDF: [v5.1](https://docs.espressif.com/projects/esp-idf/en/v5.1/esp32/index.html)
+* ESP-IDF: [v5.3](https://docs.espressif.com/projects/esp-idf/en/v5.1/esp32/index.html)
 * Written in **C** using just the [ESP-IDF Framework](https://github.com/espressif/esp-idf).
 * Testable: 95+ tests.
 * Unopinionated: you get the functions and that's it.
@@ -133,3 +134,15 @@ static void callback_touch_event(nextion_on_touch_event_t event)
     }
 }
 ```
+
+## Contributing
+
+To contribute to this project make sure to read our [CONTRIBUTING.md](/docs/CONTRIBUTING.md) file.
+
+[git-bagdge-release]: https://github.com/gfurtadoalmeida/esp32-driver-nextion/actions/workflows/release.yml/badge.svg
+[git-release]: https://github.com/gfurtadoalmeida/esp32-driver-nextion/releases
+[sonar-badge-bugs]: https://sonarcloud.io/api/project_badges/measure?project=esp32_driver_nextion&metric=bugs
+[sonar-badge-quality]: https://sonarcloud.io/api/project_badges/measure?project=esp32_driver_nextion&metric=alert_status
+[sonar-badge-security]: https://sonarcloud.io/api/project_badges/measure?project=esp32_driver_nextion&metric=security_rating
+[sonar-badge-smells]: https://sonarcloud.io/api/project_badges/measure?project=esp32_driver_nextion&metric=code_smells
+[sonar-home]: https://sonarcloud.io/project/overview?id=esp32_driver_nextion
