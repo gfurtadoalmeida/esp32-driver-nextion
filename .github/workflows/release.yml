@@ -59,6 +59,7 @@ jobs:
       with:
         allowUpdates: true
         artifacts: "${{env.ZIP_NAME}}"
+        generateReleaseNotes: true
         makeLatest: true
         name: ESP32 Driver Nextion ${{github.ref_name}}
         removeArtifacts: false
