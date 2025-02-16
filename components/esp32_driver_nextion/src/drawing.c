@@ -1,12 +1,16 @@
-#include "esp32_driver_nextion/nextion.h"
 #include "esp32_driver_nextion/drawing.h"
+#include "protocol/parsers/responses/ack.h"
+#include "protocol/protocol.h"
 #include "assertion.h"
 
 nex_err_t nextion_draw_fill_screen(nextion_t *handle, rgb565_t color)
 {
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
 
-    return nextion_command_send(handle, "cls %d", color);
+    formated_instruction_t instruction = FORMAT_INSTRUNCTION("cls %d", color);
+    parser_t parser = PARSER_ACK();
+
+    return nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
 }
 
 nex_err_t nextion_draw_fill_area(nextion_t *handle,
@@ -15,13 +19,16 @@ nex_err_t nextion_draw_fill_area(nextion_t *handle,
 {
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
 
-    return nextion_command_send(handle,
-                                "fill %d,%d,%d,%d,%d",
-                                area.upper_left.x,
-                                area.upper_left.y,
-                                area.bottom_right.x - area.upper_left.x,
-                                area.bottom_right.y - area.upper_left.y,
-                                color);
+    formated_instruction_t instruction = FORMAT_INSTRUNCTION(
+        "fill %d,%d,%d,%d,%d",
+        area.upper_left.x,
+        area.upper_left.y,
+        area.bottom_right.x - area.upper_left.x,
+        area.bottom_right.y - area.upper_left.y,
+        color);
+    parser_t parser = PARSER_ACK();
+
+    return nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
 }
 
 nex_err_t nextion_draw_fill_circle(nextion_t *handle,
@@ -31,12 +38,15 @@ nex_err_t nextion_draw_fill_circle(nextion_t *handle,
 {
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
 
-    return nextion_command_send(handle,
-                                "cirs %d,%d,%d,%d",
-                                center.x,
-                                center.y,
-                                radius,
-                                color);
+    formated_instruction_t instruction = FORMAT_INSTRUNCTION(
+        "cirs %d,%d,%d,%d",
+        center.x,
+        center.y,
+        radius,
+        color);
+    parser_t parser = PARSER_ACK();
+
+    return nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
 }
 
 nex_err_t nextion_draw_line(nextion_t *handle,
@@ -45,13 +55,16 @@ nex_err_t nextion_draw_line(nextion_t *handle,
 {
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
 
-    return nextion_command_send(handle,
-                                "line %d,%d,%d,%d,%d",
-                                area.upper_left.x,
-                                area.upper_left.y,
-                                area.bottom_right.x,
-                                area.bottom_right.y,
-                                color);
+    formated_instruction_t instruction = FORMAT_INSTRUNCTION(
+        "line %d,%d,%d,%d,%d",
+        area.upper_left.x,
+        area.upper_left.y,
+        area.bottom_right.x - area.upper_left.x,
+        area.bottom_right.y - area.upper_left.y,
+        color);
+    parser_t parser = PARSER_ACK();
+
+    return nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
 }
 
 nex_err_t nextion_draw_rectangle(nextion_t *handle,
@@ -60,13 +73,16 @@ nex_err_t nextion_draw_rectangle(nextion_t *handle,
 {
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
 
-    return nextion_command_send(handle,
-                                "draw %d,%d,%d,%d,%d",
-                                area.upper_left.x,
-                                area.upper_left.y,
-                                area.bottom_right.x,
-                                area.bottom_right.y,
-                                color);
+    formated_instruction_t instruction = FORMAT_INSTRUNCTION(
+        "draw %d,%d,%d,%d,%d",
+        area.upper_left.x,
+        area.upper_left.y,
+        area.bottom_right.x - area.upper_left.x,
+        area.bottom_right.y - area.upper_left.y,
+        color);
+    parser_t parser = PARSER_ACK();
+
+    return nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
 }
 
 nex_err_t nextion_draw_circle(nextion_t *handle,
@@ -76,12 +92,15 @@ nex_err_t nextion_draw_circle(nextion_t *handle,
 {
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
 
-    return nextion_command_send(handle,
-                                "cir %d,%d,%d,%d",
-                                center.x,
-                                center.y,
-                                radius,
-                                color);
+    formated_instruction_t instruction = FORMAT_INSTRUNCTION(
+        "cir %d,%d,%d,%d",
+        center.x,
+        center.y,
+        radius,
+        color);
+    parser_t parser = PARSER_ACK();
+
+    return nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
 }
 
 nex_err_t nextion_draw_picture(nextion_t *handle,
@@ -91,11 +110,14 @@ nex_err_t nextion_draw_picture(nextion_t *handle,
 {
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
 
-    return nextion_command_send(handle,
-                                "pic %d,%d,%d",
-                                origin.x,
-                                origin.y,
-                                picture_id);
+    formated_instruction_t instruction = FORMAT_INSTRUNCTION(
+        "pic %d,%d,%d",
+        origin.x,
+        origin.y,
+        picture_id);
+    parser_t parser = PARSER_ACK();
+
+    return nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
 }
 
 nex_err_t nextion_draw_crop_picture(nextion_t *handle,
@@ -105,15 +127,18 @@ nex_err_t nextion_draw_crop_picture(nextion_t *handle,
 {
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
 
-    return nextion_command_send(handle,
-                                "xpic %d,%d,%d,%d,%d,%d,%d",
-                                crop_area.upper_left.x,
-                                crop_area.upper_left.y,
-                                crop_area.bottom_right.x - crop_area.upper_left.x,
-                                crop_area.bottom_right.y - crop_area.upper_left.y,
-                                destination.x,
-                                destination.y,
-                                picture_id);
+    formated_instruction_t instruction = FORMAT_INSTRUNCTION(
+        "xpic %d,%d,%d,%d,%d,%d,%d",
+        crop_area.upper_left.x,
+        crop_area.upper_left.y,
+        crop_area.bottom_right.x - crop_area.upper_left.x,
+        crop_area.bottom_right.y - crop_area.upper_left.y,
+        destination.x,
+        destination.y,
+        picture_id);
+    parser_t parser = PARSER_ACK();
+
+    return nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
 }
 
 nex_err_t nextion_draw_text(nextion_t *handle,
@@ -134,17 +159,20 @@ nex_err_t nextion_draw_text(nextion_t *handle,
         background_value = background.color;
     }
 
-    return nextion_command_send(handle,
-                                "xstr %d,%d,%d,%d,%d,%d,%d,%d,%d,%d,\"%s\"",
-                                area.upper_left.x,
-                                area.upper_left.y,
-                                area.bottom_right.x - area.upper_left.x,
-                                area.bottom_right.y - area.upper_left.y,
-                                font.id,
-                                font.color,
-                                background_value,
-                                alignment.horizontal,
-                                alignment.vertical,
-                                background.fill_mode,
-                                text);
+    formated_instruction_t instruction = FORMAT_INSTRUNCTION(
+        "xstr %d,%d,%d,%d,%d,%d,%d,%d,%d,%d,\"%s\"",
+        area.upper_left.x,
+        area.upper_left.y,
+        area.bottom_right.x - area.upper_left.x,
+        area.upper_left.y,
+        font.id,
+        font.color,
+        background_value,
+        alignment.horizontal,
+        alignment.vertical,
+        background.fill_mode,
+        text);
+    parser_t parser = PARSER_ACK();
+
+    return nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
 }

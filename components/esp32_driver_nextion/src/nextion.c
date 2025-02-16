@@ -1,26 +1,26 @@
 #include <malloc.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+#include "esp32_driver_nextion/base/events.h"
 #include "esp32_driver_nextion/nextion.h"
 #include "esp32_driver_nextion/system.h"
+#include "protocol/parsers/responses/ack.h"
+#include "protocol/protocol.h"
+#include "protocol/event.h"
 #include "assertion.h"
 #include "config.h"
 
-#define CMP_CHECK_SEND_COMMAND_HANDLE_STATE(handle)                                \
-    CMP_CHECK_HANDLE(handle, NEX_FAIL)                                             \
-    CMP_CHECK((handle->is_installed), "driver error(not installed)", NEX_FAIL)     \
-    CMP_CHECK((handle->is_initialized), "driver error(not initialized)", NEX_FAIL) \
-    CMP_CHECK((handle->in_transparent_data_mode == false), "state error(in transparent data mode)", NEX_FAIL)
+#define CMP_CHECK_SEND_COMMAND_HANDLE_STATE(handle)                            \
+    CMP_CHECK_HANDLE(handle, NEX_FAIL)                                         \
+    CMP_CHECK((handle->is_installed), "driver error(not installed)", NEX_FAIL) \
+    CMP_CHECK((handle->is_initialized), "driver error(not initialized)", NEX_FAIL)
 
-static bool nextion_core_command_sync_acquire(nextion_t *handle, TickType_t timeout);
-static void nextion_core_command_sync_release(nextion_t *handle);
-static bool nextion_core_event_dispatch(nextion_t *handle, const uint8_t *buffer, const size_t buffer_length);
-static bool nextion_core_event_process(nextion_t *handle);
+#define PROCESS_SYNC_TAKE(handle, timeout) (xSemaphoreTake(handle->command_sync, timeout) == pdTRUE)
+#define PROCESS_SYNC_GIVE(handle) xSemaphoreGive(handle->command_sync)
+
 static void nextion_core_uart_task(void *pvParameters);
-static int32_t nextion_core_uart_read_as_byte(const nextion_t *handle, uint8_t *buffer, size_t length);
-static nex_err_t nextion_core_uart_read_as_simple_result(nextion_t *handle);
-static bool nextion_core_uart_write_as_byte(const nextion_t *handle, const char *bytes, size_t length);
-static bool nextion_core_uart_write_as_command(nextion_t *handle, const char *format, va_list args);
+static nex_err_t nextion_core_process_response(nextion_t *handle, const parser_t *parser);
+static void nextion_core_process_events(nextion_t *handle);
 
 /**
  * @struct nextion_t
@@ -28,18 +28,14 @@ static bool nextion_core_uart_write_as_command(nextion_t *handle, const char *fo
  */
 struct nextion_t
 {
-    char command_format_buffer[CONFIG_NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE]; /*!< Buffer used for formating commands. */
-    event_callback_on_touch event_callback_on_touch;                              /*!< Callbacks for 'on touch' events. */
-    event_callback_on_touch_coord event_callback_on_touch_coord;                  /*!< Callbacks for 'on touch with coordinates' events. */
-    event_callback_on_device event_callback_on_device;                            /*!< Callbacks for 'on device' events. */
-    SemaphoreHandle_t command_sync;                                               /*!< Mutex used command control. */
-    QueueHandle_t uart_queue;                                                     /*!< Queue used for UART event. */
-    TaskHandle_t uart_task;                                                       /*!< Task used for UART queue handling. */
-    size_t transparent_data_mode_size;                                            /*!< How many bytes are expected to be written while in "Transparent Data Mode". */
-    uart_port_t uart_num;                                                         /*!< UART port number. */
-    bool is_installed;                                                            /*!< If the driver was installed. */
-    bool is_initialized;                                                          /*!< If the driver was initialized. */
-    bool in_transparent_data_mode;                                                /*!< If it is in Transparent Data mode. */
+    uint8_t uart_buffer[64];                       /*!< Buffer to receive UART data. */
+    uint8_t event_buffer[EVENT_PARSE_BUFFER_SIZE]; /*!< Buffer to parse events. */
+    SemaphoreHandle_t command_sync;                /*!< Mutex used command control. */
+    QueueHandle_t uart_queue;                      /*!< Queue used for UART event. */
+    TaskHandle_t uart_task;                        /*!< Task used for UART queue handling. */
+    uart_port_t uart_num;                          /*!< UART port number. */
+    bool is_installed;                             /*!< If the driver was installed. */
+    bool is_initialized;                           /*!< If the driver was initialized. */
 };
 
 nextion_t *nextion_driver_install(uart_port_t uart_num, uint32_t baud_rate, gpio_num_t tx_io_num, gpio_num_t rx_io_num)
@@ -67,7 +63,6 @@ nextion_t *nextion_driver_install(uart_port_t uart_num, uint32_t baud_rate, gpio
     driver->uart_num = uart_num;
     driver->is_installed = true;
     driver->is_initialized = false;
-    driver->in_transparent_data_mode = false;
     driver->command_sync = xSemaphoreCreateBinary();
 
     ESP_ERROR_CHECK(uart_driver_install(uart_num,
@@ -94,6 +89,38 @@ nextion_t *nextion_driver_install(uart_port_t uart_num, uint32_t baud_rate, gpio
     return driver;
 }
 
+nex_err_t nextion_init(nextion_t *handle)
+{
+    CMP_CHECK_HANDLE(handle, NEX_FAIL)
+
+    // As "nextion_command_send" validates if the driver is
+    // initialized, we need to cheat here.
+    handle->is_initialized = true;
+
+    // Set up the semaphore.
+    PROCESS_SYNC_GIVE(handle);
+
+    // Resume the UART task.
+    vTaskResume(handle->uart_task);
+
+    // Just try to wake up, as the device cannot
+    // receive commands when sleeping.
+    if (nextion_system_wakeup(handle) != NEX_OK)
+    {
+        handle->is_initialized = false;
+
+        vTaskSuspend(handle->uart_task);
+
+        CMP_LOGE("failed waking up device");
+
+        return NEX_FAIL;
+    }
+
+    CMP_LOGI("driver initialized");
+
+    return NEX_OK;
+}
+
 bool nextion_driver_delete(nextion_t *handle)
 {
     CMP_CHECK((handle != NULL), "handle error(NULL)", false)
@@ -103,7 +130,7 @@ bool nextion_driver_delete(nextion_t *handle)
         return true;
     }
 
-    nextion_core_command_sync_release(handle);
+    PROCESS_SYNC_GIVE(handle);
 
     CMP_LOGI("deleting driver");
 
@@ -123,129 +150,59 @@ bool nextion_driver_delete(nextion_t *handle)
     return true;
 }
 
-bool nextion_event_callback_set_on_touch(nextion_t *handle, event_callback_on_touch callback)
-{
-    CMP_CHECK_HANDLE(handle, false)
+//
+// Protocol
+//
 
-    handle->event_callback_on_touch = callback;
-
-    return true;
-}
-
-bool nextion_event_callback_set_on_touch_coord(nextion_t *handle, event_callback_on_touch_coord callback)
-{
-    CMP_CHECK_HANDLE(handle, false)
-
-    handle->event_callback_on_touch_coord = callback;
-
-    return true;
-}
-
-bool nextion_event_callback_set_on_device(nextion_t *handle, event_callback_on_device callback)
-{
-    CMP_CHECK_HANDLE(handle, false)
-
-    handle->event_callback_on_device = callback;
-
-    return true;
-}
-
-nex_err_t nextion_init(nextion_t *handle)
-{
-    CMP_CHECK_HANDLE(handle, NEX_FAIL)
-
-    // As "nextion_command_send" validates if the driver is
-    // initialized, we need to cheat here.
-    handle->is_initialized = true;
-
-    // Set up the semaphore.
-    nextion_core_command_sync_release(handle);
-
-    // Resume the UART task.
-    vTaskResume(handle->uart_task);
-
-    // As "bkcmd" is not set, we cannot garantee what will come.
-    // Just try to wake up, as the device cannot receive commands
-    // when sleeping. Any failure will come when setting "bkcmd".
-    nextion_system_wakeup(handle);
-
-    // All logic relies on receiving responses at all times.
-    if (nextion_command_send(handle, "bkcmd=3") != NEX_OK)
-    {
-        handle->is_initialized = false;
-
-        vTaskSuspend(handle->uart_task);
-
-        CMP_LOGE("failed initializing display");
-
-        return NEX_FAIL;
-    }
-
-    CMP_LOGI("driver initialized");
-
-    return NEX_OK;
-}
-
-nex_err_t nextion_command_send_get_bytes(nextion_t *handle, uint8_t *buffer, size_t *length, const char *command, ...)
+nex_err_t nextion_protocol_send_instruction(nextion_t *handle, const char *instruction, size_t instruction_length, const parser_t *parser)
 {
     CMP_CHECK_SEND_COMMAND_HANDLE_STATE(handle)
-    CMP_CHECK((command != NULL), "command error(NULL)", NEX_FAIL)
-    CMP_CHECK((nextion_core_command_sync_acquire(handle, pdMS_TO_TICKS(CONFIG_NEX_UART_MUTEX_WAIT_TIME_MS))), "sync error(not acquired)", NEX_FAIL)
+    CMP_CHECK((instruction != NULL), "instruction error(NULL)", NEX_FAIL)
+    CMP_CHECK((PROCESS_SYNC_TAKE(handle, pdMS_TO_TICKS(CONFIG_NEX_UART_MUTEX_WAIT_TIME_MS))), "sync error(not acquired)", NEX_FAIL)
 
-    nex_err_t code = NEX_OK;
-    va_list args;
-    va_start(args, command);
+    // Process any event remaining in the buffer
+    // before sending a command, so we can be sure
+    // that the data received is a command response.
+    nextion_core_process_events(handle);
 
-    if (!nextion_core_uart_write_as_command(handle, command, args))
+    const char END_SEQUENCE[NEX_DVC_CMD_END_LENGTH] = {NEX_DVC_CMD_END_SEQUENCE};
+
+    nex_err_t code = NEX_DVC_INS_FAIL;
+
+    if (uart_write_bytes(handle->uart_num, instruction, instruction_length) < 1 || uart_write_bytes(handle->uart_num, END_SEQUENCE, NEX_DVC_CMD_END_LENGTH) < 1)
     {
-        CMP_LOGE("failed sending command");
+        CMP_LOGE("failed writing command");
 
-        code = NEX_FAIL;
+        goto END;
+    }
+
+    if (uart_wait_tx_done(handle->uart_num, pdMS_TO_TICKS(CONFIG_NEX_UART_TRANS_WAIT_TIME_MS)) != ESP_OK)
+    {
+        CMP_LOGE("failed waiting transmission");
+
+        goto END;
+    }
+
+    if (parser != NULL)
+    {
+        code = nextion_core_process_response(handle, parser);
     }
     else
     {
-        *length = (int)nextion_core_uart_read_as_byte(handle, buffer, *length);
-
-        if (*length == -1)
-        {
-            code = NEX_TIMEOUT;
-        }
+        code = NEX_DVC_INS_OK;
     }
 
-    nextion_core_command_sync_release(handle);
+END:
+    PROCESS_SYNC_GIVE(handle);
 
-    va_end(args);
-
-    return code;
-}
-
-nex_err_t nextion_command_send_variadic(nextion_t *handle, const char *command, va_list args)
-{
-    CMP_CHECK_SEND_COMMAND_HANDLE_STATE(handle)
-    CMP_CHECK((command != NULL), "command error(NULL)", NEX_FAIL)
-    CMP_CHECK((nextion_core_command_sync_acquire(handle, pdMS_TO_TICKS(CONFIG_NEX_UART_MUTEX_WAIT_TIME_MS))), "sync error(not acquired)", NEX_FAIL)
-
-    nex_err_t code = NEX_DVC_INSTRUCTION_FAIL;
-
-    if (!nextion_core_uart_write_as_command(handle, command, args))
-    {
-        CMP_LOGE("failed sending command");
-    }
-    else
-    {
-        code = nextion_core_uart_read_as_simple_result(handle);
-    }
-
-    nextion_core_command_sync_release(handle);
-
-    if (code == NEX_DVC_INSTRUCTION_FAIL)
+    if (code == NEX_DVC_INS_FAIL)
     {
         CMP_LOGW("device returned failure");
 
         return NEX_FAIL;
     }
 
-    if (code == NEX_DVC_INSTRUCTION_OK)
+    if (code == NEX_DVC_INS_OK)
     {
         return NEX_OK;
     }
@@ -253,117 +210,137 @@ nex_err_t nextion_command_send_variadic(nextion_t *handle, const char *command, 
     return code;
 }
 
-nex_err_t nextion_command_send(nextion_t *handle, const char *command, ...)
+nex_err_t nextion_protocol_send_raw_byte(const nextion_t *handle, uint8_t value)
 {
-    va_list args;
-    va_start(args, command);
+    uart_port_t uart = handle->uart_num;
 
-    nex_err_t result = nextion_command_send_variadic(handle, command, args);
-
-    va_end(args);
-
-    return result;
-}
-
-nex_err_t nextion_transparent_data_mode_begin(nextion_t *handle,
-                                              size_t data_size,
-                                              const char *command,
-                                              ...)
-{
-    CMP_CHECK_HANDLE(handle, NEX_FAIL)
-    CMP_CHECK((command != NULL), "command error(NULL)", NEX_FAIL)
-    CMP_CHECK((handle->in_transparent_data_mode == false), "state error(in transparent data mode)", NEX_FAIL)
-    CMP_CHECK((data_size > 0), "data_size error(<1)", NEX_FAIL)
-    CMP_CHECK((data_size < NEX_DVC_TRANSPARENT_DATA_MAX_DATA_SIZE), "data_size error(>NEX_DVC_TRANSPARENT_DATA_MAX_DATA_SIZE)", NEX_FAIL)
-
-    va_list args;
-    va_start(args, command);
-
-    nex_err_t result = nextion_command_send_variadic(handle, command, args);
-
-    va_end(args);
-
-    if (result != NEX_DVC_RSP_TRANSPARENT_DATA_READY)
+    if (uart_write_bytes(uart, (const void *)&value, 1) < 1)
     {
-        return result;
+        CMP_LOGE("failed writing command");
+
+        return NEX_FAIL;
     }
 
-    handle->in_transparent_data_mode = true;
-    handle->transparent_data_mode_size = data_size;
+    if (uart_wait_tx_done(uart, pdMS_TO_TICKS(CONFIG_NEX_UART_TRANS_WAIT_TIME_MS)) != ESP_OK)
+    {
+        CMP_LOGE("failed waiting transmission");
+
+        return NEX_FAIL;
+    }
 
     return NEX_OK;
 }
 
-nex_err_t nextion_transparent_data_mode_write(nextion_t *handle, uint8_t value)
+//
+// Core
+//
+
+static nex_err_t nextion_core_process_response(nextion_t *handle, const parser_t *parser)
 {
-    CMP_CHECK_HANDLE(handle, NEX_FAIL)
-    CMP_CHECK((handle->in_transparent_data_mode), "state error(not in transparent data mode)", NEX_FAIL)
-    CMP_CHECK((handle->transparent_data_mode_size > 0), "state error(all data was written)", NEX_FAIL)
-
-    const uint8_t buffer[1] = {value};
-
-    if (!nextion_core_uart_write_as_byte(handle, (const char *)buffer, 1))
+    if (parser == NULL)
     {
-        CMP_LOGE("failed writing to the communication port");
-
-        return NEX_FAIL;
+        return NEX_DVC_INS_OK;
     }
 
-    handle->transparent_data_mode_size--;
+    uint8_t *buffer = handle->uart_buffer;
 
-    return NEX_OK;
+    int total_bytes_read = 0;
+    int bytes_read = uart_read_bytes(handle->uart_num, buffer + total_bytes_read, 1, pdMS_TO_TICKS(CONFIG_NEX_UART_RECV_WAIT_TIME_MS));
+
+    total_bytes_read += bytes_read;
+
+    if (bytes_read == 0)
+    {
+        return NEX_DVC_INS_OK;
+    }
+
+    if (bytes_read == -1)
+    {
+        return NEX_TIMEOUT;
+    }
+
+    const uint8_t data_id = buffer[0];
+
+    if (!parser->can_parse(parser, data_id))
+    {
+        CMP_LOGE("parser cannot parser response: %d", data_id);
+
+        uart_flush(handle->uart_num);
+
+        return NEX_DVC_INS_FAIL;
+    }
+
+    while (parser->need_more_bytes(parser, buffer, total_bytes_read) > 0)
+    {
+        total_bytes_read += uart_read_bytes(handle->uart_num, buffer + total_bytes_read, 1, pdMS_TO_TICKS(CONFIG_NEX_UART_RECV_WAIT_TIME_MS));
+    }
+
+    if (!parser->parse(parser, buffer, total_bytes_read))
+    {
+        CMP_LOGE("parser cannot parser response: %d", data_id);
+
+        uart_flush(handle->uart_num);
+
+        return NEX_DVC_INS_FAIL;
+    }
+
+    return data_id;
 }
 
-nex_err_t nextion_transparent_data_mode_end(nextion_t *handle)
+static void nextion_core_process_events(nextion_t *handle)
 {
-    CMP_CHECK_HANDLE(handle, NEX_FAIL)
-    CMP_CHECK((handle->in_transparent_data_mode), "state error(not in transparent data mode)", NEX_FAIL)
-    CMP_CHECK((handle->transparent_data_mode_size == 0), "state error(not all data was written)", NEX_FAIL)
+    uint8_t *buffer = handle->uart_buffer;
 
-    uint8_t code = 0;
-    uint8_t buffer[NEX_DVC_CMD_ACK_LENGTH];
-    size_t bytes_read = (size_t)nextion_core_uart_read_as_byte(handle, buffer, NEX_DVC_CMD_ACK_LENGTH);
-
-    if (bytes_read < 1)
+    do
     {
-        CMP_LOGE("failed reading response");
+        int total_bytes_read = 0;
+        int bytes_read = uart_read_bytes(handle->uart_num, buffer + total_bytes_read, 1, pdMS_TO_TICKS(CONFIG_NEX_UART_RECV_WAIT_TIME_MS));
 
-        return NEX_FAIL;
-    }
+        total_bytes_read += bytes_read;
 
-    if (bytes_read < NEX_DVC_CMD_ACK_LENGTH)
-    {
-        CMP_LOGE("invalid response length, expected %d but received %d", NEX_DVC_CMD_ACK_LENGTH, bytes_read);
+        if (bytes_read < 1)
+        {
+            return;
+        }
 
-        return NEX_FAIL;
-    }
+        const uint8_t data_id = buffer[0];
+        event_parser_t event_parser;
 
-    code = buffer[0];
+        if (!try_get_event_parser(data_id, handle->event_buffer, sizeof(handle->event_buffer), &event_parser))
+        {
+            CMP_LOGE("parser not found for event: %d", data_id);
 
-    // Here we must have a response message indicating end.
+            uart_flush(handle->uart_num);
 
-    if (!NEX_DVC_CODE_IS_RESPONSE(code, bytes_read))
-    {
-        CMP_LOGE("response code not expected");
+            return;
+        }
 
-        return NEX_FAIL;
-    }
+        if (!event_parser.base.can_parse(&event_parser.base, data_id))
+        {
+            CMP_LOGE("parser found cannot parse event: %d", data_id);
 
-    if (code != NEX_DVC_RSP_TRANSPARENT_DATA_FINISHED)
-    {
-        CMP_LOGE("response code is not data finished");
+            uart_flush(handle->uart_num);
 
-        return NEX_FAIL;
-    }
+            return;
+        }
 
-    handle->in_transparent_data_mode = false;
+        while (event_parser.base.need_more_bytes(&event_parser.base, buffer, total_bytes_read) > 0)
+        {
+            total_bytes_read += uart_read_bytes(handle->uart_num, buffer + total_bytes_read, 1, pdMS_TO_TICKS(CONFIG_NEX_UART_RECV_WAIT_TIME_MS));
+        }
 
-    return NEX_OK;
+        if (!event_parser.base.parse(&event_parser.base, buffer, total_bytes_read))
+        {
+            CMP_LOGE("parser cannot parser event: %d", data_id);
+
+            uart_flush(handle->uart_num);
+
+            return;
+        }
+
+        esp_event_post(NEXTION_EVENT, event_parser.event_id, handle->event_buffer, event_parser.required_buffer_size, portMAX_DELAY);
+    } while (true);
 }
-
-/* ======================
- *     Core Methods
- *======================= */
 
 static void nextion_core_uart_task(void *pvParameters)
 {
@@ -392,17 +369,17 @@ static void nextion_core_uart_task(void *pvParameters)
 
             // If we can acquire a semaphore it means the event was sent by the device
             // automatically. It will only fail to acquire the semaphore when a command
-            // was called. For commands and Transparent Data mode, we do nothing,
-            // let them handle the bytes.
-
-            if (!handle->in_transparent_data_mode && nextion_core_command_sync_acquire(handle, 0))
+            // was called.
+            if (PROCESS_SYNC_TAKE(handle, portMAX_DELAY))
             {
                 CMP_LOGD("processing events");
 
-                nextion_core_event_process(handle);
-                nextion_core_command_sync_release(handle);
+                nextion_core_process_events(handle);
+
+                PROCESS_SYNC_GIVE(handle);
             }
             break;
+
         case UART_FIFO_OVF:
             CMP_LOGW("UART hw fifo overflow");
 
@@ -410,6 +387,7 @@ static void nextion_core_uart_task(void *pvParameters)
 
             xQueueReset(queue);
             break;
+
         case UART_BUFFER_FULL:
             CMP_LOGW("UART buffer full");
 
@@ -417,277 +395,9 @@ static void nextion_core_uart_task(void *pvParameters)
 
             xQueueReset(queue);
             break;
+
         default:
             break;
         }
     }
-}
-
-static bool nextion_core_event_process(nextion_t *handle)
-{
-    CMP_CHECK_HANDLE(handle, false)
-    CMP_CHECK((handle->in_transparent_data_mode == false), "state error(in transparent data mode)", false)
-    CMP_CHECK((handle->is_installed), "driver error(not installed)", false)
-    CMP_CHECK((handle->is_initialized), "driver error(not initialized)", false)
-
-    uint8_t buffer[NEX_DVC_EVT_MAX_RESPONSE_LENGTH];
-    int bytes_read = (int)nextion_core_uart_read_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
-
-    while (bytes_read > -1)
-    {
-        CMP_LOGD("parsed event %d with size %d", buffer[0], bytes_read);
-
-        if (!NEX_DVC_CODE_IS_EVENT(buffer[0], bytes_read))
-        {
-            CMP_LOGW("response code %d was not an event, some data might be corrupted", buffer[0]);
-
-            return false;
-        }
-
-        if (!nextion_core_event_dispatch(handle, buffer, bytes_read))
-        {
-            CMP_LOGW("failure dispatching event from event handler");
-
-            return false;
-        }
-
-        bytes_read = (int)nextion_core_uart_read_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
-    }
-
-    return true;
-}
-
-/**
- * @brief Dispatches an event to a callback.
- * @param handle Nextion context pointer.
- * @param buffer Buffer containing event data.
- * @param buffer_length Buffer length.
- * @return True if success, otherwise, false.
- */
-static bool nextion_core_event_dispatch(nextion_t *handle, const uint8_t *buffer, const size_t buffer_length)
-{
-    CMP_CHECK((buffer_length >= NEX_DVC_CMD_ACK_LENGTH), "buffer length error(<NEX_DVC_CMD_ACK_LENGTH)", false)
-
-    const uint8_t code = buffer[0];
-
-    CMP_LOGD("preparing event %d", code);
-
-    switch (code)
-    {
-    case NEX_DVC_EVT_TOUCH_OCCURRED:
-        if (buffer_length == 7 && handle->event_callback_on_touch != NULL)
-        {
-            nextion_on_touch_event_t event = {
-                .handle = handle,
-                .page_id = buffer[1],
-                .component_id = buffer[2],
-                .state = buffer[3]};
-
-            CMP_LOGD("dispatching 'on touch' event");
-
-            handle->event_callback_on_touch(event);
-        }
-        break;
-    case NEX_DVC_EVT_TOUCH_COORDINATE_AWAKE:
-    case NEX_DVC_EVT_TOUCH_COORDINATE_ASLEEP:
-        if (handle->event_callback_on_touch_coord != NULL && buffer_length == 9)
-        {
-            // Coordinates: 2 bytes and unsigned = uint16_t.
-            // Sent in big endian format.
-            nextion_on_touch_coord_event_t event = {
-                .handle = handle,
-                .x = (uint16_t)(((uint16_t)buffer[1] << 8) | (uint16_t)buffer[2]),
-                .y = (uint16_t)(((uint16_t)buffer[3] << 8) | (uint16_t)buffer[4]),
-                .state = buffer[5],
-                .exited_sleep = code == NEX_DVC_EVT_TOUCH_COORDINATE_ASLEEP};
-
-            CMP_LOGD("dispatching 'on touch coord' event");
-
-            handle->event_callback_on_touch_coord(event);
-        }
-        break;
-    default:
-        if (handle->event_callback_on_device != NULL)
-        {
-            nextion_on_device_event_t event = {
-                .handle = handle,
-                .state = code};
-
-            CMP_LOGD("dispatching 'on device' event");
-
-            handle->event_callback_on_device(event);
-        }
-    }
-
-    return true;
-}
-
-static bool nextion_core_command_sync_acquire(nextion_t *handle, TickType_t timeout)
-{
-    return xSemaphoreTake(handle->command_sync, timeout) == pdTRUE;
-}
-
-static void nextion_core_command_sync_release(nextion_t *handle)
-{
-    xSemaphoreGive(handle->command_sync);
-}
-
-static nex_err_t nextion_core_uart_read_as_simple_result(nextion_t *handle)
-{
-    uint8_t buffer[NEX_DVC_EVT_MAX_RESPONSE_LENGTH];
-
-    int bytes_read = 0;
-
-    do
-    {
-        bytes_read = (int)nextion_core_uart_read_as_byte(handle, buffer, NEX_DVC_EVT_MAX_RESPONSE_LENGTH);
-
-        if (bytes_read == -1)
-        {
-            // Some commands only return data on failure.
-            // Event processing will throw this too when no event response is found.
-            // That's why this is a debug; too much noise.
-
-            CMP_LOGD("response timed out");
-
-            return NEX_TIMEOUT;
-        }
-
-        // Depending on how much device events we're receiving,
-        // it may happen that an event response will be read.
-        // Dispatch it and read the next response until ours
-        // is found.
-
-        if (NEX_DVC_CODE_IS_EVENT(buffer[0], bytes_read))
-        {
-            CMP_LOGW("parsed the event %d on command handler", buffer[0]);
-
-            if (!nextion_core_event_dispatch(handle, buffer, bytes_read))
-            {
-                CMP_LOGW("failure dispatching event %d from command handler", buffer[0]);
-            }
-
-            continue;
-        }
-
-        break;
-    } while (true);
-
-    if (bytes_read != NEX_DVC_CMD_ACK_LENGTH)
-    {
-        CMP_LOGE("invalid response size, expected %d but received %d", NEX_DVC_CMD_ACK_LENGTH, bytes_read);
-
-        return NEX_DVC_INSTRUCTION_FAIL;
-    }
-
-    return buffer[0];
-}
-
-static int32_t nextion_core_uart_read_as_byte(const nextion_t *handle, uint8_t *buffer, size_t length)
-{
-    uint8_t *movable_buffer = buffer;
-    int ends_found = 0; // Some commands use NEX_DVC_CMD_END_LENGTH chars as end response.
-    int bytes_read = 0;
-    int result = 0;
-
-    for (size_t i = 0; i < length; i++)
-    {
-        result = uart_read_bytes(handle->uart_num, movable_buffer, 1, pdMS_TO_TICKS(CONFIG_NEX_UART_RECV_WAIT_TIME_MS));
-
-        if (result > 0) // We got something.
-        {
-            if (buffer[i] == NEX_DVC_CMD_END_VALUE)
-            {
-                ends_found++;
-            }
-
-            movable_buffer++;
-            bytes_read++;
-
-            // Stop when finding a command ending.
-            // Not every read byte request will have a
-            // command ending.
-            if (ends_found == NEX_DVC_CMD_END_LENGTH)
-            {
-                break;
-            }
-
-            continue;
-        }
-
-        if (result == 0) // It's a timeout.
-        {
-            // If we have read something before the timeout,
-            // we do not send an error. The "length" parameter
-            // sometimes is an estimation; let the caller decide
-            // if there is enough data or not.
-
-            if (bytes_read > 0)
-            {
-                return bytes_read;
-            }
-
-            // Some commands only return data on failure.
-            // Event processing will throw this too when no event response is found.
-            // That's why this is a debug; too much noise.
-
-            CMP_LOGD("response timed out");
-
-            return -1;
-        }
-
-        if (result == -1) // UART error.
-        {
-            CMP_LOGE("failed reading UART");
-            return -1;
-        }
-    }
-
-    return bytes_read;
-}
-
-static bool nextion_core_uart_write_as_command(nextion_t *handle, const char *format, va_list args)
-{
-    const char END_SEQUENCE[NEX_DVC_CMD_END_LENGTH] = {NEX_DVC_CMD_END_SEQUENCE};
-
-    int size = vsnprintf(handle->command_format_buffer, CONFIG_NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE, format, args);
-
-    uart_port_t uart = handle->uart_num;
-
-    if (uart_write_bytes(uart, handle->command_format_buffer, size) < 0 || uart_write_bytes(uart, END_SEQUENCE, NEX_DVC_CMD_END_LENGTH) < 0)
-    {
-        CMP_LOGE("failed writing command");
-
-        return false;
-    }
-
-    if (uart_wait_tx_done(uart, pdMS_TO_TICKS(CONFIG_NEX_UART_TRANS_WAIT_TIME_MS)) != ESP_OK)
-    {
-        CMP_LOGE("failed waiting transmission");
-
-        return false;
-    }
-
-    return true;
-}
-
-static bool nextion_core_uart_write_as_byte(const nextion_t *handle, const char *bytes, size_t length)
-{
-    uart_port_t uart = handle->uart_num;
-
-    if (uart_write_bytes(uart, bytes, length) < 0)
-    {
-        CMP_LOGE("failed writing command");
-
-        return false;
-    }
-
-    if (uart_wait_tx_done(uart, pdMS_TO_TICKS(CONFIG_NEX_UART_TRANS_WAIT_TIME_MS)) != ESP_OK)
-    {
-        CMP_LOGE("failed waiting transmission");
-
-        return false;
-    }
-
-    return true;
 }

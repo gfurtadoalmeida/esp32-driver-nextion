@@ -68,14 +68,14 @@ extern "C"
      * @param[in] handle Nextion context pointer.
      * @param[in] component_name A null-terminated string with the component name.
      * @param[out] buffer Location where the retrieved text will be stored. Must take the null-terminator into account.
-     * @param[in] expected_length Expected text length that might be retrieved. Will be update with the retrieved text length.
+     * @param[in] buffer_length Buffer length.
      *
      * @return NEX_OK or NEX_FAIL | NEX_DVC_ERR_INVALID_VARIABLE_OR_ATTRIBUTE | NEX_DVC_ERR_INVALID_COMPONENT.
      */
     nex_err_t nextion_component_get_text(nextion_t *handle,
                                          const char *component_name,
                                          char *buffer,
-                                         size_t *expected_length);
+                                         size_t buffer_length);
 
     /**
      * @brief Get a component ".val" value.
@@ -112,7 +112,7 @@ extern "C"
      */
     nex_err_t nextion_component_set_text(nextion_t *handle,
                                          const char *component_name,
-                                         char *text);
+                                         const char *text);
 
     /**
      * @brief Set a component ".val" value.
@@ -147,14 +147,14 @@ extern "C"
      * @param[in] component_name A null-terminated string with the component name.
      * @param[in] property_name A null-terminated string with the property name to retrieve the text from.
      * @param[out] buffer Location where the retrieved text will be stored. Must take the null-terminator into account.
-     * @param[in] expected_length Expected text length that might be retrieved. Will be update with the retrieved text length.
+     * @param[in] buffer_length Buffer length.
      * @return NEX_OK or NEX_FAIL | NEX_DVC_ERR_INVALID_VARIABLE_OR_ATTRIBUTE | NEX_DVC_ERR_INVALID_COMPONENT.
      */
     nex_err_t nextion_component_get_property_text(nextion_t *handle,
                                                   const char *component_name,
                                                   const char *property_name,
                                                   char *buffer,
-                                                  size_t *expected_length);
+                                                  size_t expected_length);
 
     /**
      * @brief Get a number from a component property.
@@ -181,7 +181,7 @@ extern "C"
     nex_err_t nextion_component_set_property_text(nextion_t *handle,
                                                   const char *component_name,
                                                   const char *property_name,
-                                                  char *text);
+                                                  const char *text);
 
     /**
      * @brief Set a component property with number.
