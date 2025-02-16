@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      ESP_DOCKER_IMAGE: gfurtadoalmeida/esp32-docker-sonar:v5.3
+      ESP_DOCKER_IMAGE: gfurtadoalmeida/esp32-docker-sonar:v5.4
 
     steps:
     - uses: actions/checkout@v4

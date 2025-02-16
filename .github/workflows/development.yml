@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
 
 env:
-  ESP_DOCKER_IMAGE: gfurtadoalmeida/esp32-docker-sonar:v5.3
+  ESP_DOCKER_IMAGE: gfurtadoalmeida/esp32-docker-sonar:v5.4
 
 jobs:
   build:

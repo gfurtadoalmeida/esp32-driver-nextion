@@ -1,5 +1,5 @@
 $ProjectFolder = $PSScriptRoot
-$EspIdfDockerImage = 'gfurtadoalmeida/esp32-docker-sonar:v5.1'
+$EspIdfDockerImage = 'gfurtadoalmeida/esp32-docker-sonar:v5.4'
 
 switch ($args[0]) {
     'build' {
