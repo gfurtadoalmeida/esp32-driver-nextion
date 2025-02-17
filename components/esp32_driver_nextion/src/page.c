@@ -10,7 +10,7 @@ nex_err_t nextion_page_get(nextion_t *handle, uint8_t *page_id)
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
     CMP_CHECK((page_id != NULL), "page_id error(NULL)", NEX_FAIL)
 
-    parser_t parser = PARSER_SENDME(page_id, sizeof(page_id));
+    parser_t parser = PARSER_SENDME(page_id, sizeof(uint8_t));
 
     nex_err_t code = nextion_protocol_send_instruction(handle, "sendme", 6, &parser);
 
