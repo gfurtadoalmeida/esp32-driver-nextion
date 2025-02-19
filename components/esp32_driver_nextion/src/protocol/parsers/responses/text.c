@@ -5,12 +5,12 @@
 
 static int find_text_end(const uint8_t *data, size_t length);
 
-bool parser_rsp_text_can_parse(const parser_t *parser, const uint8_t data_id)
+bool parser_rsp_text_can_parse(const parser_t *, const uint8_t data_id)
 {
     return data_id == NEX_DVC_RSP_GET_STRING || NEX_DVC_CODE_IS_ACK_RESPONSE(data_id);
 }
 
-int parser_rsp_text_need_more_bytes(const parser_t *parser, const uint8_t *data, size_t length)
+int parser_rsp_text_need_more_bytes(const parser_t *, const uint8_t *data, size_t length)
 {
     if (length < 4)
     {

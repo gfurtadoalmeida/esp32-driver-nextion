@@ -119,7 +119,7 @@ nex_err_t nextion_eeprom_stream_begin(nextion_t *handle, uint16_t address, size_
     return code;
 }
 
-nex_err_t nextion_eeprom_stream_write(nextion_t *handle, uint8_t value)
+nex_err_t nextion_eeprom_stream_write(const nextion_t *handle, uint8_t value)
 {
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
 

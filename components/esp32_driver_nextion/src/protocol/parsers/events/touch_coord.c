@@ -2,17 +2,17 @@
 #include "esp32_driver_nextion/base/events.h"
 #include "protocol/parsers/events/touch_coord.h"
 
-bool parser_evt_touch_coord_can_parse(const parser_t *parser, const uint8_t data_id)
+bool parser_evt_touch_coord_can_parse(const parser_t *, const uint8_t data_id)
 {
     return data_id == NEX_DVC_EVT_TOUCH_COORDINATE_AWAKE || data_id == NEX_DVC_EVT_TOUCH_COORDINATE_ASLEEP;
 }
 
-int parser_evt_touch_coord_need_more_bytes(const parser_t *parser, const uint8_t *data, size_t length)
+int parser_evt_touch_coord_need_more_bytes(const parser_t *, const uint8_t *, size_t length)
 {
     return 9 - length;
 }
 
-bool parser_evt_touch_coord_parse(const parser_t *parser, const uint8_t *data, size_t length)
+bool parser_evt_touch_coord_parse(const parser_t *parser, const uint8_t *data, size_t)
 {
     nextion_on_touch_coord_event_t *event = (nextion_on_touch_coord_event_t *)parser->result_buffer;
 
