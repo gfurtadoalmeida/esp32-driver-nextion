@@ -10,13 +10,19 @@
 
 static const char TAG[] = "nextion";
 
-static TaskHandle_t task_handle_user_interface;
+static void callback_touch_event(TaskHandle_t task_handle_user_interface,
+                                 esp_event_base_t event_base,
+                                 nextion_event_t event_id,
+                                 const nextion_on_touch_event_t *event);
 
-static void callback_touch_event(nextion_on_touch_event_t event);
 static void process_callback_queue(void *pvParameters);
 
 void app_main(void)
 {
+    esp_event_loop_create_default();
+
+    TaskHandle_t task_handle_user_interface;
+
     // Initialize UART.
     nextion_t *nextion_handle = nextion_driver_install(UART_NUM_2,
                                                        115200,
@@ -25,10 +31,6 @@ void app_main(void)
 
     // Do basic configuration.
     nextion_init(nextion_handle);
-
-    // Set a callback for touch events.
-    nextion_event_callback_set_on_touch(nextion_handle,
-                                        callback_touch_event);
 
     // Go to page with id 0.
     nextion_page_set(nextion_handle, "0");
@@ -41,6 +43,9 @@ void app_main(void)
                 5,
                 &task_handle_user_interface);
 
+    // Set a callback for touch events.
+    esp_event_handler_register(NEXTION_EVENT, NEXTION_EVENT_TOUCHED, (esp_event_handler_t)callback_touch_event, task_handle_user_interface);
+
     ESP_LOGI(TAG, "waiting for button to be pressed");
 
     vTaskDelay(portMAX_DELAY);
@@ -48,20 +53,27 @@ void app_main(void)
     // Will never reach here.
     // It is just to show how to delete the driver.
 
+    esp_event_handler_unregister(NEXTION_EVENT, NEXTION_EVENT_TOUCHED, (esp_event_handler_t)callback_touch_event);
+
     vTaskDelete(task_handle_user_interface);
 
     // Free resources.
     nextion_driver_delete(nextion_handle);
 }
 
-static void callback_touch_event(nextion_on_touch_event_t event)
+static void callback_touch_event(TaskHandle_t task_handle_user_interface,
+                                 esp_event_base_t event_base,
+                                 nextion_event_t event_id,
+                                 const nextion_on_touch_event_t *event)
 {
-    if (event.page_id == 0 && event.component_id == 5 && event.state == NEXTION_TOUCH_RELEASED)
+    ESP_LOGI(TAG, "EVENTO: %d: page %d, cmp %d, state: %d", event_id, event->page_id, event->component_id, event->state);
+
+    if (event->page_id == 0 && event->component_id == 3 && event->state == NEXTION_TOUCH_RELEASED)
     {
         ESP_LOGI(TAG, "button pressed");
 
         xTaskNotify(task_handle_user_interface,
-                    event.component_id,
+                    event->component_id,
                     eSetValueWithOverwrite);
     }
 }
@@ -72,7 +84,6 @@ static void callback_touch_event(nextion_on_touch_event_t event)
 
     nextion_t *nextion_handle = (nextion_t *)pvParameters;
     char text_buffer[MAX_TEXT_LENGTH];
-    size_t text_length = MAX_TEXT_LENGTH;
     int32_t number;
 
     for (;;)
@@ -81,16 +92,16 @@ static void callback_touch_event(nextion_on_touch_event_t event)
 
         // Get the text value from a component.
         nextion_component_get_text(nextion_handle,
-                                   "value_text",
+                                   "t0",
                                    text_buffer,
-                                   &text_length);
+                                   MAX_TEXT_LENGTH);
 
         // Get the integer value from a component.
         nextion_component_get_value(nextion_handle,
-                                    "value_number",
+                                    "n0",
                                     &number);
 
         ESP_LOGI(TAG, "text: %s", text_buffer);
-        ESP_LOGI(TAG, "number: %lu", number);
+        ESP_LOGI(TAG, "number: %ld", number);
     }
 }

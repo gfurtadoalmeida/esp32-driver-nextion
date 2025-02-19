@@ -1,4 +1,4 @@
-file(GLOB srcsCOMP "src/*.c")
+file(GLOB_RECURSE srcsCOMP "src/*.c")
 
 idf_component_register(
     SRCS
@@ -9,4 +9,5 @@ idf_component_register(
         "private_include"
     REQUIRES
         driver
+        esp_event
 )

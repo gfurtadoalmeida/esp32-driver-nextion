@@ -12,35 +12,7 @@ extern "C"
 #endif
 
     /**
-     * @brief Send a command that retrieves a null-terminated string.
-     * @note It's the caller responsibility to allocate a buffer big enough to
-     * hold the text returned.
-     * @param[in] handle Nextion context pointer.
-     * @param[in] command A null-terminated string with the command to be sent.
-     * @param[out] buffer Location where the retrieved text will be stored. Must take the null-terminator into account.
-     * @param[in] expected_length Expected text length that might be retrieved. Will be update with the retrieved text length.
-     * @return NEX_OK or NEX_DVC_ERR_INVALID_VARIABLE_OR_ATTRIBUTE.
-     */
-    nex_err_t nextion_system_get_text(nextion_t *handle,
-                                      const char *command,
-                                      char *buffer,
-                                      size_t *expected_length);
-
-    /**
-     * @brief Send a command that retrieves a signed number.
-     * @param[in] handle Nextion context pointer.
-     * @param[in] command A null-terminated string with the command to be sent.
-     * @param[out] number Location where the retrieved number will be stored.
-     * @return NEX_OK or NEX_DVC_ERR_INVALID_VARIABLE_OR_ATTRIBUTE.
-     */
-    nex_err_t nextion_system_get_number(nextion_t *handle,
-                                        const char *command,
-                                        int32_t *number);
-
-    /**
      * @brief Reset the display, losing all volatile configurations.
-     * @note It's mandatory, after (NEX_DVC_RESET_WAIT_TIME_MS) ms, to call
-     * "nextion_init" after calling this function.
      * @param[in] handle Nextion context pointer.
      * @return NEX_OK or NEX_FAIL.
      */
@@ -88,7 +60,7 @@ extern "C"
      * @param[out] seconds Seconds to wait. Range: 0 (disabled) to 65535 (18h 12m 15s).
      * @return NEX_OK or NEX_FAIL.
      */
-    nex_err_t nextion_system_get_sleep_no_touch(nextion_t *handle, uint16_t *seconds);
+    nex_err_t nextion_system_get_sleep_on_no_touch(nextion_t *handle, uint16_t *seconds);
 
     /**
      * @brief Set how long the display will be on after the last touch.
@@ -97,7 +69,7 @@ extern "C"
      * @param[in] seconds Seconds to wait. Range: 0 (disabled) to 65535 (18h 12m 15s).
      * @return NEX_OK or NEX_FAIL.
      */
-    nex_err_t nextion_system_set_sleep_no_touch(nextion_t *handle, uint16_t seconds);
+    nex_err_t nextion_system_set_sleep_on_no_touch(nextion_t *handle, uint16_t seconds);
 
     /**
      * @brief Get how long the display will be on after the last serial command.
@@ -105,7 +77,7 @@ extern "C"
      * @param[out] seconds Seconds to wait. Range: 0 (disabled) to 65535 (18h 12m 15s).
      * @return NEX_OK or NEX_FAIL.
      */
-    nex_err_t nextion_system_get_sleep_no_serial(nextion_t *handle, uint16_t *seconds);
+    nex_err_t nextion_system_get_sleep_on_no_serial(nextion_t *handle, uint16_t *seconds);
 
     /**
      * @brief Set how long the display will be on after the last serial command.
@@ -114,7 +86,7 @@ extern "C"
      * @param[in] seconds Seconds to wait. Range: 0 (disabled) to 65535 (18h 12m 15s).
      * @return NEX_OK or NEX_FAIL.
      */
-    nex_err_t nextion_system_set_sleep_no_serial(nextion_t *handle, uint16_t seconds);
+    nex_err_t nextion_system_set_sleep_on_no_serial(nextion_t *handle, uint16_t seconds);
 
     /**
      * @brief Set if the display will turn on when touched.
@@ -142,6 +114,54 @@ extern "C"
      * @return NEX_OK or NEX_FAIL.
      */
     nex_err_t nextion_system_set_send_xy(nextion_t *handle, bool send_xy);
+
+    /**
+     * @brief Get a text from a variable.
+     * @note It's the caller responsibility to allocate a buffer big enough to
+     * hold the text returned.
+     * @param[in] handle Nextion context pointer.
+     * @param[in] variable_name A null-terminated variable name.
+     * @param[out] buffer Location where the retrieved text will be stored. Must take the null-terminator into account.
+     * @param[in] buffer_length Buffer length.
+     * @return NEX_OK or NEX_DVC_ERR_INVALID_VARIABLE_OR_ATTRIBUTE.
+     */
+    nex_err_t nextion_system_get_variable_text(nextion_t *handle,
+                                               const char *variable_name,
+                                               char *buffer,
+                                               size_t buffer_lenght);
+
+    /**
+     * @brief Get a signed number from a variable.
+     * @param[in] handle Nextion context pointer.
+     * @param[in] variable_name A null-terminated variable name.
+     * @param[out] number Location where the retrieved number will be stored.
+     * @return NEX_OK or NEX_DVC_ERR_INVALID_VARIABLE_OR_ATTRIBUTE.
+     */
+    nex_err_t nextion_system_get_variable_number(nextion_t *handle,
+                                                 const char *variable_name,
+                                                 int32_t *number);
+
+    /**
+     * @brief Set a variable value with a text.
+     * @param[in] handle Nextion context pointer.
+     * @param[in] variable_name A null-terminated variable name.
+     * @param[in] text A null-terminated string with the text.
+     * @return NEX_OK or NEX_DVC_ERR_INVALID_VARIABLE_OR_ATTRIBUTE.
+     */
+    nex_err_t nextion_system_set_variable_text(nextion_t *handle,
+                                               const char *variable_name,
+                                               const char *text);
+
+    /**
+     * @brief Set a variable value with a number.
+     * @param[in] handle Nextion context pointer.
+     * @param[in] variable_name A null-terminated variable name.
+     * @param[in] number Value to be sent.
+     * @return NEX_OK or NEX_DVC_ERR_INVALID_VARIABLE_OR_ATTRIBUTE.
+     */
+    nex_err_t nextion_system_set_variable_number(nextion_t *handle,
+                                                 const char *variable_name,
+                                                 int32_t number);
 
 #ifdef __cplusplus
 }

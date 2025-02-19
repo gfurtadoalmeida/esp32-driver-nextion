@@ -1,6 +1,6 @@
 idf_component_register(
     SRCS "test_runner.c"
-    INCLUDE_DIRS ""
+    INCLUDE_DIRS "."
     REQUIRES
         unity
         esp32_driver_nextion

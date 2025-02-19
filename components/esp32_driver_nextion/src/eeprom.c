@@ -1,5 +1,10 @@
 #include "esp32_driver_nextion/nextion.h"
 #include "esp32_driver_nextion/eeprom.h"
+#include "protocol/parsers/responses/ack.h"
+#include "protocol/parsers/responses/number.h"
+#include "protocol/parsers/responses/rept.h"
+#include "protocol/parsers/responses/tdm_start.h"
+#include "protocol/protocol.h"
 #include "assertion.h"
 
 #define CMP_CHECK_EEPROM_ADDRESS(address) CMP_CHECK((address < NEX_DVC_EEPROM_SIZE), "address error(address > NEX_DVC_EEPROM_MAX_ADDRESS)", NEX_FAIL)
@@ -15,7 +20,10 @@ nex_err_t nextion_eeprom_write_text(nextion_t *handle,
     CMP_CHECK_EEPROM_END_ADDRESS(address + text_length)
     CMP_CHECK((text != NULL), "text error(NULL)", NEX_FAIL)
 
-    return nextion_command_send(handle, "wepo \"%s\",%d", text, address);
+    formated_instruction_t instruction = FORMAT_INSTRUNCTION("wepo \"%s\",%d", text, address);
+    parser_t parser = PARSER_ACK();
+
+    return nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
 }
 
 nex_err_t nextion_eeprom_write_number(nextion_t *handle,
@@ -26,7 +34,10 @@ nex_err_t nextion_eeprom_write_number(nextion_t *handle,
     CMP_CHECK_EEPROM_ADDRESS(address)
     CMP_CHECK_EEPROM_END_ADDRESS(address + 4)
 
-    return nextion_command_send(handle, "wepo %d,%d", value, address);
+    formated_instruction_t instruction = FORMAT_INSTRUNCTION("wepo %ld,%d", value, address);
+    parser_t parser = PARSER_ACK();
+
+    return nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
 }
 
 nex_err_t nextion_eeprom_read_text(nextion_t *handle,
@@ -54,11 +65,11 @@ nex_err_t nextion_eeprom_read_number(nextion_t *handle,
     uint8_t buffer[4];
 
     if (nextion_eeprom_read_bytes(handle, address, buffer, 4) != NEX_OK)
+    {
         return NEX_FAIL;
+    }
 
-    // Number: 4 bytes and signed = int32_t.
-    // Sent in little endian format.
-    *number = (int32_t)(((uint32_t)buffer[3] << 24) | ((uint32_t)buffer[2] << 16) | ((uint32_t)buffer[1] << 8) | (uint32_t)buffer[0]);
+    *number = parser_rsp_number_convert(buffer);
 
     return NEX_OK;
 }
@@ -72,17 +83,20 @@ nex_err_t nextion_eeprom_read_bytes(nextion_t *handle,
     CMP_CHECK_EEPROM_ADDRESS(address)
     CMP_CHECK_EEPROM_END_ADDRESS(address + buffer_length)
 
-    size_t length = buffer_length;
+    if (buffer_length == 0)
+    {
+        return NEX_OK;
+    }
 
-    // It is no use updating "buffer_length" because it will always read
-    // exactly what it is asked.
+    // It will always read exactly what it is asked,
+    // adding zeros if no more data is available.
+    // No return code sent.
+    formated_instruction_t instruction = FORMAT_INSTRUNCTION("rept %d,%d", address, buffer_length);
+    parser_t parser = PARSER_REPT(buffer, buffer_length);
 
-    return nextion_command_send_get_bytes(handle,
-                                          buffer,
-                                          &length,
-                                          "rept %d,%d",
-                                          address,
-                                          length);
+    nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
+
+    return NEX_OK;
 }
 
 nex_err_t nextion_eeprom_stream_begin(nextion_t *handle, uint16_t address, size_t value_count)
@@ -92,23 +106,22 @@ nex_err_t nextion_eeprom_stream_begin(nextion_t *handle, uint16_t address, size_
     CMP_CHECK_EEPROM_END_ADDRESS(address + value_count)
     CMP_CHECK((value_count < (NEX_DVC_TRANSPARENT_DATA_MAX_DATA_SIZE - 20)), "value_count error(>=NEX_DVC_TRANSPARENT_DATA_MAX_DATA_SIZE-20)", NEX_FAIL)
 
-    return nextion_transparent_data_mode_begin(handle,
-                                               value_count,
-                                               "wept %d,%d",
-                                               address,
-                                               value_count);
+    formated_instruction_t instruction = FORMAT_INSTRUNCTION("wept %d,%d", address, value_count);
+    parser_t parser = PARSER_TDM_START();
+
+    nex_err_t code = nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
+
+    if (code == NEX_DVC_RSP_TRANSPARENT_DATA_READY)
+    {
+        return NEX_OK;
+    }
+
+    return code;
 }
 
-nex_err_t nextion_eeprom_stream_write(nextion_t *handle, uint8_t value)
+nex_err_t nextion_eeprom_stream_write(const nextion_t *handle, uint8_t value)
 {
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
 
-    return nextion_transparent_data_mode_write(handle, value);
-}
-
-nex_err_t nextion_eeprom_stream_end(nextion_t *handle)
-{
-    CMP_CHECK_HANDLE(handle, NEX_FAIL)
-
-    return nextion_transparent_data_mode_end(handle);
+    return nextion_protocol_send_raw_byte(handle, value);
 }

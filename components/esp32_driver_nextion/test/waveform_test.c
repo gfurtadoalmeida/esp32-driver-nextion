@@ -86,13 +86,9 @@ TEST_CASE("Stream works", "[waveform]")
     {
         if (nextion_waveform_stream_write(handle, i) == NEX_FAIL)
         {
-            nextion_waveform_stream_end(handle);
-
             FAIL_TEST("could not write value to stream");
         }
     }
-
-    nextion_waveform_stream_end(handle);
 }
 
 TEST_CASE("Cannot start stream with invalid waveform", "[waveform]")
@@ -112,20 +108,6 @@ TEST_CASE("Cannot start stream with invalid waveform channel", "[waveform]")
 TEST_CASE("Cannot start stream with invalid value count", "[waveform]")
 {
     nex_err_t code = nextion_waveform_stream_begin(handle, TEST_WAVEFORM_ID, 0, NEX_DVC_TRANSPARENT_DATA_MAX_DATA_SIZE);
-
-    CHECK_NEX_FAIL(code);
-}
-
-TEST_CASE("Cannot write to unstarted stream", "[waveform]")
-{
-    nex_err_t code = nextion_waveform_stream_write(handle, 100);
-
-    CHECK_NEX_FAIL(code);
-}
-
-TEST_CASE("Cannot end unstarted stream", "[waveform]")
-{
-    nex_err_t code = nextion_waveform_stream_end(handle);
 
     CHECK_NEX_FAIL(code);
 }

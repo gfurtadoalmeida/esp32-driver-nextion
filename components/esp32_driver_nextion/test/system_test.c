@@ -8,10 +8,9 @@ TEST_CASE("Get text from text component", "[system]")
 {
     char text[10];
     size_t length = 10;
-    nex_err_t code = nextion_system_get_text(handle, "get t0.txt", text, &length);
+    nex_err_t code = nextion_system_get_variable_text(handle, "t0.txt", text, length);
 
     CHECK_NEX_OK(code);
-    SIZET_EQUAL(9, length);
     STRCMP_EQUAL("test text", text);
 }
 
@@ -19,7 +18,7 @@ TEST_CASE("Cannot get text from invalid text component", "[system]")
 {
     char text[10];
     size_t length = 10;
-    nex_err_t code = nextion_system_get_text(handle, "get t99.txt", text, &length);
+    nex_err_t code = nextion_system_get_variable_text(handle, "t99.txt", text, length);
 
     NEX_CODES_EQUAL(NEX_DVC_ERR_INVALID_VARIABLE_OR_ATTRIBUTE, code);
 }
@@ -27,16 +26,16 @@ TEST_CASE("Cannot get text from invalid text component", "[system]")
 TEST_CASE("Get number from number component", "[system]")
 {
     int32_t number;
-    nex_err_t code = nextion_system_get_number(handle, "get n0.val", &number);
+    nex_err_t code = nextion_system_get_variable_number(handle, "n0.val", &number);
 
     CHECK_NEX_OK(code);
-    LONGS_EQUAL(50, number);
+    LONGS_EQUAL(-5, number);
 }
 
 TEST_CASE("Cannot get number from invalid number component", "[system]")
 {
     int32_t number;
-    nex_err_t code = nextion_system_get_number(handle, "get n99.val", &number);
+    nex_err_t code = nextion_system_get_variable_number(handle, "n99.val", &number);
 
     NEX_CODES_EQUAL(NEX_DVC_ERR_INVALID_VARIABLE_OR_ATTRIBUTE, code);
 }
@@ -116,12 +115,12 @@ TEST_CASE("Get sleep on no touch", "[system]")
 {
     uint16_t seconds;
 
-    nextion_system_set_sleep_no_touch(handle, 50);
+    nextion_system_set_sleep_on_no_touch(handle, 50);
 
-    nex_err_t code = nextion_system_get_sleep_no_touch(handle, &seconds);
+    nex_err_t code = nextion_system_get_sleep_on_no_touch(handle, &seconds);
 
     // Do not leave sleep on no touch activated during tests.
-    nextion_system_set_sleep_no_touch(handle, 0);
+    nextion_system_set_sleep_on_no_touch(handle, 0);
 
     CHECK_NEX_OK(code);
     TEST_ASSERT_EQUAL_UINT8(50, seconds);
@@ -129,7 +128,7 @@ TEST_CASE("Get sleep on no touch", "[system]")
 
 TEST_CASE("Cannot get sleep on no touch when seconds null", "[system]")
 {
-    nex_err_t code = nextion_system_get_sleep_no_touch(handle, NULL);
+    nex_err_t code = nextion_system_get_sleep_on_no_touch(handle, NULL);
 
     CHECK_NEX_FAIL(code);
 }
@@ -138,12 +137,12 @@ TEST_CASE("Set sleep on no touch", "[system]")
 {
     uint16_t sleep = 0;
 
-    nex_err_t code = nextion_system_set_sleep_no_touch(handle, 50);
+    nex_err_t code = nextion_system_set_sleep_on_no_touch(handle, 50);
 
-    nextion_system_get_sleep_no_touch(handle, &sleep);
+    nextion_system_get_sleep_on_no_touch(handle, &sleep);
 
     // Do not leave sleep on no touch activated during tests.
-    nextion_system_set_sleep_no_touch(handle, 0);
+    nextion_system_set_sleep_on_no_touch(handle, 0);
 
     CHECK_NEX_OK(code);
     TEST_ASSERT_EQUAL_UINT8(50, sleep);
@@ -153,12 +152,12 @@ TEST_CASE("Get sleep on no serial", "[system]")
 {
     uint16_t seconds;
 
-    nextion_system_set_sleep_no_serial(handle, 50);
+    nextion_system_set_sleep_on_no_serial(handle, 50);
 
-    nex_err_t code = nextion_system_get_sleep_no_serial(handle, &seconds);
+    nex_err_t code = nextion_system_get_sleep_on_no_serial(handle, &seconds);
 
     // Do not leave sleep on no serial activated during tests.
-    nextion_system_set_sleep_no_serial(handle, 0);
+    nextion_system_set_sleep_on_no_serial(handle, 0);
 
     CHECK_NEX_OK(code);
     TEST_ASSERT_EQUAL_UINT8(50, seconds);
@@ -166,7 +165,7 @@ TEST_CASE("Get sleep on no serial", "[system]")
 
 TEST_CASE("Cannot get sleep on no serial when seconds null", "[system]")
 {
-    nex_err_t code = nextion_system_get_sleep_no_serial(handle, NULL);
+    nex_err_t code = nextion_system_get_sleep_on_no_serial(handle, NULL);
 
     CHECK_NEX_FAIL(code);
 }
@@ -175,12 +174,12 @@ TEST_CASE("Set sleep on no serial", "[system]")
 {
     uint16_t sleep = 0;
 
-    nex_err_t code = nextion_system_set_sleep_no_serial(handle, 50);
+    nex_err_t code = nextion_system_set_sleep_on_no_serial(handle, 50);
 
-    nextion_system_get_sleep_no_serial(handle, &sleep);
+    nextion_system_get_sleep_on_no_serial(handle, &sleep);
 
     // Do not leave sleep on no serial activated during tests.
-    nextion_system_set_sleep_no_serial(handle, 0);
+    nextion_system_set_sleep_on_no_serial(handle, 0);
 
     CHECK_NEX_OK(code);
     TEST_ASSERT_EQUAL_UINT8(50, sleep);
@@ -226,10 +225,6 @@ TEST_CASE("Reset", "[system]")
     nex_err_t code = nextion_system_reset(handle);
 
     vTaskDelay(pdMS_TO_TICKS(NEX_DVC_RESET_WAIT_TIME_MS));
-
-    // As all logic relies on "bkcmd=3" and this configuration
-    // is lost on reset, we need to configure it again.
-    nextion_init(handle);
 
     CHECK_NEX_OK(code);
 }

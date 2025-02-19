@@ -59,11 +59,6 @@ extern "C"
 #define NEX_DVC_COMPONENT_MAX_NAME_LENGTH 14U
 
 /**
- * @brief Maximum reference length: (max page name length + "." + max component name length).
- */
-#define NEX_DVC_REFERENCE_MAX_LENGTH (NEX_DVC_PAGE_MAX_NAME_LENGTH + 1 + NEX_DVC_COMPONENT_MAX_NAME_LENGTH)
-
-/**
  * @brief Character used to separate a object from its attribute.
  * @example page1.component2 / comp1.txt
  */

@@ -52,15 +52,8 @@ TEST_CASE("Stream works", "[eeprom]")
     {
         if (nextion_eeprom_stream_write(handle, i) == NEX_FAIL)
         {
-            nextion_eeprom_stream_end(handle);
-
             FAIL_TEST("Could not write value to stream");
         }
-    }
-
-    if(nextion_eeprom_stream_end(handle) == NEX_FAIL)
-    {
-        FAIL_TEST("Could not end stream");
     }
 }
 
@@ -74,20 +67,6 @@ TEST_CASE("Cannot start stream with invalid address", "[eeprom]")
 TEST_CASE("Cannot start stream with invalid end address", "[eeprom]")
 {
     nex_err_t code = nextion_eeprom_stream_begin(handle, 0, NEX_DVC_EEPROM_MAX_ADDRESS + 1);
-
-    CHECK_NEX_FAIL(code);
-}
-
-TEST_CASE("Cannot write to unstarted stream", "[eeprom]")
-{
-    nex_err_t code = nextion_eeprom_stream_write(handle, 100);
-
-    CHECK_NEX_FAIL(code);
-}
-
-TEST_CASE("Cannot end unstarted stream", "[eeprom]")
-{
-    nex_err_t code = nextion_eeprom_stream_end(handle);
 
     CHECK_NEX_FAIL(code);
 }

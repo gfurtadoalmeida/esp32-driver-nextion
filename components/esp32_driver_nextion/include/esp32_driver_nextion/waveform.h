@@ -78,14 +78,7 @@ extern "C"
      * @param[in] value Value to be written.
      * @return NEX_OK if success, otherwise NEX_FAIL.
      */
-    nex_err_t nextion_waveform_stream_write(nextion_t *handle, uint8_t value);
-
-    /**
-     * @brief End the waveform streaming.
-     * @param[in] handle Nextion context pointer.
-     * @return NEX_OK if success, otherwise NEX_FAIL.
-     */
-    nex_err_t nextion_waveform_stream_end(nextion_t *handle);
+    nex_err_t nextion_waveform_stream_write(const nextion_t *handle, uint8_t value);
 
 #ifdef __cplusplus
 }

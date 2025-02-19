@@ -1,5 +1,8 @@
 #include "esp32_driver_nextion/nextion.h"
 #include "esp32_driver_nextion/page.h"
+#include "protocol/parsers/responses/ack.h"
+#include "protocol/parsers/responses/sendme.h"
+#include "protocol/protocol.h"
 #include "assertion.h"
 
 nex_err_t nextion_page_get(nextion_t *handle, uint8_t *page_id)
@@ -7,39 +10,33 @@ nex_err_t nextion_page_get(nextion_t *handle, uint8_t *page_id)
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
     CMP_CHECK((page_id != NULL), "page_id error(NULL)", NEX_FAIL)
 
-    uint8_t buffer[5];
-    size_t length = 5;
+    parser_t parser = PARSER_SENDME(page_id, sizeof(uint8_t));
 
-    if (nextion_command_send_get_bytes(handle, buffer, &length, "sendme") != NEX_OK)
+    nex_err_t code = nextion_protocol_send_instruction(handle, "sendme", 6, &parser);
+
+    if (code == NEX_DVC_RSP_SENDME)
     {
-        return NEX_FAIL;
-    }
-
-    if (length == NEX_DVC_CMD_ACK_LENGTH)
-    {
-        return buffer[0];
-    }
-
-    if (length == 5 && buffer[0] == NEX_DVC_RSP_SENDME_RESULT)
-    {
-        *page_id = buffer[1];
-
         return NEX_OK;
     }
 
-    return NEX_FAIL;
+    return code;
 }
 
 nex_err_t nextion_page_set(nextion_t *handle, const char *page_name_or_id)
 {
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
 
-    return nextion_command_send(handle, "page %s", page_name_or_id);
+    formated_instruction_t instruction = FORMAT_INSTRUNCTION("page %s", page_name_or_id);
+    parser_t parser = PARSER_ACK();
+
+    return nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
 }
 
 nex_err_t nextion_page_refresh(nextion_t *handle)
 {
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
 
-    return nextion_command_send(handle, "ref 0");
+    parser_t parser = PARSER_ACK();
+
+    return nextion_protocol_send_instruction(handle, "ref 0", 5, &parser);
 }
