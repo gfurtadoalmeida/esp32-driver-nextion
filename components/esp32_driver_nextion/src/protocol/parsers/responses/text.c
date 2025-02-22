@@ -7,7 +7,7 @@ static int find_text_end(const uint8_t *data, size_t length);
 
 bool parser_rsp_text_can_parse(const parser_t *, const uint8_t data_id)
 {
-    return data_id == NEX_DVC_RSP_GET_STRING || NEX_DVC_CODE_IS_ACK_RESPONSE(data_id);
+    return data_id == NEX_DVC_RSP_GET_TEXT || NEX_DVC_CODE_IS_ACK_RESPONSE(data_id);
 }
 
 int parser_rsp_text_need_more_bytes(const parser_t *, const uint8_t *data, size_t length)
@@ -17,7 +17,7 @@ int parser_rsp_text_need_more_bytes(const parser_t *, const uint8_t *data, size_
         return 4 - length;
     }
 
-    if (data[0] == NEX_DVC_RSP_GET_STRING && find_text_end(data, length) == -1)
+    if (data[0] == NEX_DVC_RSP_GET_TEXT && find_text_end(data, length) == -1)
     {
         return 1;
     }

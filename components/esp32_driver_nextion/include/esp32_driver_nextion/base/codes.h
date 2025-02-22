@@ -28,7 +28,7 @@ extern "C"
 /**
  * @brief Timeout.
  */
-#define NEX_TIMEOUT 0x02
+#define NEX_TIMEOUT 0x40
 
 /* ========================================
  *         CODE VERIFICATION HELPERS
@@ -231,12 +231,12 @@ extern "C"
 #define NEX_DVC_EVT_TOUCH_COORDINATE_ASLEEP 0x68U
 
 /**
- * @brief "get command" returning a string.
+ * @brief "get command" returning a text.
  * @details Format: 0x70 {0x61} {0x62} {0x31} {0x32} {0x33} 0xFF 0xFF 0xFF
  * Composition:
  *   - Each byte is a character
  */
-#define NEX_DVC_RSP_GET_STRING 0x70U
+#define NEX_DVC_RSP_GET_TEXT 0x70U
 
 /**
  * @brief "get command" returning a number.

@@ -1,4 +1,5 @@
 #include <malloc.h>
+#include <stdarg.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "esp32_driver_nextion/base/events.h"
@@ -18,9 +19,9 @@
 #define PROCESS_SYNC_TAKE(handle, timeout) (xSemaphoreTake(handle->command_sync, timeout) == pdTRUE)
 #define PROCESS_SYNC_GIVE(handle) xSemaphoreGive(handle->command_sync)
 
-static void nextion_core_uart_task(void *pvParameters);
 static nex_err_t nextion_core_process_response(nextion_t *handle, const parser_t *parser);
 static void nextion_core_process_events(nextion_t *handle);
+static void nextion_core_uart_task(void *pvParameters);
 
 /**
  * @struct nextion_t
@@ -28,14 +29,15 @@ static void nextion_core_process_events(nextion_t *handle);
  */
 struct nextion_t
 {
-    uint8_t uart_buffer[64];                       /*!< Buffer to receive UART data. */
-    uint8_t event_buffer[EVENT_PARSE_BUFFER_SIZE]; /*!< Buffer to parse events. */
-    SemaphoreHandle_t command_sync;                /*!< Mutex used command control. */
-    QueueHandle_t uart_queue;                      /*!< Queue used for UART event. */
-    TaskHandle_t uart_task;                        /*!< Task used for UART queue handling. */
-    uart_port_t uart_num;                          /*!< UART port number. */
-    bool is_installed;                             /*!< If the driver was installed. */
-    bool is_initialized;                           /*!< If the driver was initialized. */
+    uint8_t uart_buffer[64];                                                 /*!< Buffer to receive UART data. */
+    uint8_t format_buffer[CONFIG_NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE]; /*!< Buffer to format instructions. */
+    uint8_t event_buffer[EVENT_PARSE_BUFFER_SIZE];                           /*!< Buffer to parse events. */
+    SemaphoreHandle_t command_sync;                                          /*!< Mutex used command control. */
+    QueueHandle_t uart_queue;                                                /*!< Queue used for UART event. */
+    TaskHandle_t uart_task;                                                  /*!< Task used for UART queue handling. */
+    uart_port_t uart_num;                                                    /*!< UART port number. */
+    bool is_installed;                                                       /*!< If the driver was installed. */
+    bool is_initialized;                                                     /*!< If the driver was initialized. */
 };
 
 nextion_t *nextion_driver_install(uart_port_t uart_num, uint32_t baud_rate, gpio_num_t tx_io_num, gpio_num_t rx_io_num)
@@ -153,6 +155,38 @@ bool nextion_driver_delete(nextion_t *handle)
 //
 // Protocol
 //
+
+bool nextion_protocol_format_instruction(nextion_t *handle, formated_instruction_t *formated_instruction, const char *instruction, ...)
+{
+    va_list args;
+    va_start(args, instruction);
+
+    bool result = nextion_protocol_format_instruction_variadic(handle, formated_instruction, instruction, args);
+
+    va_end(args);
+
+    return result;
+}
+
+bool nextion_protocol_format_instruction_variadic(nextion_t *handle,
+                                                  formated_instruction_t *formated_instruction,
+                                                  const char *instruction,
+                                                  va_list args)
+{
+    int result = vsnprintf((char *)handle->format_buffer, sizeof(handle->format_buffer), instruction, args);
+
+    if (result > sizeof(handle->format_buffer))
+    {
+        CMP_LOGE("format buffer insufficient: needed %d, has %d", result, sizeof(handle->format_buffer));
+
+        return false;
+    }
+
+    formated_instruction->text = (char *)handle->format_buffer;
+    formated_instruction->length = result;
+
+    return true;
+}
 
 nex_err_t nextion_protocol_send_instruction(nextion_t *handle, const char *instruction, size_t instruction_length, const parser_t *parser)
 {
