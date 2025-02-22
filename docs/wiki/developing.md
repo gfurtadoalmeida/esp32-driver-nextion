@@ -30,13 +30,21 @@ In the [.debug](../../.debug) folder you'll find interface configuration files f
 2. Plug the debug board.
 3. Open [Zadig](https://zadig.akeo.ie/) and replace the ```Dual RS232-HS (Interface 0)``` driver with WinUSB (```Options->List all devices```).
 
-## Testing
+## Testing Using the Nextion Simulator
 
-Upload [test_display.hmi](../../components/esp32_driver_nextion/test/hmi/) on your Nextion display before testing. Be aware that the display project was built using Nextion Editor 1.61.2; you might need to [upgrade your display](https://nextion.tech/faq-items/using-legacy-nextion-devices/) before uploading this project.  
+1) Download and install the [simulator](https://nextion.tech/nextion-editor/#_section2).
+2) Get an USB to TTL (FT232) device - from now on called `adapter` - so you can connect your ESP32 to the simulator.
+3) Connect the `adapter` to your PC.
+4) Open the [test_display.hmi](../../components/esp32_driver_nextion/test/hmi/) on the simulator and start the debug.
+5) Connect the simulator to the COM port used by the `adapter`.
+6) Connect the ESP32 to the `adapter`.
+7) Run the tests.
 
-The task watchdog for CPU0 is disabled on the test project. It is needed so we can interact with the test tool.  
-
-The baudrate is set to 115200 on the display ```program.s``` and ESP32 [test_runner.c](../../test/main/test_runner.c).
+> [!NOTE]
+>
+> * The display project was built using Nextion Editor 1.67.1; you might need to [upgrade your display](https://nextion.tech/faq-items/using-legacy-nextion-devices/) before uploading the HMI.  
+> * The task watchdog for CPU0 is disabled on the test project so we can interact with the testing tool.  
+> * The baudrate is set to **115200** on the display ```program.s``` and ESP32 [test_runner.c](../../test/main/test_runner.c).
 
 ### On VS Code
 

@@ -12,21 +12,21 @@ extern "C"
 #endif
 
     /**
-     * @brief Reset the display, losing all volatile configurations.
+     * @brief Reset the display, losing all volatile configuration.
      * @param[in] handle Nextion context pointer.
      * @return NEX_OK or NEX_FAIL.
      */
     nex_err_t nextion_system_reset(nextion_t *handle);
 
     /**
-     * @brief Enter in sleep mode.
+     * @brief Enter in the sleep mode.
      * @param[in] handle Nextion context pointer.
      * @return NEX_OK or NEX_FAIL.
      */
     nex_err_t nextion_system_sleep(nextion_t *handle);
 
     /**
-     * @brief Exit sleep mode.
+     * @brief Exit the sleep mode.
      * @param[in] handle Nextion context pointer.
      * @return NEX_OK or NEX_FAIL.
      */

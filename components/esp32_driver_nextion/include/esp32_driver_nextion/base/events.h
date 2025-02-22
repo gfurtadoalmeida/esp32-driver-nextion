@@ -22,10 +22,9 @@ extern "C"
 
     typedef enum
     {
-        NEXTION_EVENT_TOUCHED,
-        NEXTION_EVENT_TOUCHED_COORD,
-        NEXTION_EVENT_STATE_CHANGED,
-        NEXTION_EVENT_PAGE_CHANGED
+        NEXTION_EVENT_TOUCHED,       /** @brief Touch event without coordinates. */
+        NEXTION_EVENT_TOUCHED_COORD, /** @brief Touch with coordinates. */
+        NEXTION_EVENT_STATE_CHANGED  /** @brief Device state changed. */
     } nextion_event_t;
 
     /**
