@@ -1,8 +1,4 @@
-#include "esp32_driver_nextion/nextion.h"
 #include "esp32_driver_nextion/system.h"
-#include "protocol/parsers/responses/ack.h"
-#include "protocol/parsers/responses/number.h"
-#include "protocol/parsers/responses/text.h"
 #include "protocol/protocol.h"
 #include "assertion.h"
 
@@ -17,18 +13,14 @@ nex_err_t nextion_system_sleep(nextion_t *handle)
 {
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
 
-    parser_t parser = PARSER_ACK();
-
-    return nextion_protocol_send_instruction(handle, "sleep=1", 7, &parser);
+    return nextion_protocol_send_instruction_ack(handle, "sleep=1");
 }
 
 nex_err_t nextion_system_wakeup(nextion_t *handle)
 {
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
 
-    parser_t parser = PARSER_ACK();
-
-    return nextion_protocol_send_instruction(handle, "sleep=0", 7, &parser);
+    return nextion_protocol_send_instruction_ack(handle, "sleep=0");
 }
 
 nex_err_t nextion_system_get_brightness(nextion_t *handle, bool persisted, uint8_t *percentage)
@@ -142,17 +134,11 @@ nex_err_t nextion_system_get_variable_text(nextion_t *handle,
     CMP_CHECK((variable_name != NULL), "variable_name error(NULL)", NEX_FAIL)
     CMP_CHECK((buffer != NULL), "text error(NULL)", NEX_FAIL)
 
-    formated_instruction_t instruction = FORMAT_INSTRUNCTION("get %s", variable_name);
-    parser_t parser = PARSER_TEXT(buffer, buffer_length);
-
-    nex_err_t code = nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
-
-    if (code == NEX_DVC_RSP_GET_STRING)
-    {
-        return NEX_OK;
-    }
-
-    return code;
+    return nextion_protocol_send_instruction_get_text(handle,
+                                                      buffer,
+                                                      buffer_length,
+                                                      "get %s",
+                                                      variable_name);
 }
 
 nex_err_t nextion_system_get_variable_number(nextion_t *handle,
@@ -163,17 +149,7 @@ nex_err_t nextion_system_get_variable_number(nextion_t *handle,
     CMP_CHECK((variable_name != NULL), "variable_name error(NULL)", NEX_FAIL)
     CMP_CHECK((number != NULL), "number error(NULL)", NEX_FAIL)
 
-    formated_instruction_t instruction = FORMAT_INSTRUNCTION("get %s", variable_name);
-    parser_t parser = PARSER_NUMBER(number, sizeof(int32_t));
-
-    nex_err_t code = nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
-
-    if (code == NEX_DVC_RSP_GET_NUMBER)
-    {
-        return NEX_OK;
-    }
-
-    return code;
+    return nextion_protocol_send_instruction_get_number(handle, number, "get %s", variable_name);
 }
 
 nex_err_t nextion_system_set_variable_text(nextion_t *handle, const char *variable_name, const char *text)
@@ -182,10 +158,7 @@ nex_err_t nextion_system_set_variable_text(nextion_t *handle, const char *variab
     CMP_CHECK((variable_name != NULL), "variable_name error(NULL)", NEX_FAIL)
     CMP_CHECK((text != NULL), "text error(NULL)", NEX_FAIL)
 
-    formated_instruction_t instruction = FORMAT_INSTRUNCTION("%s=\"%s\"", variable_name, text);
-    parser_t parser = PARSER_ACK();
-
-    return nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
+    return nextion_protocol_send_instruction_ack(handle, "%s=\"%s\"", variable_name, text);
 }
 
 nex_err_t nextion_system_set_variable_number(nextion_t *handle,
@@ -195,8 +168,5 @@ nex_err_t nextion_system_set_variable_number(nextion_t *handle,
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
     CMP_CHECK((variable_name != NULL), "variable_name error(NULL)", NEX_FAIL)
 
-    formated_instruction_t instruction = FORMAT_INSTRUNCTION("%s=%ld", variable_name, number);
-    parser_t parser = PARSER_ACK();
-
-    return nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
+    return nextion_protocol_send_instruction_ack(handle, "%s=%ld", variable_name, number);
 }

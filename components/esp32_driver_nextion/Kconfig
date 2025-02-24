@@ -6,7 +6,7 @@ menu "Nextion Display"
         default 500
         help
             Time, in milliseconds, to wait for a mutex to be acquired.
-            Mutex is used to lock the UART and allow only one command or
+            The mutex is used to lock the UART and allow only one command or
             event processing to be sent.
 
     config NEX_UART_RECV_WAIT_TIME_MS
@@ -26,9 +26,9 @@ menu "Nextion Display"
     config NEX_UART_RECV_BUFFER_SIZE
         int "UART receiver buffer size (bytes)"
         range 128 1024
-        default 256
+        default 128
         help
-            The UART buffer used for receiving messages.
+            The size of the UART buffer used for receiving messages.
 
             Use a big size if you intend to receive a lot of event messages
             in a short time span and/or the event message processing is slow.
@@ -38,8 +38,9 @@ menu "Nextion Display"
         range 128 512
         default 128
         help
-            The UART buffer used to format command before sending.
-            It is used for 'vprintf' command.
+            The size of the instruction format buffer, used to format commands
+            before sending.
+            It is used by the 'vsnprintf' command.
 
             Use a big size if you intend to send big text messages.
 

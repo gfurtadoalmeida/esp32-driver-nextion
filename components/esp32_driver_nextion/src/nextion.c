@@ -1,4 +1,5 @@
 #include <malloc.h>
+#include <stdarg.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "esp32_driver_nextion/base/events.h"
@@ -10,17 +11,12 @@
 #include "assertion.h"
 #include "config.h"
 
-#define CMP_CHECK_SEND_COMMAND_HANDLE_STATE(handle)                            \
-    CMP_CHECK_HANDLE(handle, NEX_FAIL)                                         \
-    CMP_CHECK((handle->is_installed), "driver error(not installed)", NEX_FAIL) \
-    CMP_CHECK((handle->is_initialized), "driver error(not initialized)", NEX_FAIL)
+#define PROCESS_SYNC_TAKE(handle, timeout) (xSemaphoreTake(handle->send_instruction_sync, timeout) == pdTRUE)
+#define PROCESS_SYNC_GIVE(handle) xSemaphoreGive(handle->send_instruction_sync)
 
-#define PROCESS_SYNC_TAKE(handle, timeout) (xSemaphoreTake(handle->command_sync, timeout) == pdTRUE)
-#define PROCESS_SYNC_GIVE(handle) xSemaphoreGive(handle->command_sync)
-
-static void nextion_core_uart_task(void *pvParameters);
 static nex_err_t nextion_core_process_response(nextion_t *handle, const parser_t *parser);
 static void nextion_core_process_events(nextion_t *handle);
+static void nextion_core_uart_task(void *pvParameters);
 
 /**
  * @struct nextion_t
@@ -28,14 +24,15 @@ static void nextion_core_process_events(nextion_t *handle);
  */
 struct nextion_t
 {
-    uint8_t uart_buffer[64];                       /*!< Buffer to receive UART data. */
-    uint8_t event_buffer[EVENT_PARSE_BUFFER_SIZE]; /*!< Buffer to parse events. */
-    SemaphoreHandle_t command_sync;                /*!< Mutex used command control. */
-    QueueHandle_t uart_queue;                      /*!< Queue used for UART event. */
-    TaskHandle_t uart_task;                        /*!< Task used for UART queue handling. */
-    uart_port_t uart_num;                          /*!< UART port number. */
-    bool is_installed;                             /*!< If the driver was installed. */
-    bool is_initialized;                           /*!< If the driver was initialized. */
+    uint8_t uart_buffer[64];                                                 /*!< Buffer to process received UART data. */
+    uint8_t format_buffer[CONFIG_NEX_UART_TRANS_COMMAND_FORMAT_BUFFER_SIZE]; /*!< Buffer to format instructions. */
+    uint8_t event_buffer[EVENT_PARSE_BUFFER_SIZE];                           /*!< Buffer to parse events. */
+    SemaphoreHandle_t send_instruction_sync;                                 /*!< Mutex used for sending instruction. */
+    QueueHandle_t uart_queue;                                                /*!< Queue used for UART event. */
+    TaskHandle_t uart_task;                                                  /*!< Task used for UART queue handling. */
+    uart_port_t uart_num;                                                    /*!< UART port number. */
+    bool is_installed;                                                       /*!< If the driver was installed. */
+    bool is_initialized;                                                     /*!< If the driver was initialized. */
 };
 
 nextion_t *nextion_driver_install(uart_port_t uart_num, uint32_t baud_rate, gpio_num_t tx_io_num, gpio_num_t rx_io_num)
@@ -63,7 +60,7 @@ nextion_t *nextion_driver_install(uart_port_t uart_num, uint32_t baud_rate, gpio
     driver->uart_num = uart_num;
     driver->is_installed = true;
     driver->is_initialized = false;
-    driver->command_sync = xSemaphoreCreateBinary();
+    driver->send_instruction_sync = xSemaphoreCreateBinary();
 
     ESP_ERROR_CHECK(uart_driver_install(uart_num,
                                         CONFIG_NEX_UART_RECV_BUFFER_SIZE, // Receive buffer size.
@@ -93,8 +90,8 @@ nex_err_t nextion_init(nextion_t *handle)
 {
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
 
-    // As "nextion_command_send" validates if the driver is
-    // initialized, we need to cheat here.
+    // As "nextion_protocol_send_instruction" validates
+    // if the driver is initialized, we need to cheat here.
     handle->is_initialized = true;
 
     // Set up the semaphore.
@@ -104,7 +101,7 @@ nex_err_t nextion_init(nextion_t *handle)
     vTaskResume(handle->uart_task);
 
     // Just try to wake up, as the device cannot
-    // receive commands when sleeping.
+    // receive instructions when sleeping.
     if (nextion_system_wakeup(handle) != NEX_OK)
     {
         handle->is_initialized = false;
@@ -139,7 +136,7 @@ bool nextion_driver_delete(nextion_t *handle)
     // Will also free the queue.
     ESP_ERROR_CHECK(uart_driver_delete(handle->uart_num));
 
-    vSemaphoreDelete(handle->command_sync);
+    vSemaphoreDelete(handle->send_instruction_sync);
 
     free(handle);
 
@@ -154,15 +151,49 @@ bool nextion_driver_delete(nextion_t *handle)
 // Protocol
 //
 
+bool nextion_protocol_format_instruction(nextion_t *handle, formated_instruction_t *formated_instruction, const char *instruction, ...)
+{
+    va_list args;
+    va_start(args, instruction);
+
+    bool result = nextion_protocol_format_instruction_variadic(handle, formated_instruction, instruction, args);
+
+    va_end(args);
+
+    return result;
+}
+
+bool nextion_protocol_format_instruction_variadic(nextion_t *handle,
+                                                  formated_instruction_t *formated_instruction,
+                                                  const char *instruction,
+                                                  va_list args)
+{
+    int result = vsnprintf((char *)handle->format_buffer, sizeof(handle->format_buffer), instruction, args);
+
+    if (result > sizeof(handle->format_buffer))
+    {
+        CMP_LOGE("format buffer insufficient: needed %d, has %d", result, sizeof(handle->format_buffer));
+
+        return false;
+    }
+
+    formated_instruction->text = (char *)handle->format_buffer;
+    formated_instruction->length = result;
+
+    return true;
+}
+
 nex_err_t nextion_protocol_send_instruction(nextion_t *handle, const char *instruction, size_t instruction_length, const parser_t *parser)
 {
-    CMP_CHECK_SEND_COMMAND_HANDLE_STATE(handle)
+    CMP_CHECK_HANDLE(handle, NEX_FAIL)
+    CMP_CHECK((handle->is_installed), "driver error(not installed)", NEX_FAIL)
+    CMP_CHECK((handle->is_initialized), "driver error(not initialized)", NEX_FAIL)
     CMP_CHECK((instruction != NULL), "instruction error(NULL)", NEX_FAIL)
     CMP_CHECK((PROCESS_SYNC_TAKE(handle, pdMS_TO_TICKS(CONFIG_NEX_UART_MUTEX_WAIT_TIME_MS))), "sync error(not acquired)", NEX_FAIL)
 
     // Process any event remaining in the buffer
-    // before sending a command, so we can be sure
-    // that the data received is a command response.
+    // before sending an instruction, so we can be sure
+    // that the data received is a instruction response.
     nextion_core_process_events(handle);
 
     const char END_SEQUENCE[NEX_DVC_CMD_END_LENGTH] = {NEX_DVC_CMD_END_SEQUENCE};
@@ -171,7 +202,7 @@ nex_err_t nextion_protocol_send_instruction(nextion_t *handle, const char *instr
 
     if (uart_write_bytes(handle->uart_num, instruction, instruction_length) < 1 || uart_write_bytes(handle->uart_num, END_SEQUENCE, NEX_DVC_CMD_END_LENGTH) < 1)
     {
-        CMP_LOGE("failed writing command");
+        CMP_LOGE("failed writing instruction");
 
         goto END;
     }
@@ -216,7 +247,7 @@ nex_err_t nextion_protocol_send_raw_byte(const nextion_t *handle, uint8_t value)
 
     if (uart_write_bytes(uart, (const void *)&value, 1) < 1)
     {
-        CMP_LOGE("failed writing command");
+        CMP_LOGE("failed writing instruction");
 
         return NEX_FAIL;
     }
@@ -367,9 +398,10 @@ static void nextion_core_uart_task(void *pvParameters)
         case UART_DATA:
             CMP_LOGD("UART data size: %d", event.size);
 
-            // If we can acquire a semaphore it means the event was sent by the device
-            // automatically. It will only fail to acquire the semaphore when a command
-            // was called.
+            // If we can acquire a semaphore it means the event
+            // was sent by the device automatically. It will
+            // only fail to acquire the semaphore when an
+            // instruction is being sent.
             if (PROCESS_SYNC_TAKE(handle, portMAX_DELAY))
             {
                 CMP_LOGD("processing events");

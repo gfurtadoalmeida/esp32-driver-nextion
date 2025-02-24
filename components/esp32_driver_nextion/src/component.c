@@ -1,7 +1,4 @@
 #include "esp32_driver_nextion/component.h"
-#include "protocol/parsers/responses/ack.h"
-#include "protocol/parsers/responses/text.h"
-#include "protocol/parsers/responses/number.h"
 #include "protocol/protocol.h"
 #include "assertion.h"
 
@@ -10,10 +7,7 @@ nex_err_t nextion_component_refresh(nextion_t *handle, const char *component_nam
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
     CMP_CHECK((component_name_or_id != NULL), "component_name_or_id error(NULL)", NEX_FAIL)
 
-    formated_instruction_t instruction = FORMAT_INSTRUNCTION("ref %s", component_name_or_id);
-    parser_t parser = PARSER_ACK();
-
-    return nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
+    return nextion_protocol_send_instruction_ack(handle, "ref %s", component_name_or_id);
 }
 
 nex_err_t nextion_component_set_visibility(nextion_t *handle, const char *component_name_or_id, bool is_visible)
@@ -21,10 +15,7 @@ nex_err_t nextion_component_set_visibility(nextion_t *handle, const char *compon
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
     CMP_CHECK((component_name_or_id != NULL), "component_name_or_id error(NULL)", NEX_FAIL)
 
-    formated_instruction_t instruction = FORMAT_INSTRUNCTION("vis %s,%d", component_name_or_id, is_visible);
-    parser_t parser = PARSER_ACK();
-
-    return nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
+    return nextion_protocol_send_instruction_ack(handle, "vis %s,%d", component_name_or_id, is_visible);
 }
 
 nex_err_t nextion_component_set_visibility_all(nextion_t *handle, bool is_visible)
@@ -39,10 +30,7 @@ nex_err_t nextion_component_set_touchable(nextion_t *handle, const char *compone
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
     CMP_CHECK((component_name_or_id != NULL), "component_name_or_id error(NULL)", NEX_FAIL)
 
-    formated_instruction_t instruction = FORMAT_INSTRUNCTION("tsw %s,%d", component_name_or_id, is_touchable);
-    parser_t parser = PARSER_ACK();
-
-    return nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
+    return nextion_protocol_send_instruction_ack(handle, "tsw %s,%d", component_name_or_id, is_touchable);
 }
 
 nex_err_t nextion_component_set_touchable_all(nextion_t *handle, bool is_touchable)
@@ -101,17 +89,10 @@ nex_err_t nextion_component_get_property_text(nextion_t *handle,
     CMP_CHECK((property_name != NULL), "property_name error(NULL)", NEX_FAIL)
     CMP_CHECK((buffer != NULL), "buffer error(NULL)", NEX_FAIL)
 
-    formated_instruction_t instruction = FORMAT_INSTRUNCTION("get %s.%s", component_name, property_name);
-    parser_t parser = PARSER_TEXT(buffer, buffer_length);
-
-    nex_err_t code = nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
-
-    if (code == NEX_DVC_RSP_GET_STRING)
-    {
-        return NEX_OK;
-    }
-
-    return code;
+    return nextion_protocol_send_instruction_get_text(handle,
+                                                      buffer,
+                                                      buffer_length,
+                                                      "get %s.%s", component_name, property_name);
 }
 
 nex_err_t nextion_component_get_property_number(nextion_t *handle,
@@ -124,17 +105,7 @@ nex_err_t nextion_component_get_property_number(nextion_t *handle,
     CMP_CHECK((property_name != NULL), "property_name error(NULL)", NEX_FAIL)
     CMP_CHECK((number != NULL), "number error(NULL)", NEX_FAIL)
 
-    formated_instruction_t instruction = FORMAT_INSTRUNCTION("get %s.%s", component_name, property_name);
-    parser_t parser = PARSER_NUMBER(number, sizeof(int32_t));
-
-    nex_err_t code = nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
-
-    if (code == NEX_DVC_RSP_GET_NUMBER)
-    {
-        return NEX_OK;
-    }
-
-    return code;
+    return nextion_protocol_send_instruction_get_number(handle, number, "get %s.%s", component_name, property_name);
 }
 
 nex_err_t nextion_component_set_property_text(nextion_t *handle,
@@ -147,10 +118,7 @@ nex_err_t nextion_component_set_property_text(nextion_t *handle,
     CMP_CHECK((property_name != NULL), "property_name error(NULL)", NEX_FAIL)
     CMP_CHECK((text != NULL), "text error(NULL)", NEX_FAIL)
 
-    formated_instruction_t instruction = FORMAT_INSTRUNCTION("%s.%s=\"%s\"", component_name, property_name, text);
-    parser_t parser = PARSER_ACK();
-
-    return nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
+    return nextion_protocol_send_instruction_ack(handle, "%s.%s=\"%s\"", component_name, property_name, text);
 }
 
 nex_err_t nextion_component_set_property_number(nextion_t *handle,
@@ -162,8 +130,5 @@ nex_err_t nextion_component_set_property_number(nextion_t *handle,
     CMP_CHECK((component_name != NULL), "component_name error(NULL)", NEX_FAIL)
     CMP_CHECK((property_name != NULL), "property_name error(NULL)", NEX_FAIL)
 
-    formated_instruction_t instruction = FORMAT_INSTRUNCTION("%s.%s=%ld", component_name, property_name, number);
-    parser_t parser = PARSER_ACK();
-
-    return nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
+    return nextion_protocol_send_instruction_ack(handle, "%s.%s=%ld", component_name, property_name, number);
 }

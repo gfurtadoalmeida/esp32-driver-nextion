@@ -1,6 +1,4 @@
-#include "esp32_driver_nextion/nextion.h"
 #include "esp32_driver_nextion/page.h"
-#include "protocol/parsers/responses/ack.h"
 #include "protocol/parsers/responses/sendme.h"
 #include "protocol/protocol.h"
 #include "assertion.h"
@@ -26,17 +24,12 @@ nex_err_t nextion_page_set(nextion_t *handle, const char *page_name_or_id)
 {
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
 
-    formated_instruction_t instruction = FORMAT_INSTRUNCTION("page %s", page_name_or_id);
-    parser_t parser = PARSER_ACK();
-
-    return nextion_protocol_send_instruction(handle, instruction.text, instruction.length, &parser);
+    return nextion_protocol_send_instruction_ack(handle, "page %s", page_name_or_id);
 }
 
 nex_err_t nextion_page_refresh(nextion_t *handle)
 {
     CMP_CHECK_HANDLE(handle, NEX_FAIL)
 
-    parser_t parser = PARSER_ACK();
-
-    return nextion_protocol_send_instruction(handle, "ref 0", 5, &parser);
+    return nextion_protocol_send_instruction_ack(handle, "ref 0");
 }
