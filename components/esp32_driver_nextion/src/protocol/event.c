@@ -4,6 +4,7 @@
 #include "protocol/parsers/events/tdm_stop.h"
 #include "protocol/parsers/events/touch_coord.h"
 #include "protocol/parsers/events/touch.h"
+#include "protocol/parsers/events/sendme.h"
 #include "protocol/event.h"
 
 bool try_get_event_parser(uint8_t event_id, void *result_buffer, size_t result_buffer_length, event_parser_t *parser)
@@ -28,6 +29,14 @@ bool try_get_event_parser(uint8_t event_id, void *result_buffer, size_t result_b
         parser->base.need_more_bytes = parser_evt_touch_coord_need_more_bytes;
         parser->base.parse = parser_evt_touch_coord_parse;
         parser->required_buffer_size = sizeof(nextion_on_touch_coord_event_t);
+        return true;
+
+    case NEX_DVC_RSP_SENDME:
+        parser->event_id = NEXTION_EVENT_PAGE_CHANGED;
+        parser->base.can_parse = parser_evt_sendme_can_parse;
+        parser->base.need_more_bytes = parser_evt_sendme_need_more_bytes;
+        parser->base.parse = parser_evt_sendme_parse;
+        parser->required_buffer_size = sizeof(nextion_page_changed_event_t);
         return true;
 
     case NEX_DVC_EVT_HARDWARE_START_RESET:

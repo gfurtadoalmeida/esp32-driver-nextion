@@ -18,13 +18,23 @@ extern "C"
  */
 #define EVENT_PARSE_BUFFER_SIZE (sizeof(nextion_on_touch_coord_event_t))
 
+    /**
+     * @brief Nextion esp_event event base.
+     * @details Used by "esp_event_handler_*" functions.
+     */
     ESP_EVENT_DECLARE_BASE(NEXTION_EVENT);
 
+    /**
+     * @typedef nextion_event_t
+     * @brief Nextion esp_event events id.
+     * @details Used by "esp_event_handler_*" functions.
+     */
     typedef enum
     {
         NEXTION_EVENT_TOUCHED,       /** @brief Touch event without coordinates. */
         NEXTION_EVENT_TOUCHED_COORD, /** @brief Touch with coordinates. */
-        NEXTION_EVENT_STATE_CHANGED  /** @brief Device state changed. */
+        NEXTION_EVENT_STATE_CHANGED, /** @brief Device state changed. */
+        NEXTION_EVENT_PAGE_CHANGED   /** @brief Page changed. */
     } nextion_event_t;
 
     /**
@@ -90,6 +100,16 @@ extern "C"
         nextion_t *handle;            /** @brief Nextion context pointer. */
         nextion_device_state_t state; /** @brief Device state. */
     } nextion_on_device_event_t;
+
+    /**
+     * @typedef nextion_page_changed_event_t
+     * @brief Page changed event data.
+     */
+    typedef struct
+    {
+        nextion_t *handle; /** @brief Nextion context pointer. */
+        uint8_t page_id;   /** @brief Page id. */
+    } nextion_page_changed_event_t;
 
 #ifdef __cplusplus
 }
