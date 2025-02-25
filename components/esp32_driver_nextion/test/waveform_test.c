@@ -1,7 +1,7 @@
 #include "esp32_driver_nextion/waveform.h"
 #include "common_infra_test.h"
 
-#define TEST_WAVEFORM_ID 7U
+#define TEST_WAVEFORM_ID 17U
 
 TEST_CASE("Start waveform refresh", "[waveform]")
 {

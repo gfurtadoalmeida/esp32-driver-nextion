@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "unity.h"
+#include "esp_event.h"
 #include "esp32_driver_nextion/nextion.h"
 
 #define TEST_UART_NUM UART_NUM_2
@@ -16,6 +17,8 @@ void app_main(void)
     /* This is just the test runner.
      * The real tests are on "components/#/test".
      */
+
+    esp_event_loop_create_default();
 
     handle = nextion_driver_install(TEST_UART_NUM, TEST_UART_BAUD_RATE, TEST_UART_TX_PIN, TEST_UART_RX_PIN);
 
