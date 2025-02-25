@@ -146,9 +146,7 @@ To contribute to this project make sure to read our [CONTRIBUTING.md](/docs/CONT
 
 ## To Do
 
-* [ ] Fix code smells.
 * [ ] Have only one touch event insted of one with coordinates and other without coordinates.
-* [ ] Page change event.
 * [ ] Enhance protocol handling with:
   * [ ] Automatic baud rate detection on `nextion_init`.
   * [ ] CRC support.

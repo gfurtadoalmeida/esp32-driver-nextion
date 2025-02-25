@@ -18,7 +18,12 @@ int parser_rsp_sendme_need_more_bytes(const parser_t *, const uint8_t *data, siz
 
 bool parser_rsp_sendme_parse(const parser_t *parser, const uint8_t *data, size_t)
 {
-    *((uint8_t *)parser->result_buffer) = data[1];
+    *((uint8_t *)parser->result_buffer) = parser_rsp_sendme_convert(data + 1);
 
     return true;
+}
+
+uint8_t inline parser_rsp_sendme_convert(const uint8_t *data)
+{
+    return data[0];
 }

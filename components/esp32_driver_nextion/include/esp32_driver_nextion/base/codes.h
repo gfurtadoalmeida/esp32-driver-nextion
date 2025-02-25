@@ -194,6 +194,8 @@ extern "C"
 
 /**
  * @brief "Sendme" command result.
+ * @remark Can act as an event when executing the
+ * "Sendme" instruction on the display side.
  * @details Format: 0x66 {0x01} 0xFF 0xFF 0xFF
  * Composition:
  *   - {0x01}: page number

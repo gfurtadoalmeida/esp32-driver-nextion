@@ -38,6 +38,13 @@ extern "C"
     bool parser_rsp_sendme_parse(const parser_t *parser, const uint8_t *data, size_t length);
 
     /**
+     * @brief Parse data into a page id.
+     * @param[in] data Data pointer to be parsed, without the data id.
+     * @return page id.
+     */
+    uint8_t parser_rsp_sendme_convert(const uint8_t *data);
+
+    /**
      * @brief Create a SENDME parser.
      * @param result_buffer_value Buffer to write the parsed page id into.
      * @param result_buffer_length_value Buffer length.
