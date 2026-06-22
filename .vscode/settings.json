@@ -40,5 +40,6 @@
   ],
   "idf.port": "/dev/ttyUSB1",
   "idf.portWin": "COM7",
-  "sonarlint.pathToCompileCommands": "${workspaceFolder}\\build\\compile_commands.json"
+  "sonarlint.pathToCompileCommands": "${workspaceFolder}\\build\\compile_commands.json",
+  "idf.currentSetup": "C:/Espressif/frameworks/esp-idf-v5.5/"
 }
