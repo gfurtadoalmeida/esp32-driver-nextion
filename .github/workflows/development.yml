@@ -24,6 +24,10 @@ on:
 env:
   ESP_DOCKER_IMAGE: gfurtadoalmeida/esp32-docker-sonar:v5.4
 
+concurrency:
+  group: ${{github.workflow}}-${{github.ref}}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
